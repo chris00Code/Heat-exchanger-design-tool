@@ -1,0 +1,30 @@
+{
+    "id": 2006070282064,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 2006070418128,
+            "title": "Input Flow",
+            "pos_x": -728.0,
+            "pos_y": -222.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2006070446416,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 3
+                }
+            ],
+            "content": {
+                "fluid": "water",
+                "temperature": "293.15",
+                "mass flow rate": "1"
+            },
+            "op_code": 1
+        }
+    ],
+    "edges": []
+}

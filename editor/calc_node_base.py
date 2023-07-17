@@ -36,7 +36,6 @@ class CalcGraphicsNode(QDMGraphicsNode):
             QRectF(offset, 0, 24.0, 24.0)
         )
 
-
 class CalcContent(QDMNodeContentWidget):
     def initUI(self):
         lbl = QLabel(self.node.content_label, self)
