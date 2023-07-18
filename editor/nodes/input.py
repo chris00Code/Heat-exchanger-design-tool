@@ -74,7 +74,7 @@ class NetworkNode_Input(CalcNode):
     content_label_objname = "network_node_input"
 
     def __init__(self, scene):
-        super().__init__(scene, inputs=[], outputs=[3])
+        super().__init__(scene, inputs=[], outputs=[1])
         self.eval()
 
     def initInnerClasses(self):

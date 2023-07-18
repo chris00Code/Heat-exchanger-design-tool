@@ -1,7 +1,16 @@
-from calc_conf import register_node, OP_NODE_ADD, OP_NODE_SUB, OP_NODE_MUL, OP_NODE_DIV
+from calc_conf import register_node, OP_NODE_CO,OP_NODE_ADD, OP_NODE_SUB, OP_NODE_MUL, OP_NODE_DIV
 from calc_node_base import CalcNode
+from ex_node_base import ExNode
 
+@register_node(OP_NODE_CO)
+class CalcNode_Co(ExNode):
+    icon = "icons/cocurrent.png"
+    op_code = OP_NODE_CO
+    op_title = "co-current"
+    content_label = "->->"
+    content_label_objname = "calc_node_bg"
 
+"""
 @register_node(OP_NODE_ADD)
 class CalcNode_Add(CalcNode):
     icon = "icons/add.png"
@@ -12,7 +21,7 @@ class CalcNode_Add(CalcNode):
 
     def evalOperation(self, input1, input2):
         return input1 + input2
-
+"""
 
 @register_node(OP_NODE_SUB)
 class CalcNode_Sub(CalcNode):
