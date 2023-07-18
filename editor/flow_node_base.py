@@ -1,106 +1,106 @@
-from qtpy.QtWidgets import QLineEdit
-from qtpy.QtCore import Qt
-from calc_conf import register_node, OP_NODE_INPUT
-from calc_node_base import CalcNode, CalcGraphicsNode
+from qtpy.QtGui import QImage, QPixmap
+from qtpy.QtCore import QRectF
+from qtpy.QtWidgets import QLabel
+
+from nodeeditor.node_node import Node
 from nodeeditor.node_content_widget import QDMNodeContentWidget
+from nodeeditor.node_graphics_node import QDMGraphicsNode
+from nodeeditor.node_socket import LEFT_CENTER, RIGHT_CENTER
 from nodeeditor.utils import dumpException
-from PyQt5.QtWidgets import QVBoxLayout, QLabel
+
+from flow import Flow
 
 
-class CalcInputContent(QDMNodeContentWidget):
+class FlowGraphicsNode(QDMGraphicsNode):
+    def initSizes(self):
+        super().initSizes()
+        self.width = 160
+        self.height = 160
+        self.edge_roundness = 6
+        self.edge_padding = 0
+        self.title_horizontal_padding = 8
+        self.title_vertical_padding = 10
+
+    def initAssets(self):
+        super().initAssets()
+        self.icons = QImage("icons/status_icons.png")
+
+    def paint(self, painter, QStyleOptionGraphicsItem, widget=None):
+        super().paint(painter, QStyleOptionGraphicsItem, widget)
+
+        offset = 24.0
+        if self.node.isDirty(): offset = 0.0
+        if self.node.isInvalid(): offset = 48.0
+
+        painter.drawImage(
+            QRectF(-10, -10, 24.0, 24.0),
+            self.icons,
+            QRectF(offset, 0, 24.0, 24.0)
+        )
+
+
+class FlowContent(QDMNodeContentWidget):
     def initUI(self):
-        # Create a QVBoxLayout to hold the widgets
-        self.layout = QVBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.layout)
-
-        # Add the first QLabel widget with the first description text
-        description_label_fluid = QLabel("Enter fluid:")
-        self.layout.addWidget(description_label_fluid)
-
-        #@TODO implement dropdown with available fluids
-        # Create the first QLineEdit widget with the default text "water"
-        self.edit_fluid = QLineEdit("water", self)
-        self.edit_fluid.setAlignment(Qt.AlignRight)
-        self.edit_fluid.setObjectName(self.node.content_label_objname)
-        self.layout.addWidget(self.edit_fluid)
-
-        # Add the second QLabel widget with the second description text
-        description_label_temp = QLabel("Enter temperature [K]:")
-        self.layout.addWidget(description_label_temp)
-
-        # Create the second QLineEdit widget with an empty default text
-        self.edit_temp = QLineEdit("293.15", self)
-        self.edit_temp.setAlignment(Qt.AlignRight)
-        self.edit_temp.setObjectName(self.node.content_label_objname)
-        self.layout.addWidget(self.edit_temp)
+        lbl = QLabel(self.node.content_label, self)
+        lbl.setObjectName(self.node.content_label_objname)
 
 
-        description_label_dm = QLabel("Enter mass flow rate [kg/s]:")
-        self.layout.addWidget(description_label_dm)
+class FlowNode(Node):
+    icon = "icons/flow.png"
+    op_code = 0
+    op_title = "Undefined"
+    content_label = ""
+    content_label_objname = "calc_node_bg"
 
-        self.edit_dm = QLineEdit("1", self)
-        self.edit_dm.setAlignment(Qt.AlignRight)
-        self.edit_dm.setObjectName(self.node.content_label_objname)
-        self.layout.addWidget(self.edit_dm)
+    GraphicsNode_class = FlowGraphicsNode
+    NodeContent_class = FlowContent
+
+    def __init__(self, scene, inputs=[], outputs=[]):
+        super().__init__(scene, self.__class__.op_title, inputs, outputs)
+        self.flow = None
+
+        # it's really important to mark all nodes Dirty by default
+        self.markDirty()
+
+    def initSettings(self):
+        super().initSettings()
+        self.input_socket_position = LEFT_CENTER
+        self.output_socket_position = RIGHT_CENTER
+
+    def evalOperation(self, input1, input2):
+        return 123
+
+    def evalImplementation(self):
+        pass
+
+    def eval(self):
+        if not self.isDirty() and not self.isInvalid():
+            print(" _> returning cached %s value:" % self.__class__.__name__, self.value)
+            return self.flow
+
+        try:
+            flow = self.evalImplementation()
+            return flow
+        except ValueError or NotImplementedError as e:
+            self.markInvalid()
+            self.grNode.setToolTip(str(e))
+            self.markDescendantsDirty()
+        except Exception as e:
+            self.markInvalid()
+            self.grNode.setToolTip(str(e))
+            dumpException(e)
+
+    def onInputChanged(self, socket=None):
+        print("%s::__onInputChanged" % self.__class__.__name__)
+        self.markDirty()
+        self.eval()
 
     def serialize(self):
         res = super().serialize()
-        res['fluid'] = self.edit_fluid.text()
-        res['temperature'] = self.edit_temp.text()
-        res['mass flow rate'] = self.edit_dm.text()
+        res['op_code'] = self.__class__.op_code
         return res
 
-    def deserialize(self, data, hashmap={}):
-        res = super().deserialize(data, hashmap)
-        try:
-            value1 = data['fluid']
-            value2 = data['temperature']
-            value3 = data['mass flow rate']
-            self.edit_fluid.setText(value1)
-            self.edit_temp.setText(value2)
-            self.edit_dm.setText(value3)
-            return True & res
-        except Exception as e:
-            dumpException(e)
+    def deserialize(self, data, hashmap={}, restore_id=True):
+        res = super().deserialize(data, hashmap, restore_id)
+        print("Deserialized CalcNode '%s'" % self.__class__.__name__, "res:", res)
         return res
-
-
-@register_node(OP_NODE_INPUT)
-class NetworkNode_Input(CalcNode):
-    icon = "icons/flow.png"
-    op_code = OP_NODE_INPUT
-    op_title = "Input Flow"
-    content_label_objname = "network_node_input"
-
-    def __init__(self, scene):
-        super().__init__(scene, inputs=[], outputs=[1])
-        self.eval()
-
-    def initInnerClasses(self):
-        self.content = CalcInputContent(self)
-        self.grNode = CalcGraphicsNode(self)
-        self.grNode.height = 160
-
-        self.content.edit_fluid.textChanged.connect(self.onInputChanged)
-        self.content.edit_temp.textChanged.connect(self.onInputChanged)
-        self.content.edit_dm.textChanged.connect(self.onInputChanged)
-
-    def evalImplementation(self):
-        fluid = self.content.edit_fluid.text()
-        temp = self.content.edit_temp.text()
-        dm = self.content.edit_dm.text()
-
-        #@TODO eval of parameters
-        self.value = None
-        self.markDirty(False)
-        self.markInvalid(False)
-
-        self.markDescendantsInvalid(False)
-        self.markDescendantsDirty()
-
-        self.grNode.setToolTip("")
-
-        self.evalChildren()
-
-        return self.value

@@ -1,12 +1,15 @@
 from qtpy.QtWidgets import QLineEdit
 from qtpy.QtCore import Qt
 from calc_conf import register_node, OP_NODE_INPUT
-from calc_node_base import CalcNode, CalcGraphicsNode
+from flow_node_base import FlowNode, FlowGraphicsNode
 from nodeeditor.node_content_widget import QDMNodeContentWidget
 from nodeeditor.utils import dumpException
 from PyQt5.QtWidgets import QVBoxLayout, QLabel
+from PyQt5.QtGui import QDoubleValidator
+from flow import Flow
 
-class CalcInputContent(QDMNodeContentWidget):
+
+class FlowInputContent(QDMNodeContentWidget):
     def initUI(self):
         # Create a QVBoxLayout to hold the widgets
         self.layout = QVBoxLayout()
@@ -17,7 +20,7 @@ class CalcInputContent(QDMNodeContentWidget):
         description_label_fluid = QLabel("Enter fluid:")
         self.layout.addWidget(description_label_fluid)
 
-        #@TODO implement dropdown with available fluids
+        # @TODO implement dropdown with available fluids
         # Create the first QLineEdit widget with the default text "water"
         self.edit_fluid = QLineEdit("water", self)
         self.edit_fluid.setAlignment(Qt.AlignRight)
@@ -28,26 +31,28 @@ class CalcInputContent(QDMNodeContentWidget):
         description_label_temp = QLabel("Enter temperature [K]:")
         self.layout.addWidget(description_label_temp)
 
+        validator = QDoubleValidator()
+        validator.setNotation(QDoubleValidator.StandardNotation)
+
         # Create the second QLineEdit widget with an empty default text
         self.edit_temp = QLineEdit("293.15", self)
+        self.edit_temp.setValidator(validator)
         self.edit_temp.setAlignment(Qt.AlignRight)
         self.edit_temp.setObjectName(self.node.content_label_objname)
         self.layout.addWidget(self.edit_temp)
 
-
         description_label_dm = QLabel("Enter mass flow rate [kg/s]:")
         self.layout.addWidget(description_label_dm)
 
-        self.edit_dm = QLineEdit("1", self)
-        self.edit_dm.setAlignment(Qt.AlignRight)
-        self.edit_dm.setObjectName(self.node.content_label_objname)
-        self.layout.addWidget(self.edit_dm)
+        self.edit_mfr = QLineEdit("1", self)
+        self.edit_mfr.setValidator(validator)
+        self.edit_mfr.setAlignment(Qt.AlignRight)
+        self.edit_mfr.setObjectName(self.node.content_label_objname)
+        self.layout.addWidget(self.edit_mfr)
 
     def serialize(self):
         res = super().serialize()
-        res['fluid'] = self.edit_fluid.text()
-        res['temperature'] = self.edit_temp.text()
-        res['mass flow rate'] = self.edit_dm.text()
+        res['flow'] = self.node.flow.serialize()
         return res
 
     def deserialize(self, data, hashmap={}):
@@ -58,7 +63,7 @@ class CalcInputContent(QDMNodeContentWidget):
             value3 = data['mass flow rate']
             self.edit_fluid.setText(value1)
             self.edit_temp.setText(value2)
-            self.edit_dm.setText(value3)
+            self.edit_mfr.setText(value3)
             return True & res
         except Exception as e:
             dumpException(e)
@@ -66,32 +71,29 @@ class CalcInputContent(QDMNodeContentWidget):
 
 
 @register_node(OP_NODE_INPUT)
-class NetworkNode_Input(CalcNode):
-    icon = "icons/flow.png"
+class NetworkNode_Input(FlowNode):
     op_code = OP_NODE_INPUT
     op_title = "Input Flow"
-    content_label_objname = "network_node_input"
+    content_label_objname = "flow_node_input"
 
     def __init__(self, scene):
         super().__init__(scene, inputs=[], outputs=[1])
         self.eval()
 
     def initInnerClasses(self):
-        self.content = CalcInputContent(self)
-        self.grNode = CalcGraphicsNode(self)
-        self.grNode.height = 160
+        self.content = FlowInputContent(self)
+        self.grNode = FlowGraphicsNode(self)
 
         self.content.edit_fluid.textChanged.connect(self.onInputChanged)
         self.content.edit_temp.textChanged.connect(self.onInputChanged)
-        self.content.edit_dm.textChanged.connect(self.onInputChanged)
+        self.content.edit_mfr.textChanged.connect(self.onInputChanged)
 
     def evalImplementation(self):
         fluid = self.content.edit_fluid.text()
-        temp = self.content.edit_temp.text()
-        dm = self.content.edit_dm.text()
+        temp = float(self.content.edit_temp.text())
+        mfr = float(self.content.edit_mfr.text())
 
-        #@TODO eval of parameters
-        self.value = None
+        self.flow = Flow(fluid, temp, mfr)
         self.markDirty(False)
         self.markInvalid(False)
 
@@ -102,4 +104,4 @@ class NetworkNode_Input(CalcNode):
 
         self.evalChildren()
 
-        return self.value
+        return self.flow
