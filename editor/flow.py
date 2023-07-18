@@ -33,3 +33,9 @@ class Flow:
     def serialize(self):
         return self.__dict__
 
+    @staticmethod
+    def deserialize(data):
+        fluid = data.get('fluid')
+        temperature = data.get('temperature')
+        mass_flow_rate = data.get('mass_flow_rate')
+        return Flow(fluid, temperature, mass_flow_rate)

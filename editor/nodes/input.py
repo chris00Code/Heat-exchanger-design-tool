@@ -58,19 +58,17 @@ class FlowInputContent(QDMNodeContentWidget):
     def deserialize(self, data, hashmap={}):
         res = super().deserialize(data, hashmap)
         try:
-            value1 = data['fluid']
-            value2 = data['temperature']
-            value3 = data['mass flow rate']
-            self.edit_fluid.setText(value1)
-            self.edit_temp.setText(value2)
-            self.edit_mfr.setText(value3)
+            flow = Flow.deserialize(data['flow'])
+            self.edit_fluid.setText(flow.fluid)
+            self.edit_temp.setText(str(flow.temperature))
+            self.edit_mfr.setText(str(flow.mass_flow_rate))
             return True & res
         except Exception as e:
             dumpException(e)
         return res
 
 
-@register_node(OP_NODE_INPUT)
+@register_node(OP_NODE_INPUT)""
 class NetworkNode_Input(FlowNode):
     op_code = OP_NODE_INPUT
     op_title = "Input Flow"

@@ -1,17 +1,17 @@
 {
-    "id": 2025105137872,
+    "id": 1676222669584,
     "scene_width": 64000,
     "scene_height": 64000,
     "nodes": [
         {
-            "id": 2025105286288,
+            "id": 1676216124048,
             "title": "Input Flow",
             "pos_x": 59.0,
-            "pos_y": -161.0,
+            "pos_y": -84.0,
             "inputs": [],
             "outputs": [
                 {
-                    "id": 2025105315344,
+                    "id": 1676222851280,
                     "index": 0,
                     "multi_edges": true,
                     "position": 5,
@@ -21,7 +21,7 @@
             "content": {
                 "flow": {
                     "fluid": "water",
-                    "temperature": 293.15,
+                    "temperature": 54654.0,
                     "mass_flow_rate": 1.0
                 }
             },
