@@ -6,6 +6,7 @@ from nodeeditor.node_content_widget import QDMNodeContentWidget
 from nodeeditor.utils import dumpException
 from PyQt5.QtWidgets import QVBoxLayout, QLabel
 
+
 class CalcInputContent(QDMNodeContentWidget):
     def initUI(self):
         # Create a QVBoxLayout to hold the widgets

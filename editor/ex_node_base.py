@@ -1,26 +1,22 @@
 from qtpy.QtGui import QImage
 from qtpy.QtCore import QRectF
 from qtpy.QtWidgets import QLabel
-from qtpy.QtCore import Qt
+
 from nodeeditor.node_node import Node
 from nodeeditor.node_content_widget import QDMNodeContentWidget
 from nodeeditor.node_graphics_node import QDMGraphicsNode
 from nodeeditor.node_socket import LEFT_CENTER, RIGHT_CENTER
 from nodeeditor.utils import dumpException
-from PyQt5 import QtCore, QtGui, QtWidgets
-from qtpy.QtWidgets import QLineEdit
-from PyQt5.QtWidgets import QVBoxLayout, QLabel
-from qtpy.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
 
 
-class ExGraphicsNode(QDMGraphicsNode):
+class CalcGraphicsNode(QDMGraphicsNode):
     def initSizes(self):
         super().initSizes()
-        self.width = 170
-        self.height = 200
+        self.width = 160
+        self.height = 74
         self.edge_roundness = 6
-        self.edge_padding = 5
-        self.title_horizontal_padding = 15
+        self.edge_padding = 0
+        self.title_horizontal_padding = 8
         self.title_vertical_padding = 10
 
     def initAssets(self):
@@ -40,75 +36,29 @@ class ExGraphicsNode(QDMGraphicsNode):
             QRectF(offset, 0, 24.0, 24.0)
         )
 
-        image_path = self.node.icon
-        image = QImage(image_path)
-        painter.drawImage(QRectF(100, 0, 24.0, 24.0), image)
-
-
-class ExContent(QDMNodeContentWidget):
+class CalcContent(QDMNodeContentWidget):
     def initUI(self):
-        self.grid_layout = QGridLayout()
-        self.grid_layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.grid_layout)
-
-        font1 = QtGui.QFont()
-        font1.setPointSize(11)
-        font1.setBold(True)
-        font1.setWeight(75)
-
-        label_1 = QLabel("Input fluids:")
-        label_1.setFont(font1)
-        self.grid_layout.addWidget(label_1, 0, 0, 1, 2)
-
-        label_2 = QLabel("fluid 1:")
-        self.grid_layout.addWidget(label_2, 1, 0, 1, 1)
-
-        #@TODO iplement Flow regestration
-        self.label_3 = QLabel("Flow1")
-        self.grid_layout.addWidget(self.label_3, 1, 1, 1, 1)
-
-        label_4 = QLabel("fluid 2:")
-        self.grid_layout.addWidget(label_4, 2, 0, 1, 1)
-
-        self.label_5 = QLabel("Flow2")
-        self.grid_layout.addWidget(self.label_5, 2, 1, 1, 1)
-
-        label_6 = QLabel("Parameters:")
-        label_6.setFont(font1)
-        self.grid_layout.addWidget(label_6, 3, 0, 1, 2)
-
-        label_7 = QLabel("heat capacity flow:")
-        self.grid_layout.addWidget(label_7, 4, 0, 1, 1)
-        self.label_8 = QLineEdit("", self)
-        self.grid_layout.addWidget(self.label_8, 4, 1, 1, 1)
-
-        label_9 = QLabel("k:")
-        self.grid_layout.addWidget(label_9, 5, 0, 1, 1)
-        self.label_10 = QLineEdit("", self)
-        self.grid_layout.addWidget(self.label_10, 5, 1, 1, 1)
-
-        label_11 = QLabel("A:")
-        self.grid_layout.addWidget(label_11, 6, 0, 1, 1)
-        self.label_12 = QLineEdit("", self)
-        self.grid_layout.addWidget(self.label_12, 6, 1, 1, 1)
+        lbl = QLabel(self.node.content_label, self)
+        lbl.setObjectName(self.node.content_label_objname)
 
 
-class ExNode(Node):
+class CalcNode(Node):
     icon = ""
     op_code = 0
     op_title = "Undefined"
     content_label = ""
     content_label_objname = "calc_node_bg"
 
-    GraphicsNode_class = ExGraphicsNode
-    NodeContent_class = ExContent
+    GraphicsNode_class = CalcGraphicsNode
+    NodeContent_class = CalcContent
 
-    def __init__(self, scene, inputs=[2, 2], outputs=[2, 2]):
+    def __init__(self, scene, inputs=[2,2], outputs=[2,2]):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
         self.value = None
 
         # it's really important to mark all nodes Dirty by default
         self.markDirty()
+
 
     def initSettings(self):
         super().initSettings()
@@ -116,7 +66,7 @@ class ExNode(Node):
         self.output_socket_position = RIGHT_CENTER
 
     def evalOperation(self, input1, input2):
-        raise NotImplementedError
+        return 123
 
     def evalImplementation(self):
         i1 = self.getInput(0)
@@ -158,10 +108,13 @@ class ExNode(Node):
             self.grNode.setToolTip(str(e))
             dumpException(e)
 
+
+
     def onInputChanged(self, socket=None):
         print("%s::__onInputChanged" % self.__class__.__name__)
         self.markDirty()
         self.eval()
+
 
     def serialize(self):
         res = super().serialize()
