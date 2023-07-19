@@ -122,23 +122,28 @@ class ExNode(Node):
 
     # @TODO changing fluids when input changes
     def evalImplementation(self):
-        i1 = self.getInput(0)
-        i2 = self.getInput(1)
+        input_1 = self.getInputWithSocketIndex(0)
+        input_2 = self.getInputWithSocketIndex(1)
 
         # @TODO implement diversification of flows when same fluids
-        if i1 is not None:
-            self.out_flow_1 = i1.get_flow(0)
-            fluid_1 = i1.get_flow(0).fluid
+        if not any(item is None for item in input_1):
+            self.out_flow_1 = input_1[0].get_flow(input_1[1])
+            fluid_1 = self.out_flow_1.fluid
             self.content.label_3.setText(fluid_1)
-        if i2 is not None:
-            self.out_flow_2 = i2.get_flow(1)
-            fluid_2 = i2.get_flow(1).fluid
-            self.content.label_5.setText(fluid_2)
-        if i1 and i2 is None:
+        else:
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
-            return None
+            self.content.label_3.setText("")
+        if not any(item is None for item in input_2):
+            self.out_flow_2 = input_2[0].get_flow(input_2[1])
+            fluid_2 = self.out_flow_2.fluid
+            self.content.label_5.setText(fluid_2)
         else:
+            self.markDescendantsDirty()
+            self.grNode.setToolTip("Connect all inputs")
+            self.content.label_5.setText("")
+            return None
+        if not any(item is None for item in zip(input_1, input_2)):
             self.markDirty(False)
             self.markInvalid(False)
             self.grNode.setToolTip("")
