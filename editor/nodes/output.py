@@ -50,7 +50,7 @@ class FlowNodeOutput(FlowNode):
     def initInnerClasses(self):
         self.content = FlowOutputContent(self)
         self.grNode = FlowGraphicsNode(self)
-        self.grNode.height = 150
+        self.grNode.height = 70
 
 
     def evalImplementation(self):
