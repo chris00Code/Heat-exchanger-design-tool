@@ -68,7 +68,7 @@ class FlowInputContent(QDMNodeContentWidget):
         return res
 
 
-@register_node(OP_NODE_INPUT)""
+@register_node(OP_NODE_INPUT)
 class NetworkNode_Input(FlowNode):
     op_code = OP_NODE_INPUT
     op_title = "Input Flow"

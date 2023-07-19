@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from qtpy.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QVBoxLayout, QLabel
 from qtpy.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
+from flow import Flow
 
 
 class ExGraphicsNode(QDMGraphicsNode):
@@ -63,14 +64,15 @@ class ExContent(QDMNodeContentWidget):
         label_2 = QLabel("fluid 1:")
         self.grid_layout.addWidget(label_2, 1, 0, 1, 1)
 
-        # @TODO iplement Flow regestration
-        self.label_3 = QLabel("Flow1")
+        self.label_3 = QLabel("", self)
+        self.label_3.setObjectName(self.node.content_label_objname)
         self.grid_layout.addWidget(self.label_3, 1, 1, 1, 1)
 
         label_4 = QLabel("fluid 2:")
         self.grid_layout.addWidget(label_4, 2, 0, 1, 1)
 
-        self.label_5 = QLabel("Flow2")
+        self.label_5 = QLabel("", self)
+        self.label_5.setObjectName(self.node.content_label_objname)
         self.grid_layout.addWidget(self.label_5, 2, 1, 1, 1)
 
         label_6 = QLabel("Parameters:")
@@ -98,7 +100,7 @@ class ExNode(Node):
     op_code = 0
     op_title = "Undefined"
     content_label = ""
-    content_label_objname = "calc_node_bg"
+    content_label_objname = "excalc_node_bg"
 
     GraphicsNode_class = ExGraphicsNode
     NodeContent_class = ExContent
@@ -122,16 +124,20 @@ class ExNode(Node):
         i1 = self.getInput(0)
         i2 = self.getInput(1)
 
-        if i1 is None or i2 is None:
-            self.markInvalid()
+        # @TODO implement diversification of flows when same fluids
+        if i1 is not None:
+            self.out_flow_1 = i1
+            fluid_1 = i1.content.edit_fluid.text()
+            self.content.label_3.setText(fluid_1)
+        if i2 is not None:
+            self.out_flow_2 = i2
+            fluid_2 = i2.content.edit_fluid.text()
+            self.content.label_5.setText(fluid_2)
+        if i1 and i2 is None:
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
             return None
-
         else:
-            self.out_flow_1 = i1
-            self.out_flow_2 = i2
-
             self.markDirty(False)
             self.markInvalid(False)
             self.grNode.setToolTip("")

@@ -8,7 +8,7 @@ class CalcNode_Co(ExNode):
     op_code = OP_NODE_CO
     op_title = "co-current"
     content_label = "->->"
-    content_label_objname = "calc_node_bg"
+    content_label_objname = "excalc_node_bg"
 
 """
 @register_node(OP_NODE_ADD)
