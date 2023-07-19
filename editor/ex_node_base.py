@@ -211,19 +211,30 @@ class ExNode(Node):
             self.grNode.setToolTip(str(e))
             dumpException(e)
         self.heat_capacity_flow = self.evalOperation()
+        if self.heat_capacity_flow is None:
+            self.markDirty()
+            self.markDescendantsDirty()
+            dumpException("heat capacity flow not defined")
 
     def onInputChanged(self, socket=None):
         print("%s::__onInputChanged" % self.__class__.__name__)
         self.markDirty()
         self.eval()
 
+    # @TODO also serialize/deserialize k and A
     def serialize(self):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
+        res['heat_capacity_flow'] = self.heat_capacity_flow
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
         res = super().deserialize(data, hashmap, restore_id)
+        try:
+            self.heat_capacity_flow = float(data['heat_capacity_flow'])
+            self.content.label_8.setText(str(self.heat_capacity_flow))
+        except Exception as e:
+            dumpException(e)
         print("Deserialized CalcNode '%s'" % self.__class__.__name__, "res:", res)
         return res
 
