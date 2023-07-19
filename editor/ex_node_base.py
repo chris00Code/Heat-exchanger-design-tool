@@ -12,6 +12,7 @@ from qtpy.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QVBoxLayout, QLabel
 from qtpy.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
 from flow import Flow
+from PyQt5.QtGui import QDoubleValidator
 
 
 class ExGraphicsNode(QDMGraphicsNode):
@@ -57,6 +58,9 @@ class ExContent(QDMNodeContentWidget):
         font1.setBold(True)
         font1.setWeight(75)
 
+        validator = QDoubleValidator()
+        validator.setNotation(QDoubleValidator.StandardNotation)
+
         label_1 = QLabel("Input fluids:")
         label_1.setFont(font1)
         self.grid_layout.addWidget(label_1, 0, 0, 1, 2)
@@ -82,16 +86,19 @@ class ExContent(QDMNodeContentWidget):
         label_7 = QLabel("heat capacity flow:")
         self.grid_layout.addWidget(label_7, 4, 0, 1, 1)
         self.label_8 = QLineEdit("", self)
+        self.label_8.setValidator(validator)
         self.grid_layout.addWidget(self.label_8, 4, 1, 1, 1)
 
         label_9 = QLabel("k:")
         self.grid_layout.addWidget(label_9, 5, 0, 1, 1)
         self.label_10 = QLineEdit("", self)
+        self.label_10.setValidator(validator)
         self.grid_layout.addWidget(self.label_10, 5, 1, 1, 1)
 
         label_11 = QLabel("A:")
         self.grid_layout.addWidget(label_11, 6, 0, 1, 1)
         self.label_12 = QLineEdit("", self)
+        self.label_12.setValidator(validator)
         self.grid_layout.addWidget(self.label_12, 6, 1, 1, 1)
 
 
@@ -109,6 +116,7 @@ class ExNode(Node):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
         self.out_flow_1 = None
         self.out_flow_2 = None
+        self.heat_capacity_flow = None
         # it's really important to mark all nodes Dirty by default
         self.markDirty()
 
@@ -117,8 +125,45 @@ class ExNode(Node):
         self.input_socket_position = LEFT_CENTER
         self.output_socket_position = RIGHT_CENTER
 
-    def evalOperation(self, input1, input2):
-        raise NotImplementedError
+        self.content.label_8.textChanged.connect(self.onCapFlowChanged)
+        self.content.label_10.textChanged.connect(self.onkAChanged)
+        self.content.label_12.textChanged.connect(self.onkAChanged)
+
+    def onCapFlowChanged(self):
+        print("%s::__onCapChanged" % self.__class__.__name__)
+        l8 = self.content.label_8.text()
+        l10 = self.content.label_10.text()
+        l12 = self.content.label_12.text()
+        if self.content.label_8.text() != '' \
+                and self.content.label_10.text() == '' \
+                and self.content.label_12.text() == '':
+            self.content.label_10.setEnabled(False)
+            self.content.label_12.setEnabled(False)
+        else:
+            self.content.label_10.setEnabled(True)
+            self.content.label_12.setEnabled(True)
+        self.markDirty()
+        self.eval()
+
+    def onkAChanged(self):
+        print("%s::__onkAChanged" % self.__class__.__name__)
+        if self.content.label_10.text() != '' or self.content.label_12.text() != '':
+            self.content.label_8.setEnabled(False)
+        else:
+            self.content.label_8.setEnabled(True)
+        self.markDirty()
+        self.eval()
+        if self.heat_capacity_flow is not None:
+            self.content.label_8.setText(str(self.heat_capacity_flow))
+
+    # @TODO change heatcapacity flow when changed to None
+    def evalOperation(self):
+        if self.content.label_10.text() != "" and self.content.label_12.text() != "":
+            return float(self.content.label_10.text()) * float(self.content.label_12.text())
+        elif self.content.label_8.text() != "":
+            return float(self.content.label_8.text())
+        else:
+            return None
 
     # @TODO changing fluids when input changes
     def evalImplementation(self):
@@ -155,7 +200,6 @@ class ExNode(Node):
         if not self.isDirty() and not self.isInvalid():
             print(" _> returning cached %s value:" % self.__class__.__name__)
             return None
-
         try:
             self.evalImplementation()
         except ValueError as e:
@@ -166,6 +210,7 @@ class ExNode(Node):
             self.markInvalid()
             self.grNode.setToolTip(str(e))
             dumpException(e)
+        self.heat_capacity_flow = self.evalOperation()
 
     def onInputChanged(self, socket=None):
         print("%s::__onInputChanged" % self.__class__.__name__)
