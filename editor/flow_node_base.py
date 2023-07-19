@@ -81,7 +81,11 @@ class FlowNode(Node):
         try:
             flow = self.evalImplementation()
             return flow
-        except ValueError or NotImplementedError as e:
+        except NotImplementedError as e:
+            self.markInvalid()
+            self.grNode.setToolTip(str(e))
+            self.markDescendantsDirty()
+        except ValueError as e:
             self.markInvalid()
             self.grNode.setToolTip(str(e))
             self.markDescendantsDirty()
@@ -104,3 +108,6 @@ class FlowNode(Node):
         res = super().deserialize(data, hashmap, restore_id)
         print("Deserialized CalcNode '%s'" % self.__class__.__name__, "res:", res)
         return res
+
+    def get_flow(self, value=None):
+        return self.flow

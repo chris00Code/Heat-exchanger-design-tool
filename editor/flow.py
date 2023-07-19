@@ -18,7 +18,7 @@ class Flow:
         if fluid in ["water", "air"]:
             return fluid
         else:
-            raise NotImplementedError
+            raise NotImplementedError("fluid data not implemented")
 
     @staticmethod
     @validate_positive_integer

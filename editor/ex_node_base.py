@@ -120,18 +120,19 @@ class ExNode(Node):
     def evalOperation(self, input1, input2):
         raise NotImplementedError
 
+    # @TODO changing fluids when input changes
     def evalImplementation(self):
         i1 = self.getInput(0)
         i2 = self.getInput(1)
 
         # @TODO implement diversification of flows when same fluids
         if i1 is not None:
-            self.out_flow_1 = i1
-            fluid_1 = i1.content.edit_fluid.text()
+            self.out_flow_1 = i1.get_flow(0)
+            fluid_1 = i1.get_flow(0).fluid
             self.content.label_3.setText(fluid_1)
         if i2 is not None:
-            self.out_flow_2 = i2
-            fluid_2 = i2.content.edit_fluid.text()
+            self.out_flow_2 = i2.get_flow(1)
+            fluid_2 = i2.get_flow(1).fluid
             self.content.label_5.setText(fluid_2)
         if i1 and i2 is None:
             self.markDescendantsDirty()
@@ -160,24 +161,6 @@ class ExNode(Node):
             self.markInvalid()
             self.grNode.setToolTip(str(e))
             dumpException(e)
-        """
-        if not self.isDirty() and not self.isInvalid():
-            print(" _> returning cached %s value:" % self.__class__.__name__, self.value)
-            return self.value
-
-        try:
-
-            val = self.evalImplementation()
-            return val
-        except ValueError as e:
-            self.markInvalid()
-            self.grNode.setToolTip(str(e))
-            self.markDescendantsDirty()
-        except Exception as e:
-            self.markInvalid()
-            self.grNode.setToolTip(str(e))
-            dumpException(e)
-        """
 
     def onInputChanged(self, socket=None):
         print("%s::__onInputChanged" % self.__class__.__name__)
@@ -193,3 +176,10 @@ class ExNode(Node):
         res = super().deserialize(data, hashmap, restore_id)
         print("Deserialized CalcNode '%s'" % self.__class__.__name__, "res:", res)
         return res
+
+    def get_flow(self, input):
+        match input:
+            case 0:
+                return self.out_flow_1
+            case 1:
+                return self.out_flow_2

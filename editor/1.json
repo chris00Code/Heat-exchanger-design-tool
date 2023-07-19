@@ -6,8 +6,8 @@
         {
             "id": 1676216124048,
             "title": "Input Flow",
-            "pos_x": 59.0,
-            "pos_y": -84.0,
+            "pos_x": -209.0,
+            "pos_y": -159.0,
             "inputs": [],
             "outputs": [
                 {
@@ -21,12 +21,189 @@
             "content": {
                 "flow": {
                     "fluid": "water",
-                    "temperature": 54654.0,
+                    "temperature": 165.0,
                     "mass_flow_rate": 1.0
                 }
             },
             "op_code": 1
+        },
+        {
+            "id": 2471468015120,
+            "title": "co-current",
+            "pos_x": 53.0,
+            "pos_y": -162.0,
+            "inputs": [
+                {
+                    "id": 2471309369744,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2471468015760,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2471468015824,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2471468016080,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {},
+            "op_code": 7
+        },
+        {
+            "id": 2471468042256,
+            "title": "Input Flow",
+            "pos_x": -206.0,
+            "pos_y": 13.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2471468041424,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "flow": {
+                    "fluid": "air",
+                    "temperature": 293.15,
+                    "mass_flow_rate": 1.0
+                }
+            },
+            "op_code": 1
+        },
+        {
+            "id": 2471468050640,
+            "title": "co-current",
+            "pos_x": 277.0,
+            "pos_y": -162.18749999999994,
+            "inputs": [
+                {
+                    "id": 2471468043024,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2471468054608,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2471468054224,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2471468052752,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {},
+            "op_code": 7
+        },
+        {
+            "id": 2471468140496,
+            "title": "Output",
+            "pos_x": 278.1249999999999,
+            "pos_y": -309.375,
+            "inputs": [
+                {
+                    "id": 2471468149584,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 2
+        },
+        {
+            "id": 2471468365648,
+            "title": "Output",
+            "pos_x": 285.64453124999994,
+            "pos_y": 83.00781249999997,
+            "inputs": [
+                {
+                    "id": 2471468363920,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 2
         }
     ],
-    "edges": []
+    "edges": [
+        {
+            "id": 2471468023632,
+            "edge_type": 2,
+            "start": 1676222851280,
+            "end": 2471309369744
+        },
+        {
+            "id": 2471468049680,
+            "edge_type": 2,
+            "start": 2471468041424,
+            "end": 2471468015760
+        },
+        {
+            "id": 2471468055504,
+            "edge_type": 2,
+            "start": 2471468015824,
+            "end": 2471468043024
+        },
+        {
+            "id": 2471468143760,
+            "edge_type": 2,
+            "start": 2471468016080,
+            "end": 2471468054608
+        },
+        {
+            "id": 2471468257168,
+            "edge_type": 2,
+            "start": 2471468015824,
+            "end": 2471468149584
+        },
+        {
+            "id": 2471468443728,
+            "edge_type": 2,
+            "start": 2471468363920,
+            "end": 2471468016080
+        }
+    ]
 }
