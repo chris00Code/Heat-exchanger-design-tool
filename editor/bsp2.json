@@ -1,0 +1,317 @@
+{
+    "id": 2416730374096,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 2416730527056,
+            "title": "Input Flow",
+            "pos_x": -623.0,
+            "pos_y": 123.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2416815113872,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "flow": {
+                    "fluid": "water",
+                    "temperature": 293.15,
+                    "mass_flow_rate": 1.0
+                }
+            },
+            "op_code": 1
+        },
+        {
+            "id": 2416730519184,
+            "title": "co-current",
+            "pos_x": -230.0,
+            "pos_y": 122.0,
+            "inputs": [
+                {
+                    "id": 2416815116304,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2416815118352,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2416815114832,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2416815118992,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {},
+            "op_code": 4,
+            "heat_capacity_flow": 1187.25
+        },
+        {
+            "id": 2416815127376,
+            "title": "co-current",
+            "pos_x": 88.0,
+            "pos_y": 118.0,
+            "inputs": [
+                {
+                    "id": 2416815124560,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2416815123024,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2416815123088,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2416815116496,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {},
+            "op_code": 4,
+            "heat_capacity_flow": 1187.25
+        },
+        {
+            "id": 2416815123728,
+            "title": "co-current",
+            "pos_x": -231.0,
+            "pos_y": -148.0,
+            "inputs": [
+                {
+                    "id": 2416815233424,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2416815232912,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2416815234192,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2416815230224,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {},
+            "op_code": 4,
+            "heat_capacity_flow": 1187.25
+        },
+        {
+            "id": 2416815237072,
+            "title": "co-current",
+            "pos_x": 90.0,
+            "pos_y": -158.0,
+            "inputs": [
+                {
+                    "id": 2416815237136,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2416815238608,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2416815232464,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2416815238672,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {},
+            "op_code": 4,
+            "heat_capacity_flow": 1187.25
+        },
+        {
+            "id": 2416815320528,
+            "title": "output flow",
+            "pos_x": -629.0,
+            "pos_y": -98.0,
+            "inputs": [
+                {
+                    "id": 2416815315280,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 2
+        },
+        {
+            "id": 2416815321552,
+            "title": "output flow",
+            "pos_x": -230.0,
+            "pos_y": -348.0,
+            "inputs": [
+                {
+                    "id": 2416815313488,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 2
+        },
+        {
+            "id": 2416815395472,
+            "title": "Input Flow",
+            "pos_x": 91.0,
+            "pos_y": -452.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2416815394064,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "flow": {
+                    "fluid": "air",
+                    "temperature": 293.15,
+                    "mass_flow_rate": 1.0
+                }
+            },
+            "op_code": 1
+        }
+    ],
+    "edges": [
+        {
+            "id": 2416815505680,
+            "edge_type": 2,
+            "start": 2416815113872,
+            "end": 2416815118352
+        },
+        {
+            "id": 2416815512080,
+            "edge_type": 2,
+            "start": 2416815118992,
+            "end": 2416815123024
+        },
+        {
+            "id": 2416815589136,
+            "edge_type": 2,
+            "start": 2416815116496,
+            "end": 2416815238608
+        },
+        {
+            "id": 2416815594320,
+            "edge_type": 2,
+            "start": 2416815238672,
+            "end": 2416815232912
+        },
+        {
+            "id": 2416815600912,
+            "edge_type": 2,
+            "start": 2416815230224,
+            "end": 2416815315280
+        },
+        {
+            "id": 2416815595664,
+            "edge_type": 2,
+            "start": 2416815394064,
+            "end": 2416815237136
+        },
+        {
+            "id": 2416815656976,
+            "edge_type": 2,
+            "start": 2416815232464,
+            "end": 2416815124560
+        },
+        {
+            "id": 2416747130896,
+            "edge_type": 2,
+            "start": 2416815123088,
+            "end": 2416815116304
+        },
+        {
+            "id": 2416815937936,
+            "edge_type": 2,
+            "start": 2416815114832,
+            "end": 2416815233424
+        },
+        {
+            "id": 2416815934288,
+            "edge_type": 2,
+            "start": 2416815234192,
+            "end": 2416815313488
+        }
+    ]
+}
