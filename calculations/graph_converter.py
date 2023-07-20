@@ -1,4 +1,71 @@
 import networkx as nx
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+class ExNode:
+    def __init__(self, name, par):
+        self.name = name
+        self.par = par
+
+
+n1 = ExNode("A", 1)
+n2 = ExNode("B", 2)
+n3 = ExNode("C", 2)
+n4 = ExNode("D", 2)
+i1 = ExNode("Input1", 1)
+i2 = ExNode("Input2", 2)
+
+# bsp1
+nodes = [n4, n3, n2, n1]
+inputs = [i1, i2]
+path1 = [(n3, n2), (n2, n1), (n1, n4),(i1,n3)]
+path2 = [(n1, n2), (n2, n3), (n3, n4),(i2,n1)]
+"""#HUE
+nodes=[n1,n2,n3]
+path1 = []
+path2 = [(n1,n2),(n2,n3)]
+#strelow
+nodes = [n1,n2,n3,n4]
+path1 = [(n1, n2,{'weight': 0.75}), (n1, n3,{'weight': 0.25}), (n2, n4),(n3,n4)]
+path2 = [(n2, n1),(n4,n3)]
+"""
+# Erster Pfad
+G1 = nx.DiGraph()
+G1.add_nodes_from(inputs)
+G1.add_edges_from(path1)
+adj_matrix1 = nx.adjacency_matrix(G1, nodelist=nodes).todense()
+# Anzeigen der Adjazenzmatrizen
+print("Adjazenzmatrix für den ersten Pfad:")
+print(adj_matrix1)
+
+inp1 = nx.adjacency_matrix(G1,nodelist=[i1,i2,n1,n2,n3,n4]).todense()
+print(inp1)
+
+# Zweiter Pfad
+G2 = nx.DiGraph()
+G2.add_nodes_from(nodes)
+G2.add_edges_from(path2)
+adj_matrix2 = nx.adjacency_matrix(G2, nodelist=nodes).todense()
+
+print("Adjazenzmatrix für den zweiten Pfad:")
+print(adj_matrix2)
+
+# Plot des ersten Graphen
+plt.figure(figsize=(10, 8))
+pos1 = nx.spring_layout(G1)
+nx.draw(G1, pos=pos1, with_labels=True, node_size=500, node_color="skyblue", font_size=10, font_weight="bold")
+plt.title("Plot des ersten Graphen")
+
+# Plot des zweiten Graphen
+plt.figure(figsize=(10, 8))
+pos2 = nx.spring_layout(G2)
+nx.draw(G2, pos=pos2, with_labels=True, node_size=500, node_color="skyblue", font_size=10, font_weight="bold")
+plt.title("Plot des zweiten Graphen")
+
+plt.show()
+
+"""import networkx as nx
 import json
 import matplotlib.pyplot as plt
 
@@ -46,7 +113,8 @@ for flow in flows:
     current_node_id = next_node_id
 
 
-    print(node_list)
+    print(node_list)"""
+
 """
 G = nx.MultiGraph()
 
