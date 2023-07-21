@@ -2,8 +2,8 @@ from qtpy.QtGui import QImage, QPixmap
 from qtpy.QtCore import QRectF
 from qtpy.QtWidgets import QLabel
 from collections import OrderedDict
-#from nodeeditor.node_node import Node
-from new_node_node import Node
+from nodeeditor.node_node import Node
+# from new_node_node import Node
 from nodeeditor.node_content_widget import QDMNodeContentWidget
 from nodeeditor.node_graphics_node import QDMGraphicsNode
 from nodeeditor.node_socket import LEFT_CENTER, RIGHT_CENTER
@@ -11,6 +11,7 @@ from nodeeditor.utils import dumpException
 from nodeeditor.node_serializable import Serializable
 from flow import Flow
 from graph_node import GraphNode
+
 
 class FlowGraphicsNode(QDMGraphicsNode):
     def initSizes(self):
@@ -81,7 +82,7 @@ class FlowNode(Node):
 
     def eval(self):
         if not self.isDirty() and not self.isInvalid():
-            #print(" _> returning cached %s value:" % self.__class__.__name__, self.value)
+            # print(" _> returning cached %s value:" % self.__class__.__name__, self.value)
             return self.flow
 
         try:
@@ -106,30 +107,24 @@ class FlowNode(Node):
         self.markDirty()
         self.eval()
 
-    def serialize(self) -> OrderedDict:
-        inputs, outputs = [], []
-        for socket in self.inputs: inputs.append(socket.serialize())
-        for socket in self.outputs: outputs.append(socket.serialize())
-        ser_content = self.content.serialize() if isinstance(self.content, Serializable) else {}
-        return OrderedDict([
-            ('id', self.id),
-            ('title', self.title),
-            ('pos_x', self.grNode.scenePos().x()),
-            ('pos_y', self.grNode.scenePos().y()),
-            ('inputs', inputs),
-            ('outputs', outputs),
-            ('content', ser_content),
-        ])
-        """
+    def serialize(self):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
+        print(self.serialize_Children())
+        #res['childrens'] = self.serialize_Children()
         return res
-        """
 
     def deserialize(self, data, hashmap={}, restore_id=True):
         res = super().deserialize(data, hashmap, restore_id)
         print("Deserialized CalcNode '%s'" % self.__class__.__name__, "res:", res)
         return res
+
+    def serialize_Children(self):
+        childrens = self.getChildrenNodes()
+        ser_childs = []
+        for child in childrens:
+            ser_childs.append(child.serialize())
+        return ser_childs
 
     def get_flow(self, value=None):
         return self.flow
