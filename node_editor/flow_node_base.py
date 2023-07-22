@@ -1,19 +1,22 @@
-from qtpy.QtGui import QImage, QPixmap
+# Import necessary modules from the qtpy library
+from qtpy.QtGui import QImage
 from qtpy.QtCore import QRectF
 from qtpy.QtWidgets import QLabel
-from collections import OrderedDict
+
+# Import modules from nodeeditor
 from nodeeditor.node_node import Node
-# from new_node_node import Node
 from nodeeditor.node_content_widget import QDMNodeContentWidget
 from nodeeditor.node_graphics_node import QDMGraphicsNode
 from nodeeditor.node_socket import LEFT_CENTER, RIGHT_CENTER
 from nodeeditor.utils import dumpException
-from nodeeditor.node_serializable import Serializable
-from flow import Flow
+
+# Import custom modules from the project
 from graph_node import GraphNode
 
 
+# Custom class that extends QDMGraphicsNode to customize node appearance
 class FlowGraphicsNode(QDMGraphicsNode):
+    # Initialize default sizes and other parameters for the node
     def initSizes(self):
         super().initSizes()
         self.width = 160
@@ -23,6 +26,7 @@ class FlowGraphicsNode(QDMGraphicsNode):
         self.title_horizontal_padding = 8
         self.title_vertical_padding = 10
 
+    # Load custom icons for the node
     def initAssets(self):
         super().initAssets()
         self.icons = QImage("icons/status_icons.png")
@@ -41,48 +45,56 @@ class FlowGraphicsNode(QDMGraphicsNode):
         )
 
 
+# Custom class that extends QDMNodeContentWidget for displaying node content
 class FlowContent(QDMNodeContentWidget):
+    # Initialize the UI for the node content
     def initUI(self):
         lbl = QLabel(self.node.content_label, self)
         lbl.setObjectName(self.node.content_label_objname)
 
 
 class FlowNode(Node):
+    """
+    Class representing 'Node' in the 'scence'
+    contains relevant info of a Flow
+    """
+
+    GraphicsNode_class = FlowGraphicsNode
+    NodeContent_class = FlowContent
+    # @TODO may changing sockets fpr better usage
+    # Socket_class = Socket
+
     icon = "icons/flow.png"
     op_code = 0
     op_title = "Undefined"
     content_label = ""
     content_label_objname = "calc_node_bg"
 
-    GraphicsNode_class = FlowGraphicsNode
-    NodeContent_class = FlowContent
-
     def __init__(self, scene, inputs=[], outputs=[]):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
-        self.flow = None
 
         self.graphNode = GraphNode(self.graph_node_title, self.id)
         # it's really important to mark all nodes Dirty by default
         self.markDirty()
+
+        self.flow = None
 
     def initSettings(self):
         super().initSettings()
         self.input_socket_position = LEFT_CENTER
         self.output_socket_position = RIGHT_CENTER
 
-    def evalOperation(self, input1, input2):
-        return 123
+        # @TODO may change to single edge and introduce mixers
+        # self.output_multi_edged = True
+
+    # node evaluations
 
     def evalImplementation(self):
         pass
 
-    def evalGraph(self):
-        output_ids = self.getChildrenNodes()
-        self.graphNode.output_ids = output_ids
-
     def eval(self):
         if not self.isDirty() and not self.isInvalid():
-            # print(" _> returning cached %s value:" % self.__class__.__name__, self.value)
+            print(" _> returning cached %s value:" % self.__class__.__name__, self.flow)
             return self.flow
 
         try:
@@ -107,6 +119,8 @@ class FlowNode(Node):
         self.markDirty()
         self.eval()
 
+    # serialization functions
+
     def serialize(self):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
@@ -115,7 +129,7 @@ class FlowNode(Node):
 
     def deserialize(self, data, hashmap={}, restore_id=True):
         res = super().deserialize(data, hashmap, restore_id)
-        print("Deserialized CalcNode '%s'" % self.__class__.__name__, "res:", res)
+        print("Deserialized FlowNode '%s'" % self.__class__.__name__, "res:", res)
         return res
 
     def serialize_Children(self):
@@ -127,3 +141,7 @@ class FlowNode(Node):
 
     def get_flow(self, value=None):
         return self.flow
+
+    def evalGraph(self):
+        output_ids = self.getChildrenNodes()
+        self.graphNode.output_ids = output_ids

@@ -6,7 +6,7 @@ from nodeeditor.node_content_widget import QDMNodeContentWidget
 from nodeeditor.utils import dumpException
 from PyQt5.QtWidgets import QVBoxLayout, QLabel
 from PyQt5.QtGui import QDoubleValidator
-from flow import Flow
+from ex_flow import Flow
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qtpy.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
 

@@ -4,11 +4,12 @@ from qtpy.QtWidgets import QMdiArea, QWidget, QDockWidget, QAction, QMessageBox,
 from qtpy.QtCore import Qt, QSignalMapper
 
 from nodeeditor.utils import loadStylesheets
-from nodeeditor.node_editor_window import NodeEditorWindow
-from calc_sub_window import CalculatorSubWindow
-from calc_drag_listbox import QDMDragListbox
 from nodeeditor.utils import dumpException, pp
-from calc_conf import CALC_NODES
+from nodeeditor.node_editor_window import NodeEditorWindow
+
+from nodeeditor_sub_window import NodeeditorSubWindow
+from calc_drag_listbox import QDMDragListbox
+from calc_conf import EXCHANGER_NODES
 
 # Enabling edge validators
 from nodeeditor.node_edge import Edge
@@ -29,7 +30,7 @@ import qss.nodeeditor_dark_resources
 DEBUG = True
 
 
-class GrapEditorWindow(NodeEditorWindow):
+class NodeEditorWindow(NodeEditorWindow):
 
     def initUI(self):
         self.name_company = 'Blenderfreak'
@@ -45,7 +46,7 @@ class GrapEditorWindow(NodeEditorWindow):
 
         if DEBUG:
             print("Registered nodes:")
-            pp(CALC_NODES)
+            pp(EXCHANGER_NODES)
 
 
         self.mdiArea = QMdiArea()
@@ -126,7 +127,7 @@ class GrapEditorWindow(NodeEditorWindow):
                         self.mdiArea.setActiveSubWindow(existing)
                     else:
                         # we need to create new subWindow and open the file
-                        nodeeditor = CalculatorSubWindow()
+                        nodeeditor = NodeeditorSubWindow()
                         if nodeeditor.fileLoad(fname):
                             self.statusBar().showMessage("File %s loaded" % fname, 5000)
                             nodeeditor.setTitle()
@@ -250,7 +251,7 @@ class GrapEditorWindow(NodeEditorWindow):
         self.statusBar().showMessage("Ready")
 
     def createMdiChild(self, child_widget=None):
-        nodeeditor = child_widget if child_widget is not None else CalculatorSubWindow()
+        nodeeditor = child_widget if child_widget is not None else NodeeditorSubWindow()
         subwnd = self.mdiArea.addSubWindow(nodeeditor)
         subwnd.setWindowIcon(self.empty_icon)
         # nodeeditor.scene.addItemSelectedListener(self.updateEditMenu)

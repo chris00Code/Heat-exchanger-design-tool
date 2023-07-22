@@ -1,17 +1,13 @@
 from qtpy.QtGui import QImage
 from qtpy.QtCore import QRectF
-from qtpy.QtWidgets import QLabel
-from qtpy.QtCore import Qt
 from nodeeditor.node_node import Node
 from nodeeditor.node_content_widget import QDMNodeContentWidget
 from nodeeditor.node_graphics_node import QDMGraphicsNode
 from nodeeditor.node_socket import LEFT_CENTER, RIGHT_CENTER
 from nodeeditor.utils import dumpException
-from PyQt5 import QtCore, QtGui, QtWidgets
-from qtpy.QtWidgets import QLineEdit
-from PyQt5.QtWidgets import QVBoxLayout, QLabel
-from qtpy.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
-from flow import Flow
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QLabel
+from qtpy.QtWidgets import QGridLayout, QLabel, QLineEdit
 from PyQt5.QtGui import QDoubleValidator
 
 
