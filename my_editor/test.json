@@ -1,0 +1,175 @@
+{
+    "id": 1753129501328,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 1753145021584,
+            "title": "Input Flow",
+            "pos_x": -327.0,
+            "pos_y": -146.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 1753145050512,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "flow": {
+                    "fluid": "water",
+                    "temperature": 293.15,
+                    "mass_flow_rate": 1.0
+                }
+            },
+            "op_code": 1,
+            "children_ids": [
+                1753145060688,
+                1753145060688
+            ]
+        },
+        {
+            "id": 1753145057104,
+            "title": "output flow",
+            "pos_x": 184.0,
+            "pos_y": -43.0,
+            "inputs": [
+                {
+                    "id": 1753088214480,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 2,
+            "children_ids": []
+        },
+        {
+            "id": 1753145060688,
+            "title": "counter-current",
+            "pos_x": -68.0,
+            "pos_y": -158.0,
+            "inputs": [
+                {
+                    "id": 1753090576656,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1753145060816,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 1753145060560,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1753145060944,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {},
+            "op_code": 3,
+            "heat_capacity_flow": null,
+            "children_ids": [
+                1753145145168,
+                1753145145168
+            ]
+        },
+        {
+            "id": 1753145145168,
+            "title": "co-current",
+            "pos_x": 245.0,
+            "pos_y": -111.0,
+            "inputs": [
+                {
+                    "id": 1753145145104,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1753145144976,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 1753145145296,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 1753145144912,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {},
+            "op_code": 4,
+            "heat_capacity_flow": null,
+            "children_ids": [
+                1753145057104
+            ]
+        }
+    ],
+    "edges": [
+        {
+            "id": 1753145141328,
+            "edge_type": 2,
+            "start": 1753145050512,
+            "end": 1753090576656
+        },
+        {
+            "id": 1753145273040,
+            "edge_type": 2,
+            "start": 1753145060560,
+            "end": 1753145145104
+        },
+        {
+            "id": 1753145276752,
+            "edge_type": 2,
+            "start": 1753145145296,
+            "end": 1753088214480
+        },
+        {
+            "id": 1753145411728,
+            "edge_type": 2,
+            "start": 1753145050512,
+            "end": 1753145060816
+        },
+        {
+            "id": 1753145415760,
+            "edge_type": 2,
+            "start": 1753145060944,
+            "end": 1753145144976
+        }
+    ]
+}

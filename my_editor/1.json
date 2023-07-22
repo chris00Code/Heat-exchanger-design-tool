@@ -25,7 +25,10 @@
                     "mass_flow_rate": 1.0
                 }
             },
-            "op_code": 1
+            "op_code": 1,
+            "children_ids": [
+                2822468038224
+            ]
         },
         {
             "id": 2822467987856,
@@ -49,7 +52,10 @@
                     "mass_flow_rate": 1.0
                 }
             },
-            "op_code": 1
+            "op_code": 1,
+            "children_ids": [
+                2822468038224
+            ]
         },
         {
             "id": 2822468038224,
@@ -149,7 +155,8 @@
             ],
             "outputs": [],
             "content": {},
-            "op_code": 2
+            "op_code": 2,
+            "children_ids": []
         },
         {
             "id": 2822468285136,
@@ -167,7 +174,8 @@
             ],
             "outputs": [],
             "content": {},
-            "op_code": 2
+            "op_code": 2,
+            "children_ids": []
         }
     ],
     "edges": [

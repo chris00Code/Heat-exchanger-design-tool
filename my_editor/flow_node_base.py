@@ -110,8 +110,7 @@ class FlowNode(Node):
     def serialize(self):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
-        print(self.serialize_Children())
-        #res['childrens'] = self.serialize_Children()
+        res['children_ids'] = self.serialize_Children()
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
@@ -123,7 +122,7 @@ class FlowNode(Node):
         childrens = self.getChildrenNodes()
         ser_childs = []
         for child in childrens:
-            ser_childs.append(child.serialize())
+            ser_childs.append(child.id)
         return ser_childs
 
     def get_flow(self, value=None):

@@ -226,6 +226,7 @@ class ExNode(Node):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
         res['heat_capacity_flow'] = self.heat_capacity_flow
+        res['children_ids'] = self.serialize_Children()
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
@@ -244,3 +245,10 @@ class ExNode(Node):
                 return self.out_flow_1
             case 1:
                 return self.out_flow_2
+
+    def serialize_Children(self):
+        childrens = self.getChildrenNodes()
+        ser_childs = []
+        for child in childrens:
+            ser_childs.append(child.id)
+        return ser_childs
