@@ -1,0 +1,345 @@
+{
+    "id": 2504709095824,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 2504724946704,
+            "title": "Input Flow",
+            "pos_x": -340.0,
+            "pos_y": 8.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2504724975696,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "flow": {
+                    "fluid": "water",
+                    "temperature": 293.15,
+                    "mass_flow_rate": 1.0
+                }
+            },
+            "op_code": 1,
+            "children_ids": [
+                2504724980752
+            ]
+        },
+        {
+            "id": 2504724980752,
+            "title": "co-current",
+            "pos_x": -25.0,
+            "pos_y": 8.0,
+            "inputs": [
+                {
+                    "id": 2504724981456,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2504724981520,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2504724981584,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2504724981648,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {
+                "heat_transferability": 4749.0
+            },
+            "op_code": 4,
+            "children_ids": [
+                2504725064784,
+                2504725055376
+            ]
+        },
+        {
+            "id": 2504725055376,
+            "title": "co-current",
+            "pos_x": 251.0,
+            "pos_y": 7.0,
+            "inputs": [
+                {
+                    "id": 2504725054864,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2504725054928,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2504725055504,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2504725054992,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {
+                "heat_transferability": 4749.0
+            },
+            "op_code": 4,
+            "children_ids": [
+                2504724980752,
+                2504725157840
+            ]
+        },
+        {
+            "id": 2504725064784,
+            "title": "co-current",
+            "pos_x": -30.0,
+            "pos_y": -249.0,
+            "inputs": [
+                {
+                    "id": 2504725064656,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2504725064720,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2504725065104,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2504725064976,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {
+                "heat_transferability": 4749.0
+            },
+            "op_code": 4,
+            "children_ids": [
+                2504725223440,
+                2504725276432
+            ]
+        },
+        {
+            "id": 2504725157840,
+            "title": "co-current",
+            "pos_x": 253.0,
+            "pos_y": -243.0,
+            "inputs": [
+                {
+                    "id": 2504725158480,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2504725158288,
+                    "index": 1,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 2504725157968,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                },
+                {
+                    "id": 2504725158224,
+                    "index": 1,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 2
+                }
+            ],
+            "content": {
+                "heat_transferability": 4749.0
+            },
+            "op_code": 4,
+            "children_ids": [
+                2504725055376,
+                2504725064784
+            ]
+        },
+        {
+            "id": 2504725160272,
+            "title": "Input Flow",
+            "pos_x": 256.2499999999999,
+            "pos_y": -494.9999999999998,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 2504725161680,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "flow": {
+                    "fluid": "water",
+                    "temperature": 373.15,
+                    "mass_flow_rate": 1.0
+                }
+            },
+            "op_code": 1,
+            "children_ids": [
+                2504725157840
+            ]
+        },
+        {
+            "id": 2504725223440,
+            "title": "output flow",
+            "pos_x": -27.343749999999986,
+            "pos_y": -417.9687499999997,
+            "inputs": [
+                {
+                    "id": 2504725220624,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 2,
+            "children_ids": []
+        },
+        {
+            "id": 2504725276432,
+            "title": "output flow",
+            "pos_x": -337.8906249999998,
+            "pos_y": -195.3124999999999,
+            "inputs": [
+                {
+                    "id": 2504725277392,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 2,
+            "children_ids": []
+        }
+    ],
+    "edges": [
+        {
+            "id": 2504725404496,
+            "edge_type": 3,
+            "start": 2504724975696,
+            "end": 2504724981520
+        },
+        {
+            "id": 2504725409104,
+            "edge_type": 2,
+            "start": 2504724981648,
+            "end": 2504725054928
+        },
+        {
+            "id": 2504725464464,
+            "edge_type": 2,
+            "start": 2504725054992,
+            "end": 2504725158288
+        },
+        {
+            "id": 2504725404624,
+            "edge_type": 2,
+            "start": 2504725158224,
+            "end": 2504725064720
+        },
+        {
+            "id": 2504725479376,
+            "edge_type": 2,
+            "start": 2504725064976,
+            "end": 2504725277392
+        },
+        {
+            "id": 2504725478224,
+            "edge_type": 2,
+            "start": 2504725161680,
+            "end": 2504725158480
+        },
+        {
+            "id": 2504725475344,
+            "edge_type": 2,
+            "start": 2504725157968,
+            "end": 2504725054864
+        },
+        {
+            "id": 2504728887248,
+            "edge_type": 3,
+            "start": 2504725055504,
+            "end": 2504724981456
+        },
+        {
+            "id": 2504725476176,
+            "edge_type": 2,
+            "start": 2504724981584,
+            "end": 2504725064656
+        },
+        {
+            "id": 2504725276176,
+            "edge_type": 2,
+            "start": 2504725065104,
+            "end": 2504725220624
+        }
+    ]
+}

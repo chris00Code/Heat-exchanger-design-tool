@@ -1,17 +1,17 @@
 {
-    "id": 1753129501328,
+    "id": 2957380241680,
     "scene_width": 64000,
     "scene_height": 64000,
     "nodes": [
         {
-            "id": 1753145021584,
+            "id": 2957496534800,
             "title": "Input Flow",
-            "pos_x": -327.0,
-            "pos_y": -146.0,
+            "pos_x": -201.0,
+            "pos_y": -94.0,
             "inputs": [],
             "outputs": [
                 {
-                    "id": 1753145050512,
+                    "id": 2957496547280,
                     "index": 0,
                     "multi_edges": true,
                     "position": 5,
@@ -27,44 +27,24 @@
             },
             "op_code": 1,
             "children_ids": [
-                1753145060688,
-                1753145060688
+                2957496618384
             ]
         },
         {
-            "id": 1753145057104,
-            "title": "output flow",
-            "pos_x": 184.0,
-            "pos_y": -43.0,
-            "inputs": [
-                {
-                    "id": 1753088214480,
-                    "index": 0,
-                    "multi_edges": false,
-                    "position": 2,
-                    "socket_type": 1
-                }
-            ],
-            "outputs": [],
-            "content": {},
-            "op_code": 2,
-            "children_ids": []
-        },
-        {
-            "id": 1753145060688,
+            "id": 2957496618384,
             "title": "counter-current",
-            "pos_x": -68.0,
-            "pos_y": -158.0,
+            "pos_x": 72.0,
+            "pos_y": -92.0,
             "inputs": [
                 {
-                    "id": 1753090576656,
+                    "id": 2957378870096,
                     "index": 0,
                     "multi_edges": false,
                     "position": 2,
                     "socket_type": 2
                 },
                 {
-                    "id": 1753145060816,
+                    "id": 2957384002256,
                     "index": 1,
                     "multi_edges": false,
                     "position": 2,
@@ -73,103 +53,37 @@
             ],
             "outputs": [
                 {
-                    "id": 1753145060560,
+                    "id": 2957411329744,
                     "index": 0,
                     "multi_edges": true,
                     "position": 5,
                     "socket_type": 2
                 },
                 {
-                    "id": 1753145060944,
+                    "id": 2957496619024,
                     "index": 1,
                     "multi_edges": true,
                     "position": 5,
                     "socket_type": 2
                 }
             ],
-            "content": {},
+            "content": {
+                "heat_transferability": null
+            },
             "op_code": 3,
-            "heat_capacity_flow": null,
-            "children_ids": [
-                1753145145168,
-                1753145145168
-            ]
-        },
-        {
-            "id": 1753145145168,
-            "title": "co-current",
-            "pos_x": 245.0,
-            "pos_y": -111.0,
-            "inputs": [
-                {
-                    "id": 1753145145104,
-                    "index": 0,
-                    "multi_edges": false,
-                    "position": 2,
-                    "socket_type": 2
-                },
-                {
-                    "id": 1753145144976,
-                    "index": 1,
-                    "multi_edges": false,
-                    "position": 2,
-                    "socket_type": 2
-                }
-            ],
-            "outputs": [
-                {
-                    "id": 1753145145296,
-                    "index": 0,
-                    "multi_edges": true,
-                    "position": 5,
-                    "socket_type": 2
-                },
-                {
-                    "id": 1753145144912,
-                    "index": 1,
-                    "multi_edges": true,
-                    "position": 5,
-                    "socket_type": 2
-                }
-            ],
-            "content": {},
-            "op_code": 4,
-            "heat_capacity_flow": null,
-            "children_ids": [
-                1753145057104
-            ]
+            "flow_id": {
+                "1": 2957496534800,
+                "2": null
+            },
+            "children_ids": []
         }
     ],
     "edges": [
         {
-            "id": 1753145141328,
+            "id": 2957496627600,
             "edge_type": 2,
-            "start": 1753145050512,
-            "end": 1753090576656
-        },
-        {
-            "id": 1753145273040,
-            "edge_type": 2,
-            "start": 1753145060560,
-            "end": 1753145145104
-        },
-        {
-            "id": 1753145276752,
-            "edge_type": 2,
-            "start": 1753145145296,
-            "end": 1753088214480
-        },
-        {
-            "id": 1753145411728,
-            "edge_type": 2,
-            "start": 1753145050512,
-            "end": 1753145060816
-        },
-        {
-            "id": 1753145415760,
-            "edge_type": 2,
-            "start": 1753145060944,
-            "end": 1753145144976
+            "start": 2957496547280,
+            "end": 2957378870096
         }
     ]
 }

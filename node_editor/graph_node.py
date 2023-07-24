@@ -19,11 +19,12 @@ Node:
 
 
 class GraphNode:
-    def __init__(self, title: str = "Graph Node", node_id: hex = None, input_ids: list = [], output_ids: list = [],
+    def __init__(self, title: str = "Graph Node", node_id: hex = None, flow_ids: list = [], output_ids: list = [],
                  parameters: dict = {}):
         self._title = title
+        self._op_code = self.set_op_code()
         self._node_id = node_id
-        self._input_ids = input_ids
+        self._flow_ids = flow_ids
         self._output_ids = output_ids
         self._parameters = parameters
 
@@ -38,6 +39,16 @@ class GraphNode:
     def title(self, value):
         self._title = value
 
+    def set_op_code(self):
+        match self.title:
+            case "input":
+                value = 0
+            case "output":
+                value = 1
+            case _:
+                value = 2
+        return value
+
     @property
     def node_id(self):
         return self._node_id
@@ -47,12 +58,12 @@ class GraphNode:
         self._node_id = value
 
     @property
-    def input_ids(self):
-        return self._input_ids
+    def flow_ids(self):
+        return self._flow_ids
 
-    @input_ids.setter
-    def input_ids(self, value):
-        self._input_ids = value
+    @flow_ids.setter
+    def flow_ids(self, value):
+        self._flow_ids = value
 
     @property
     def output_ids(self):

@@ -1,3 +1,5 @@
+import json
+
 from qtpy.QtGui import QImage
 from qtpy.QtCore import QRectF
 from nodeeditor.node_node import Node
@@ -9,6 +11,7 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QLabel
 from qtpy.QtWidgets import QGridLayout, QLabel, QLineEdit
 from PyQt5.QtGui import QDoubleValidator
+from flow_node_base import FlowNode
 
 
 class ExGraphicsNode(QDMGraphicsNode):
@@ -79,7 +82,7 @@ class ExContent(QDMNodeContentWidget):
         label_6.setFont(font1)
         self.grid_layout.addWidget(label_6, 3, 0, 1, 2)
 
-        label_7 = QLabel("heat capacity flow:")
+        label_7 = QLabel("heat transferability:")
         self.grid_layout.addWidget(label_7, 4, 0, 1, 1)
         self.label_8 = QLineEdit("", self)
         self.label_8.setValidator(validator)
@@ -97,6 +100,21 @@ class ExContent(QDMNodeContentWidget):
         self.label_12.setValidator(validator)
         self.grid_layout.addWidget(self.label_12, 6, 1, 1, 1)
 
+    def serialize(self):
+        res = super().serialize()
+        res['heat_transferability'] = self.node.heat_transferability
+        return res
+
+    def deserialize(self, data, hashmap={}):
+        res = super().deserialize(data, hashmap)
+        try:
+            self.node.heat_transferability = float(data['heat_transferability'])
+            self.label_8.setText(str(self.node.heat_transferability))
+            return True & res
+        except Exception as e:
+            dumpException(e)
+        return res
+
 
 class ExNode(Node):
     icon = ""
@@ -112,7 +130,9 @@ class ExNode(Node):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
         self.out_flow_1 = None
         self.out_flow_2 = None
-        self.heat_capacity_flow = None
+        self.heat_transferability = None
+        self.flows = {"1": None, "2": None}
+        self.output_ids = {"1": None, "2": None}
         # it's really important to mark all nodes Dirty by default
         self.markDirty()
 
@@ -127,9 +147,6 @@ class ExNode(Node):
 
     def onCapFlowChanged(self):
         print("%s::__onCapChanged" % self.__class__.__name__)
-        l8 = self.content.label_8.text()
-        l10 = self.content.label_10.text()
-        l12 = self.content.label_12.text()
         if self.content.label_8.text() != '' \
                 and self.content.label_10.text() == '' \
                 and self.content.label_12.text() == '':
@@ -149,8 +166,8 @@ class ExNode(Node):
             self.content.label_8.setEnabled(True)
         self.markDirty()
         self.eval()
-        if self.heat_capacity_flow is not None:
-            self.content.label_8.setText(str(self.heat_capacity_flow))
+        if self.heat_transferability is not None:
+            self.content.label_8.setText(str(self.heat_transferability))
 
     # @TODO change heatcapacity flow when changed to None
     def evalOperation(self):
@@ -163,10 +180,18 @@ class ExNode(Node):
 
     # @TODO changing fluids when input changes
     def evalImplementation(self):
+        # @TODO correect eval
+        """
+        inp_1 = self.flows["1"]
+        inp_2 = self.flows["2"]
+
+        if inp_1 is not None:
+        """
         input_1 = self.getInputWithSocketIndex(0)
         input_2 = self.getInputWithSocketIndex(1)
 
         # @TODO implement diversification of flows when same fluids
+
         if not any(item is None for item in input_1):
             self.out_flow_1 = input_1[0].get_flow(input_1[1])
             fluid_1 = self.out_flow_1.fluid
@@ -196,6 +221,8 @@ class ExNode(Node):
         if not self.isDirty() and not self.isInvalid():
             print(" _> returning cached %s value:" % self.__class__.__name__)
             return None
+        self.set_flows()
+        self.set_output_ids()
         try:
             self.evalImplementation()
         except ValueError as e:
@@ -206,11 +233,11 @@ class ExNode(Node):
             self.markInvalid()
             self.grNode.setToolTip(str(e))
             dumpException(e)
-        self.heat_capacity_flow = self.evalOperation()
-        if self.heat_capacity_flow is None:
+        self.heat_transferability = self.evalOperation()
+        if self.heat_transferability is None:
             self.markDirty()
             self.markDescendantsDirty()
-            dumpException("heat capacity flow not defined")
+            dumpException("heat transferability not defined")
 
     def onInputChanged(self, socket=None):
         print("%s::__onInputChanged" % self.__class__.__name__)
@@ -221,17 +248,14 @@ class ExNode(Node):
     def serialize(self):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
-        res['heat_capacity_flow'] = self.heat_capacity_flow
-        res['children_ids'] = self.serialize_Children()
+        # res['flow_ids'] = self.flow_ids
+        res['flow_ids'] = self.serialize_flow_ids()
+        res['output_ids']= self.output_ids
+        #res['children_ids'] = self.serialize_Children()
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
         res = super().deserialize(data, hashmap, restore_id)
-        try:
-            self.heat_capacity_flow = float(data['heat_capacity_flow'])
-            self.content.label_8.setText(str(self.heat_capacity_flow))
-        except Exception as e:
-            dumpException(e)
         print("Deserialized CalcNode '%s'" % self.__class__.__name__, "res:", res)
         return res
 
@@ -248,3 +272,53 @@ class ExNode(Node):
         for child in childrens:
             ser_childs.append(child.id)
         return ser_childs
+
+    def serialize_flow_ids(self):
+        id_1 = get_flow_id(self.flows["1"], 1)
+        id_2 = get_flow_id(self.flows["2"], 2)
+        return {"1": id_1, "2": id_2}
+
+    def set_flow_ids(self):
+        inp_1 = self.getInput(0)
+        inp_2 = self.getInput(1)
+        self.flow_ids = {"1": get_flow_id(inp_1, 1), "2": get_flow_id(inp_2, 2)}
+
+    def set_flows(self):
+        inp_1 = self.getInput(0)
+        inp_2 = self.getInput(1)
+        self.flows = {"1": get_flows(inp_1, 1), "2": get_flows(inp_2, 2)}
+
+    def set_output_ids(self):
+        # @TODO implement multi edge output
+        try:
+            outp_1 = self.getOutputs(0)[0].id
+        except IndexError:
+            outp_1 = None
+        try:
+            outp_2 = self.getOutputs(1)[0].id
+        except IndexError:
+            outp_2=None
+        self.output_ids = {"1": outp_1, "2": outp_2}
+
+
+@staticmethod
+def get_flow_id(node, index):
+    if node is None:
+        return None
+    elif isinstance(node, FlowNode):
+        return node.id
+    elif isinstance(node, ExNode):
+        return node.flow_ids[f"{index}"]
+    else:
+        raise NotImplementedError
+
+@staticmethod
+def get_flows(node, index):
+    if node is None:
+        return None
+    elif isinstance(node, FlowNode):
+        return node
+    elif isinstance(node, ExNode):
+        return node.flows[f"{index}"]
+    else:
+        raise NotImplementedError

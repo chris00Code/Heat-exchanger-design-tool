@@ -78,6 +78,8 @@ class FlowNode(Node):
         self.markDirty()
 
         self.flow = None
+        # @TODO implement multi output
+        self.output_ids = {"1": None}
 
     def initSettings(self):
         super().initSettings()
@@ -93,10 +95,10 @@ class FlowNode(Node):
         pass
 
     def eval(self):
+        self.set_output_ids()
         if not self.isDirty() and not self.isInvalid():
             print(" _> returning cached %s value:" % self.__class__.__name__, self.flow)
             return self.flow
-
         try:
             self.evalGraph()
             flow = self.evalImplementation()
@@ -124,7 +126,8 @@ class FlowNode(Node):
     def serialize(self):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
-        res['children_ids'] = self.serialize_Children()
+        res['output_ids']= self.output_ids
+        #res['children_ids'] = self.serialize_Children()
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
@@ -145,3 +148,10 @@ class FlowNode(Node):
     def evalGraph(self):
         output_ids = self.getChildrenNodes()
         self.graphNode.output_ids = output_ids
+
+    def set_output_ids(self):
+        try:
+            outp_1 = self.getOutputs(0)[0].id
+        except IndexError:
+            outp_1 = None
+        self.output_ids = {"1": outp_1}

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from graph_node import GraphNode
 
 # Pfad zur JSON-Datei mit dem gespeicherten Graphen
-json_file_path = 'test.json'
+json_file_path = '3.json'
 
 # JSON-Datei laden
 with open(json_file_path, 'r') as file:
@@ -21,55 +21,83 @@ def get_node_ids(data):
 
 
 def create_graph_nodes(data):
-    grap_nodes = []
+    graph_nodes = []
     for node in data["nodes"]:
         op_code = node["op_code"]
         match op_code:
             case 1:
-                grap_node = GraphNode("input", node["id"], [], node["children_ids"], node["content"])
+                title = "input"
+                flow_ids = None
             case 2:
-                grap_node = GraphNode("output", node["id"], [], node["children_ids"], node["content"])
+                title = "output"
+                flow_ids = None
             case 3:
-                grap_node = GraphNode("cocurrent", node["id"], [], node["children_ids"], node["content"])
-        grap_nodes.append(grap_node)
-    return grap_nodes
-
-
-def get_paths(nodes):
-    paths = []
-    for input in get_input_nodes(nodes):
-        current_node = input
-        next_node_id = input.output_ids[0]
-        while next_node_id is not None:
-            next_node = get_node_by_id(nodes, next_node_id)
-            edge = (current_node, next_node)
-            paths.append(edge)
-            current_node = next_node
-            try:
-                next_node_id = current_node.output_ids[-1]
-            except IndexError:
-                next_node_id = None
-    return paths
+                title = "countercurrent"
+                flow_ids = node["flow_ids"]
+            case 4:
+                title = "cocurrent"
+                flow_ids = node["flow_ids"]
+        graph_node = GraphNode(title, node["id"], flow_ids, node["output_ids"], node["content"])
+        graph_nodes.append(graph_node)
+    return sorted(graph_nodes, key=lambda x: x._op_code)
 
 
 def get_input_nodes(nodes):
-    return [node for node in nodes if node.title == "input"]
+    return [node for node in nodes if node._op_code == 0]
+
+
+def get_output_nodes(nodes):
+    return [node for node in nodes if node._op_code == 1]
+
+
+def get_exchanger_nodes(nodes):
+    return [node for node in nodes if node._op_code > 1]
 
 
 def get_node_by_id(nodes, id):
+    if id is None:
+        return None
     for node in nodes:
         if node.node_id == id:
             return node
     return None
 
 
+def get_paths(nodes):
+    # @TODO implement multiedge and weights
+    paths = []
+    for input in get_input_nodes(nodes):
+        flow_id = input.node_id
+        path = []
+        current_node = input
+        next_node = get_node_by_id(nodes, input.output_ids["1"])
+        while next_node is not None:
+            connection = (current_node, next_node)
+            path.append(connection)
+            current_node = next_node
+            # when not output
+            if current_node._op_code != 1:
+                if current_node.flow_ids["1"] == flow_id:
+                    next_node = get_node_by_id(nodes, current_node.output_ids["1"])
+                elif current_node.flow_ids["2"] == flow_id:
+                    next_node = get_node_by_id(nodes, current_node.output_ids["2"])
+                else:
+                    raise ValueError("Input/Output Flows of Node don't match")
+            else:
+                next_node = None
+        paths.append(path)
+    return paths
+
+
 graph_nodes = create_graph_nodes(graph_data)
 input_nodes = get_input_nodes(graph_nodes)
+output_nodes = get_output_nodes(graph_nodes)
+
 paths = get_paths(graph_nodes)
 
 G1 = nx.DiGraph()
 G1.add_nodes_from(graph_nodes)
-G1.add_edges_from(paths)
+G1.add_edges_from(paths[2])
 
 # Plot des ersten Graphen
 plt.figure(figsize=(10, 8))

@@ -39,3 +39,4 @@ class Flow:
         temperature = data.get('temperature')
         mass_flow_rate = data.get('mass_flow_rate')
         return Flow(fluid, temperature, mass_flow_rate)
+
