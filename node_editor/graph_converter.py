@@ -1,6 +1,8 @@
 import networkx as nx
 import json
 import matplotlib.pyplot as plt
+import numpy as np
+
 from graph_node import GraphNode
 
 # Pfad zur JSON-Datei mit dem gespeicherten Graphen
@@ -89,12 +91,28 @@ def get_paths(nodes):
     return paths
 
 
+def get_heat_transferability_matrix(nodes):
+    dim = len(nodes)
+    heat_transferability = np.zeros((dim, dim))
+    for i, node in enumerate(nodes):
+        kA = node.parameters["heat_transferability"]
+        if kA is None:
+            heat_transferability[i, i] = kA
+        else:
+            raise ValueError
+    return heat_transferability
+
+
 graph_nodes = create_graph_nodes(graph_data)
 input_nodes = get_input_nodes(graph_nodes)
 output_nodes = get_output_nodes(graph_nodes)
-
+ex_nodes = get_exchanger_nodes(graph_nodes)
 paths = get_paths(graph_nodes)
 
+kA = get_heat_transferability_matrix(ex_nodes)
+print(kA)
+
+"""
 G1 = nx.DiGraph()
 G1.add_nodes_from(graph_nodes)
 G1.add_edges_from(paths[2])
@@ -105,3 +123,4 @@ pos1 = nx.spring_layout(G1)
 nx.draw(G1, pos=pos1, with_labels=True, node_size=500, node_color="skyblue", font_size=10, font_weight="bold")
 plt.title("Plot des ersten Graphen")
 plt.show()
+"""

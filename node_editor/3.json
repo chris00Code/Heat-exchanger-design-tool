@@ -68,7 +68,7 @@
                 }
             ],
             "content": {
-                "heat_transferability": null
+                "heat_transferability": 5.0
             },
             "op_code": 3,
             "flow_ids": {
@@ -118,7 +118,7 @@
                 }
             ],
             "content": {
-                "heat_transferability": null
+                "heat_transferability": 12.0
             },
             "op_code": 4,
             "flow_ids": {
