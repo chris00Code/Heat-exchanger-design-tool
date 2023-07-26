@@ -48,6 +48,7 @@ class Fluid:
     def temperature(self, value):
         self._temperature = value
 
+
     def _set_fluid(self):
         try:
             fluid = fld.Fluid(fld.FluidsList[self._title])
@@ -70,14 +71,6 @@ class Fluid:
         except:
             str_fluid = "state not yet defined"
         return str_fluid
-
-
-def update_mean_fluid_on_change(func):
-    def wrapper(self):
-        func(self)
-        self.update_mean_fluid()
-
-    return wrapper
 
 
 class Flow:
@@ -129,6 +122,12 @@ class Flow:
         mean_temp, mean_p = (in_temp + out_temp) / 2, (in_p + out_p) / 2
         self._mean_fluid.temperature, self._mean_fluid.pressure = mean_temp, mean_p
 
+    def get_heat_capacity_flow(self):
+        return self.mean_fluid.get_specific_heat() * self.mass_flow
+
+    def str_heat_capacity_flow(self):
+        return f"Wärmekapazitätsstrom: W_dot = %.2f W/K\n" % (self.get_heat_capacity_flow())
+
     def __repr__(self):
         str_in = str(self.in_fluid)
         str_out = str(self.out_fluid)
@@ -136,7 +135,7 @@ class Flow:
 
 
 if __name__ == "__main__":
-    fl = Fluid("Water")
+    fl = Fluid("Air")
     print(fl.get_specific_heat())
     fl.pressure = 500e3
     print(fl._fluid.temperature)
@@ -146,4 +145,6 @@ if __name__ == "__main__":
     flow.in_fluid.temperature = 500
     print(flow)
     mean = flow.mean_fluid
-    print(mean)
+
+    print(flow.mean_fluid.temperature)
+    print(flow.str_heat_capacity_flow())
