@@ -122,6 +122,11 @@ class Flow:
         mean_temp, mean_p = (in_temp + out_temp) / 2, (in_p + out_p) / 2
         self._mean_fluid.temperature, self._mean_fluid.pressure = mean_temp, mean_p
 
+
+    @property
+    def heat_capacity_flow(self):
+        return self.mean_fluid.get_specific_heat() * self.mass_flow
+
     def get_heat_capacity_flow(self):
         return self.mean_fluid.get_specific_heat() * self.mass_flow
 
