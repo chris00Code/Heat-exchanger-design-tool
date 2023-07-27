@@ -5,6 +5,7 @@ from os import path
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
 class Node:
     def __init__(self, title: str = "Node", node_id: hex = None, flow_ids: list = [], output_ids: list = [],
                  parameters: dict = {}):
@@ -12,6 +13,7 @@ class Node:
         self._op_code = self.set_op_code()
         self._node_id = node_id
         self._flow_ids = flow_ids
+        self._input_ids = None
         self._output_ids = output_ids
         self._parameters = parameters
 
@@ -63,6 +65,14 @@ class Node:
     @output_ids.setter
     def output_ids(self, value):
         self._output_ids = value
+
+    @property
+    def input_ids(self):
+        return self._input_ids
+
+    @output_ids.setter
+    def input_ids(self, value):
+        self._input_ids = value
 
     @property
     def parameters(self):
@@ -141,6 +151,7 @@ class GraphRepresentation:
     def paths(self):
         return self._paths
 
+    """
     def _create_paths(self):
         paths = []
         input_nodes = self.input_nodes
@@ -165,13 +176,36 @@ class GraphRepresentation:
                     next_node = None
             paths.append(path)
         return paths
+    """
+
+    def _create_paths(self):
+        paths = {"11": [], "12": [], "21": [], "22": []}
+        for node in ex_nodes:
+            cur_in_ids = node.input_ids
+            for i, id in enumerate(cur_in_ids):
+                prev_node = self.get_node_by_id(id)
+                prev_out_ids = prev_node.output_ids
+                if i == 0:
+                    if id == prev_out_ids[0]:
+                        type = "11"
+                    elif id == prev_out_ids[1]:
+                        type = "12"
+                elif i == 1:
+                    if id == prev_out_ids[0]:
+                        type = "21"
+                    elif id == prev_out_ids[1]:
+                        type = "22"
+                edge = (prev_node, node)
+                paths[type].append(edge)
+        return paths
 
 
 if __name__ == "__main__":
-    graph_rep = GraphRepresentation("./node_editor/3.json")
+    graph_rep = GraphRepresentation("./node_editor/bsp1.json")
     print(graph_rep)
     print(graph_rep.paths)
     nodes = graph_rep.nodes
+    ex_nodes = graph_rep.exchanger_nodes
     paths = graph_rep.paths
 
     G1 = nx.DiGraph()
@@ -180,3 +214,5 @@ if __name__ == "__main__":
 
     ad = nx.adjacency_matrix(G1, nodelist=nodes).todense()
     print(ad)
+    ad_ex = nx.adjacency_matrix(G1, nodelist=ex_nodes).todense()
+    print(ad_ex)
