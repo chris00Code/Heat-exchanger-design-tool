@@ -12,6 +12,7 @@ class Network:
         # self._inputs = []
         # self._outputs = []
         # self._paths = []
+        # self._structure = None
 
     @property
     def exchangers(self):
@@ -50,7 +51,11 @@ class Network:
 
     @property
     def structure(self):
-        return self._structure
+        try:
+            value = self._structure
+        except AttributeError:
+            value = None
+        return value
 
     @structure.setter
     def structure(self, value):
@@ -62,7 +67,11 @@ class Network:
 
     @property
     def input(self):
-        return self._input
+        try:
+            value = self._input
+        except AttributeError:
+            value = None
+        return value
 
     @input.setter
     def input(self, value):
@@ -74,7 +83,19 @@ class Network:
 
     @property
     def temperature_inputs(self):
-        return self._temperature_inputs
+        try:
+            value = self._temperature_inputs
+        except AttributeError:
+            value = None
+        return value
+
+    @temperature_inputs.setter
+    def temperature_inputs(self, value):
+        # @TODO implement graph converting
+        if isinstance(value, np.matrix):
+            self._temperature_inputs = value
+        else:
+            raise NotImplementedError
 
     @property
     def temperatures(self):
@@ -88,6 +109,26 @@ class Network:
 
         self._temperatures = inv((identity - ps)) @ phi @ inp @ ti
         return self._temperatures
+
+    @property
+    def outputs(self):
+        try:
+            value = self._outputs
+        except AttributeError:
+            value = None
+        return value
+
+    @outputs.setter
+    def outputs(self, value):
+        # @TODO implement graph converting
+        if isinstance(value, np.matrix):
+            self._outputs = value
+        else:
+            raise NotImplementedError
+    @property
+    def temperature_outputs(self):
+        value = self.outputs@self.temperatures
+        return value
 
     def __repr__(self):
         output = "Heat Exchanger Network:\n"
@@ -134,4 +175,24 @@ if __name__ == "__main__":
                      [0., 0., 0., 0.25, 0., 0., 0., 0.75]])
     netw = Network()
     netw.phi = phi
-    print(netw.phi)
+    netw.structure = np.matrix([[0., 1., 0., 0., 0., 0., 0., 0.],
+                                [0., 0., 1., 0., 0., 0., 0., 0.],
+                                [0., 0., 0., 0., 0., 0., 0., 0.],
+                                [1., 0., 0., 0., 0., 0., 0., 0.],
+                                [0., 0., 0., 0., 0., 0., 0., 0.],
+                                [0., 0., 0., 0., 1., 0., 0., 0.],
+                                [0., 0., 0., 0., 0., 1., 0., 0.],
+                                [0., 0., 0., 0., 0., 0., 1., 0.]])
+    netw.input = np.matrix([[0, 0],
+                            [0, 0],
+                            [1, 0],
+                            [0, 0],
+                            [0, 1],
+                            [0, 0],
+                            [0, 0],
+                            [0, 0]])
+    netw.temperature_inputs = np.matrix([[1], [0]])
+    print(netw.temperatures)
+    netw.outputs = np.matrix([[0, 0, 0, 1, 0, 0, 0, 0],
+                              [0, 0, 0, 0, 0, 0, 0, 1]])
+    print(netw.temperature_outputs)
