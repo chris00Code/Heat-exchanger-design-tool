@@ -132,6 +132,7 @@ class ExNode(Node):
         self.out_flow_2 = None
         self.heat_transferability = None
         self.flows = {"1": None, "2": None}
+        self.input_ids = {"1": None, "2": None}
         self.output_ids = {"1": None, "2": None}
         # it's really important to mark all nodes Dirty by default
         self.markDirty()
@@ -222,6 +223,7 @@ class ExNode(Node):
             print(" _> returning cached %s value:" % self.__class__.__name__)
             return None
         self.set_flows()
+        self.set_input_ids()
         self.set_output_ids()
         try:
             self.evalImplementation()
@@ -250,8 +252,9 @@ class ExNode(Node):
         res['op_code'] = self.__class__.op_code
         # res['flow_ids'] = self.flow_ids
         res['flow_ids'] = self.serialize_flow_ids()
-        res['output_ids']= self.output_ids
-        #res['children_ids'] = self.serialize_Children()
+        res['input_ids'] = self.input_ids
+        res['output_ids'] = self.output_ids
+        # res['children_ids'] = self.serialize_Children()
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
@@ -297,9 +300,19 @@ class ExNode(Node):
         try:
             outp_2 = self.getOutputs(1)[0].id
         except IndexError:
-            outp_2=None
+            outp_2 = None
         self.output_ids = {"1": outp_1, "2": outp_2}
 
+    def set_input_ids(self):
+        try:
+            inp_1 = self.getInputs(0)[0].id
+        except IndexError:
+            inp_1 = None
+        try:
+            inp_2 = self.getInputs(1)[0].id
+        except IndexError:
+            inp_2 = None
+        self.input_ids = {"1": inp_1, "2": inp_2}
 
 @staticmethod
 def get_flow_id(node, index):
@@ -311,6 +324,7 @@ def get_flow_id(node, index):
         return node.flow_ids[f"{index}"]
     else:
         raise NotImplementedError
+
 
 @staticmethod
 def get_flows(node, index):

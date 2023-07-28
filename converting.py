@@ -7,13 +7,14 @@ import matplotlib.pyplot as plt
 
 
 class Node:
-    def __init__(self, title: str = "Node", node_id: hex = None, flow_ids: list = [], output_ids: list = [],
+    def __init__(self, title: str = "Node", node_id: hex = None, flow_ids: list = [], input_ids: list = [],
+                 output_ids: list = [],
                  parameters: dict = {}):
         self._title = title
         self._op_code = self.set_op_code()
         self._node_id = node_id
         self._flow_ids = flow_ids
-        self._input_ids = None
+        self._input_ids = input_ids
         self._output_ids = output_ids
         self._parameters = parameters
 
@@ -123,7 +124,7 @@ class GraphRepresentation:
                 case 4:
                     title = "cocurrent"
                     flow_ids = node["flow_ids"]
-            graph_node = Node(title, node["id"], flow_ids, node["output_ids"], node["content"])
+            graph_node = Node(title, node["id"], flow_ids, node["input_ids"], node["output_ids"], node["content"])
             graph_nodes.append(graph_node)
         return sorted(graph_nodes, key=lambda x: x.op_code)
 
@@ -179,24 +180,28 @@ class GraphRepresentation:
     """
 
     def _create_paths(self):
+        ex_nodes = self.exchanger_nodes
         paths = {"11": [], "12": [], "21": [], "22": []}
         for node in ex_nodes:
+            cur_node_id = node.node_id
             cur_in_ids = node.input_ids
-            for i, id in enumerate(cur_in_ids):
+            for i, id in enumerate(cur_in_ids.values()):
                 prev_node = self.get_node_by_id(id)
                 prev_out_ids = prev_node.output_ids
+                type = None
                 if i == 0:
-                    if id == prev_out_ids[0]:
+                    if cur_node_id == prev_out_ids['1']:
                         type = "11"
-                    elif id == prev_out_ids[1]:
+                    elif cur_node_id == prev_out_ids['2']:
                         type = "12"
                 elif i == 1:
-                    if id == prev_out_ids[0]:
+                    if cur_node_id == prev_out_ids['1']:
                         type = "21"
-                    elif id == prev_out_ids[1]:
+                    elif cur_node_id == prev_out_ids['2']:
                         type = "22"
-                edge = (prev_node, node)
-                paths[type].append(edge)
+                if type is not None:
+                    edge = (prev_node, node)
+                    paths[type].append(edge)
         return paths
 
 

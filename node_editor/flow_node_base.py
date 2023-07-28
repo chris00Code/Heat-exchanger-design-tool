@@ -79,7 +79,8 @@ class FlowNode(Node):
 
         self.flow = None
         # @TODO implement multi output
-        self.output_ids = {"1": None}
+        self.input_ids = {"1": None,"2":None}
+        self.output_ids = {"1": None,"2":None}
 
     def initSettings(self):
         super().initSettings()
@@ -95,6 +96,7 @@ class FlowNode(Node):
         pass
 
     def eval(self):
+        self.set_input_ids()
         self.set_output_ids()
         if not self.isDirty() and not self.isInvalid():
             print(" _> returning cached %s value:" % self.__class__.__name__, self.flow)
@@ -126,8 +128,9 @@ class FlowNode(Node):
     def serialize(self):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
-        res['output_ids']= self.output_ids
-        #res['children_ids'] = self.serialize_Children()
+        res['input_ids'] = self.input_ids
+        res['output_ids'] = self.output_ids
+        # res['children_ids'] = self.serialize_Children()
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
@@ -155,3 +158,10 @@ class FlowNode(Node):
         except IndexError:
             outp_1 = None
         self.output_ids = {"1": outp_1}
+
+    def set_input_ids(self):
+        try:
+            inp_1 = self.getInputs(0)[0].id
+        except IndexError:
+            inp_1 = None
+        self.input_ids = {"1": inp_1}
