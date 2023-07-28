@@ -133,7 +133,7 @@ class ExNode(Node):
         self.out_flow_2 = None
         self.heat_transferability = None
 
-        self._flows = None
+        self._flows = {"1": None, "2": None}
 
         self.input_ids = {"1": None, "2": None}
         self.output_ids = {"1": None, "2": None}
@@ -162,14 +162,12 @@ class ExNode(Node):
             if not isinstance(flow, Flow):
                 raise ValueError
             else:
-                if index == 0:
-                    flows = (flow, None)
-                elif index == 1:
-                    flows = (None, flow)
-                else:
-                    raise IndexError
-        # @TODO tuple content check
-        self._flows = flows
+                self._flows[str(index+1)] = flow
+                # @TODO tuple content check
+
+    def get_flow_with_id(self, input_nb):
+        value = (self.flows[str(input_nb+1)], self.id)
+        return value
 
     def onCapFlowChanged(self):
         print("%s::__onCapChanged" % self.__class__.__name__)
@@ -217,10 +215,15 @@ class ExNode(Node):
         # input 1 connected
         if input_1[0] is not None:
             print("Input 1 connected")
-            flow, id = input_1[0].get_flow_with_id()
+            flow, id = input_1[0].get_flow_with_id(input_1[1])
             self.flows = (flow, 0)
             self.flow_ids["1"] = id
             self.content.label_3.setText(flow.out_fluid.title)
+
+            self.markDirty(False)
+            self.markDescendantsDirty(False)
+            self.grNode.setToolTip("")
+
         else:
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
@@ -228,15 +231,18 @@ class ExNode(Node):
         # input 2 connected
         if input_2[0] is not None:
             print("Input 2 connected")
-            flow, id = input_2[0].get_flow_with_id()
+            flow, id = input_2[0].get_flow_with_id(input_2[1])
             self.flows = (flow, 1)
             self.flow_ids["2"] = id
             self.content.label_5.setText(flow.out_fluid.title)
+
+            self.markDirty(False)
+            self.markDescendantsDirty(False)
+            self.grNode.setToolTip("")
         else:
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
             self.content.label_5.setText("")
-
 
     def eval_ids(self):
         # set input ids
@@ -261,14 +267,13 @@ class ExNode(Node):
             outp_2 = None
         self.output_ids = {"1": outp_1, "2": outp_2}
 
-
+    #@TODO children evaluation when input/socket change
     def eval(self):
         # node input/output evaluation
         self.eval_ids()
 
         if not self.isDirty() and not self.isInvalid():
             print(" _> returning cached %s value:" % self.__class__.__name__)
-
         try:
             self.evalImplementation()
         except ValueError as e:

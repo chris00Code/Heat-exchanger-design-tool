@@ -55,11 +55,11 @@ class FlowNodeOutput(FlowNode):
 
     def evalImplementation(self):
         try:
-            input = self.getInputWithSocketIndex(0)[0]
+            input = self.getInputWithSocketIndex(0)
 
             # @TODO implement diversification of flows when same fluids
 
-            flow, _ = input.get_flow_with_id()
+            flow, _ = input[0].get_flow_with_id(input[1])
             self.flow = flow
             fluid = flow.out_fluid.title
             self.content.label_3.setText(fluid)

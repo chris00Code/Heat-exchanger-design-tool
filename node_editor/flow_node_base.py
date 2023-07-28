@@ -104,7 +104,7 @@ class FlowNode(Node):
             raise ValueError
         self._flow = value
 
-    def get_flow_with_id(self):
+    def get_flow_with_id(self,input_nb):
         return (self.flow, self.id)
 
     # node evaluations
