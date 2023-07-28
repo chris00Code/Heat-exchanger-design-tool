@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QLabel
 from qtpy.QtWidgets import QGridLayout, QLabel, QLineEdit
 from PyQt5.QtGui import QDoubleValidator
 from flow_node_base import FlowNode
+from exchanger.stream import Flow
 
 
 class ExGraphicsNode(QDMGraphicsNode):
@@ -131,9 +132,12 @@ class ExNode(Node):
         self.out_flow_1 = None
         self.out_flow_2 = None
         self.heat_transferability = None
-        self.flows = {"1": None, "2": None}
+
+        self._flows = None
+
         self.input_ids = {"1": None, "2": None}
         self.output_ids = {"1": None, "2": None}
+        self.flow_ids = {"1": None, "2": None}
         # it's really important to mark all nodes Dirty by default
         self.markDirty()
 
@@ -145,6 +149,27 @@ class ExNode(Node):
         self.content.label_8.textChanged.connect(self.onCapFlowChanged)
         self.content.label_10.textChanged.connect(self.onkAChanged)
         self.content.label_12.textChanged.connect(self.onkAChanged)
+
+    # node content
+    @property
+    def flows(self):
+        return self._flows
+
+    @flows.setter
+    def flows(self, value):
+        if isinstance(value, tuple):
+            flow, index = value
+            if not isinstance(flow, Flow):
+                raise ValueError
+            else:
+                if index == 0:
+                    flows = (flow, None)
+                elif index == 1:
+                    flows = (None, flow)
+                else:
+                    raise IndexError
+        # @TODO tuple content check
+        self._flows = flows
 
     def onCapFlowChanged(self):
         print("%s::__onCapChanged" % self.__class__.__name__)
@@ -179,52 +204,71 @@ class ExNode(Node):
         else:
             return None
 
-    # @TODO changing fluids when input changes
     def evalImplementation(self):
-        # @TODO correect eval
-        """
-        inp_1 = self.flows["1"]
-        inp_2 = self.flows["2"]
-
-        if inp_1 is not None:
-        """
         input_1 = self.getInputWithSocketIndex(0)
         input_2 = self.getInputWithSocketIndex(1)
 
-        # @TODO implement diversification of flows when same fluids
+        # no input defined
+        if any(item is None for item in zip(input_1, input_2)):
+            self.markDirty()
+            self.markDescendantsDirty()
+            self.grNode.setToolTip("Connect all inputs")
 
-        if not any(item is None for item in input_1):
-            self.out_flow_1 = input_1[0].get_flow(input_1[1])
-            fluid_1 = self.out_flow_1.fluid
-            self.content.label_3.setText(fluid_1)
+        # input 1 connected
+        if input_1[0] is not None:
+            print("Input 1 connected")
+            flow, id = input_1[0].get_flow_with_id()
+            self.flows = (flow, 0)
+            self.flow_ids["1"] = id
+            self.content.label_3.setText(flow.out_fluid.title)
         else:
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
             self.content.label_3.setText("")
-        if not any(item is None for item in input_2):
-            self.out_flow_2 = input_2[0].get_flow(input_2[1])
-            fluid_2 = self.out_flow_2.fluid
-            self.content.label_5.setText(fluid_2)
+        # input 2 connected
+        if input_2[0] is not None:
+            print("Input 2 connected")
+            flow, id = input_2[0].get_flow_with_id()
+            self.flows = (flow, 1)
+            self.flow_ids["2"] = id
+            self.content.label_5.setText(flow.out_fluid.title)
         else:
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
             self.content.label_5.setText("")
-            return None
-        if not any(item is None for item in zip(input_1, input_2)):
-            self.markDirty(False)
-            self.markInvalid(False)
-            self.grNode.setToolTip("")
 
-            self.markDescendantsDirty()
-            self.evalChildren()
+
+    def eval_ids(self):
+        # set input ids
+        try:
+            inp_1 = self.getInputs(0)[0].id
+        except IndexError:
+            inp_1 = None
+        try:
+            inp_2 = self.getInputs(1)[0].id
+        except IndexError:
+            inp_2 = None
+        self.input_ids = {"1": inp_1, "2": inp_2}
+
+        # set output ids
+        try:
+            outp_1 = self.getOutputs(0)[0].id
+        except IndexError:
+            outp_1 = None
+        try:
+            outp_2 = self.getOutputs(1)[0].id
+        except IndexError:
+            outp_2 = None
+        self.output_ids = {"1": outp_1, "2": outp_2}
+
 
     def eval(self):
+        # node input/output evaluation
+        self.eval_ids()
+
         if not self.isDirty() and not self.isInvalid():
             print(" _> returning cached %s value:" % self.__class__.__name__)
-            return None
-        self.set_flows()
-        self.set_input_ids()
-        self.set_output_ids()
+
         try:
             self.evalImplementation()
         except ValueError as e:
@@ -235,6 +279,8 @@ class ExNode(Node):
             self.markInvalid()
             self.grNode.setToolTip(str(e))
             dumpException(e)
+
+        # node content evaluation
         self.heat_transferability = self.evalOperation()
         if self.heat_transferability is None:
             self.markDirty()
@@ -250,11 +296,9 @@ class ExNode(Node):
     def serialize(self):
         res = super().serialize()
         res['op_code'] = self.__class__.op_code
-        # res['flow_ids'] = self.flow_ids
-        res['flow_ids'] = self.serialize_flow_ids()
         res['input_ids'] = self.input_ids
         res['output_ids'] = self.output_ids
-        # res['children_ids'] = self.serialize_Children()
+        res['flow_ids'] = self.flow_ids
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
@@ -291,28 +335,6 @@ class ExNode(Node):
         inp_2 = self.getInput(1)
         self.flows = {"1": get_flows(inp_1, 1), "2": get_flows(inp_2, 2)}
 
-    def set_output_ids(self):
-        # @TODO implement multi edge output
-        try:
-            outp_1 = self.getOutputs(0)[0].id
-        except IndexError:
-            outp_1 = None
-        try:
-            outp_2 = self.getOutputs(1)[0].id
-        except IndexError:
-            outp_2 = None
-        self.output_ids = {"1": outp_1, "2": outp_2}
-
-    def set_input_ids(self):
-        try:
-            inp_1 = self.getInputs(0)[0].id
-        except IndexError:
-            inp_1 = None
-        try:
-            inp_2 = self.getInputs(1)[0].id
-        except IndexError:
-            inp_2 = None
-        self.input_ids = {"1": inp_1, "2": inp_2}
 
 @staticmethod
 def get_flow_id(node, index):

@@ -35,6 +35,7 @@ class FlowOutputContent(QDMNodeContentWidget):
         # Setze den vertikalen Streckfaktor der dritten Zeile auf 1, um den verfügbaren Platz zu nutzen
         self.grid_layout.setRowStretch(2, 1)
 
+
 @register_node(OP_NODE_OUTPUT)
 class FlowNodeOutput(FlowNode):
     icon = "icons/out.png"
@@ -45,7 +46,6 @@ class FlowNodeOutput(FlowNode):
 
     def __init__(self, scene):
         super().__init__(scene, inputs=[1], outputs=[])
-        self.flow = None
         self.markDirty()
 
     def initInnerClasses(self):
@@ -53,14 +53,15 @@ class FlowNodeOutput(FlowNode):
         self.grNode = FlowGraphicsNode(self)
         self.grNode.height = 70
 
-
     def evalImplementation(self):
-        input = self.getInputWithSocketIndex(0)
+        try:
+            input = self.getInputWithSocketIndex(0)[0]
 
-        # @TODO implement diversification of flows when same fluids
-        if not any(item is None for item in input):
-            self.flow = input[0].get_flow(input[1])
-            fluid = self.flow.fluid
+            # @TODO implement diversification of flows when same fluids
+
+            flow, _ = input.get_flow_with_id()
+            self.flow = flow
+            fluid = flow.out_fluid.title
             self.content.label_3.setText(fluid)
 
             self.markDirty(False)
@@ -68,8 +69,7 @@ class FlowNodeOutput(FlowNode):
             self.grNode.setToolTip("")
 
             self.markDescendantsDirty()
-            self.evalChildren()
-        else:
+        except AttributeError:
+            self.markDirty()
             self.markDescendantsDirty()
-            self.grNode.setToolTip("Connect input")
             self.content.label_3.setText("")

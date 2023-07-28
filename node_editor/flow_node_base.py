@@ -12,6 +12,7 @@ from nodeeditor.utils import dumpException
 
 # Import custom modules from the project
 from graph_node import GraphNode
+from exchanger.stream import Flow
 
 
 # Custom class that extends QDMGraphicsNode to customize node appearance
@@ -77,10 +78,12 @@ class FlowNode(Node):
         # it's really important to mark all nodes Dirty by default
         self.markDirty()
 
-        self.flow = None
+        # @TODO implement in other way
+        self._flow = None
+
         # @TODO implement multi output
-        self.input_ids = {"1": None,"2":None}
-        self.output_ids = {"1": None,"2":None}
+        self.input_ids = {"1": None}
+        self.output_ids = {"1": None}
 
     def initSettings(self):
         super().initSettings()
@@ -90,21 +93,45 @@ class FlowNode(Node):
         # @TODO may change to single edge and introduce mixers
         # self.output_multi_edged = True
 
-    # node evaluations
+    # node content
+    @property
+    def flow(self):
+        return self._flow
 
+    @flow.setter
+    def flow(self, value):
+        if not isinstance(value, Flow):
+            raise ValueError
+        self._flow = value
+
+    def get_flow_with_id(self):
+        return (self.flow, self.id)
+
+    # node evaluations
     def evalImplementation(self):
         pass
 
-    def eval(self):
-        self.set_input_ids()
-        self.set_output_ids()
-        if not self.isDirty() and not self.isInvalid():
-            print(" _> returning cached %s value:" % self.__class__.__name__, self.flow)
-            return self.flow
+    def eval_ids(self):
         try:
-            self.evalGraph()
-            flow = self.evalImplementation()
-            return flow
+            inp_1 = self.getInputs(0)[0].id
+        except IndexError:
+            inp_1 = None
+        self.input_ids = {"1": inp_1}
+
+        try:
+            outp_1 = self.getOutputs(0)[0].id
+        except IndexError:
+            outp_1 = None
+        self.output_ids = {"1": outp_1}
+
+    def eval(self):
+        self.eval_ids()
+
+        if not self.isDirty() and not self.isInvalid():
+            print(" _> returning cached %s value:" % self.__class__.__name__, self.flow.in_fluid.title)
+        try:
+            self.evalImplementation()
+            return True
         except NotImplementedError as e:
             self.markInvalid()
             self.grNode.setToolTip(str(e))
@@ -130,38 +157,9 @@ class FlowNode(Node):
         res['op_code'] = self.__class__.op_code
         res['input_ids'] = self.input_ids
         res['output_ids'] = self.output_ids
-        # res['children_ids'] = self.serialize_Children()
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
         res = super().deserialize(data, hashmap, restore_id)
         print("Deserialized FlowNode '%s'" % self.__class__.__name__, "res:", res)
         return res
-
-    def serialize_Children(self):
-        childrens = self.getChildrenNodes()
-        ser_childs = []
-        for child in childrens:
-            ser_childs.append(child.id)
-        return ser_childs
-
-    def get_flow(self, value=None):
-        return self.flow
-
-    def evalGraph(self):
-        output_ids = self.getChildrenNodes()
-        self.graphNode.output_ids = output_ids
-
-    def set_output_ids(self):
-        try:
-            outp_1 = self.getOutputs(0)[0].id
-        except IndexError:
-            outp_1 = None
-        self.output_ids = {"1": outp_1}
-
-    def set_input_ids(self):
-        try:
-            inp_1 = self.getInputs(0)[0].id
-        except IndexError:
-            inp_1 = None
-        self.input_ids = {"1": inp_1}

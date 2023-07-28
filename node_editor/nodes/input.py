@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QLabel
 from PyQt5.QtGui import QDoubleValidator
 from ex_flow import Flow
 from graph_node import GraphNode
+from exchanger.stream import Fluid, Flow
 
 
 class FlowInputContent(QDMNodeContentWidget):
@@ -23,7 +24,7 @@ class FlowInputContent(QDMNodeContentWidget):
 
         # @TODO implement dropdown with available fluids
         # Create the first QLineEdit widget with the default text "water"
-        self.edit_fluid = QLineEdit("water", self)
+        self.edit_fluid = QLineEdit("Water", self)
         self.edit_fluid.setAlignment(Qt.AlignRight)
         self.edit_fluid.setObjectName(self.node.content_label_objname)
         self.layout.addWidget(self.edit_fluid)
@@ -52,8 +53,12 @@ class FlowInputContent(QDMNodeContentWidget):
         self.layout.addWidget(self.edit_mfr)
 
     def serialize(self):
+        self.node.eval()
         res = super().serialize()
-        res['flow'] = self.node.flow.serialize()
+        try:
+            res['flow'] = self.node.flow.serialize()
+        except AttributeError:
+            pass
         return res
 
     def deserialize(self, data, hashmap={}):
@@ -84,7 +89,6 @@ class NetworkNode_Input(FlowNode):
         self.content = FlowInputContent(self)
         self.grNode = FlowGraphicsNode(self)
 
-
         self.content.edit_fluid.textChanged.connect(self.onInputChanged)
         self.content.edit_temp.textChanged.connect(self.onInputChanged)
         self.content.edit_mfr.textChanged.connect(self.onInputChanged)
@@ -94,7 +98,11 @@ class NetworkNode_Input(FlowNode):
         temp = float(self.content.edit_temp.text())
         mfr = float(self.content.edit_mfr.text())
 
-        self.flow = Flow(fluid, temp, mfr)
+        # @TODO change to stream class
+        fluid = Fluid(fluid, temperature=temp)
+        flow = Flow(fluid, mfr)
+        self.flow = flow
+
         self.markDirty(False)
         self.markInvalid(False)
 
@@ -105,4 +113,3 @@ class NetworkNode_Input(FlowNode):
 
         self.evalChildren()
 
-        return self.flow

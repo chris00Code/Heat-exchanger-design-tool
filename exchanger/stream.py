@@ -1,6 +1,8 @@
 import json
+import os
 
-with open("pyfluids.json") as config_file:
+file_path = os.path.join(os.path.dirname(__file__), "pyfluids.json")
+with open(file_path) as config_file:
     config_data = json.load(config_file)
 
 import pyfluids as fld
@@ -47,7 +49,6 @@ class Fluid:
     @update_fluid
     def temperature(self, value):
         self._temperature = value
-
 
     def _set_fluid(self):
         try:
@@ -122,7 +123,6 @@ class Flow:
         mean_temp, mean_p = (in_temp + out_temp) / 2, (in_p + out_p) / 2
         self._mean_fluid.temperature, self._mean_fluid.pressure = mean_temp, mean_p
 
-
     @property
     def heat_capacity_flow(self):
         return self.mean_fluid.get_specific_heat() * self.mass_flow
@@ -137,6 +137,18 @@ class Flow:
         str_in = str(self.in_fluid)
         str_out = str(self.out_fluid)
         return f"Flow:\nInput: %s \nOutput: %s\n" % (str_in, str_out) + self.mass_flow_repr()
+
+    def serialize(self):
+        dict = {"fluid": self.in_fluid.title,
+                "pressure": self.in_fluid.pressure,
+                "temperature": self.in_fluid.temperature,
+                "mass_flow": self.mass_flow}
+        return dict
+
+    @staticmethod
+    def deserialize(data):
+        flow = Flow(Fluid(data["fluid"], data["pressure"], data["temperature"]), data["mass_flow"])
+        return flow
 
 
 if __name__ == "__main__":
@@ -153,3 +165,9 @@ if __name__ == "__main__":
 
     print(flow.mean_fluid.temperature)
     print(flow.str_heat_capacity_flow())
+
+    ser_flow = flow.serialize()
+    flow_2 = Flow.deserialize(ser_flow)
+    flow.in_fluid.temperature = 300
+    print(flow)
+    print(flow_2)

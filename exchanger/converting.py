@@ -206,7 +206,7 @@ class GraphRepresentation:
 
 
 if __name__ == "__main__":
-    graph_rep = GraphRepresentation("./node_editor/bsp1.json")
+    graph_rep = GraphRepresentation("../node_editor/bsp1.json")
     print(graph_rep)
     print(graph_rep.paths)
     nodes = graph_rep.nodes
