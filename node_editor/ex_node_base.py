@@ -162,11 +162,11 @@ class ExNode(Node):
             if not isinstance(flow, Flow):
                 raise ValueError
             else:
-                self._flows[str(index+1)] = flow
+                self._flows[str(index + 1)] = flow
                 # @TODO tuple content check
 
     def get_flow_with_id(self, input_nb):
-        value = (self.flows[str(input_nb+1)], self.id)
+        value = (self.flows[str(input_nb + 1)], self.id)
         return value
 
     def onCapFlowChanged(self):
@@ -205,7 +205,7 @@ class ExNode(Node):
     def evalImplementation(self):
         input_1 = self.getInputWithSocketIndex(0)
         input_2 = self.getInputWithSocketIndex(1)
-
+        inp_valid_1, inp_valid_2 = False, False
         # no input defined
         if any(item is None for item in zip(input_1, input_2)):
             self.markDirty()
@@ -220,9 +220,10 @@ class ExNode(Node):
             self.flow_ids["1"] = id
             self.content.label_3.setText(flow.out_fluid.title)
 
-            self.markDirty(False)
-            self.markDescendantsDirty(False)
-            self.grNode.setToolTip("")
+            inp_valid_1 = True
+            # self.markDirty(False)
+            # self.markDescendantsDirty(False)
+            # self.grNode.setToolTip("")
 
         else:
             self.markDescendantsDirty()
@@ -236,13 +237,20 @@ class ExNode(Node):
             self.flow_ids["2"] = id
             self.content.label_5.setText(flow.out_fluid.title)
 
-            self.markDirty(False)
-            self.markDescendantsDirty(False)
-            self.grNode.setToolTip("")
+            inp_valid_2 = True
         else:
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
             self.content.label_5.setText("")
+
+        if inp_valid_1 and inp_valid_2:
+            self.markDirty(False)
+            self.markDescendantsDirty(False)
+            self.grNode.setToolTip("")
+        else:
+            self.markDirty()
+            self.markDescendantsDirty()
+            self.grNode.setToolTip("Connect all inputs")
 
     def eval_ids(self):
         # set input ids
@@ -267,15 +275,15 @@ class ExNode(Node):
             outp_2 = None
         self.output_ids = {"1": outp_1, "2": outp_2}
 
-    #@TODO children evaluation when input/socket change
+    # @TODO children evaluation when input/socket change
     def eval(self):
         # node input/output evaluation
-        self.eval_ids()
 
         if not self.isDirty() and not self.isInvalid():
             print(" _> returning cached %s value:" % self.__class__.__name__)
         try:
             self.evalImplementation()
+            self.eval_ids()
         except ValueError as e:
             self.markInvalid()
             self.grNode.setToolTip(str(e))
@@ -290,7 +298,9 @@ class ExNode(Node):
         if self.heat_transferability is None:
             self.markDirty()
             self.markDescendantsDirty()
-            dumpException("heat transferability not defined")
+            # dumpException("heat transferability not defined")
+        self.markDescendantsDirty()
+        self.evalChildren()
 
     def onInputChanged(self, socket=None):
         print("%s::__onInputChanged" % self.__class__.__name__)
@@ -311,7 +321,7 @@ class ExNode(Node):
         print("Deserialized CalcNode '%s'" % self.__class__.__name__, "res:", res)
         return res
 
-    def get_flow(self, input):
+    """    def get_flow(self, input):
         match input:
             case 0:
                 return self.out_flow_1
@@ -338,9 +348,10 @@ class ExNode(Node):
     def set_flows(self):
         inp_1 = self.getInput(0)
         inp_2 = self.getInput(1)
-        self.flows = {"1": get_flows(inp_1, 1), "2": get_flows(inp_2, 2)}
+        self.flows = {"1": get_flows(inp_1, 1), "2": get_flows(inp_2, 2)}"""
 
 
+"""
 @staticmethod
 def get_flow_id(node, index):
     if node is None:
@@ -363,3 +374,4 @@ def get_flows(node, index):
         return node.flows[f"{index}"]
     else:
         raise NotImplementedError
+"""
