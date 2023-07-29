@@ -1,10 +1,14 @@
 import json
 import os
 
-file_path = os.path.join(os.path.dirname(__file__), "pyfluids.json")
+"""file_path = os.path.join(os.path.dirname(__file__), "pyfluids.json")
+#os.chdir(os.path.dirname(file_path))
+#package_path = os.path.dirname(os.path.abspath(__file__))
+#file_path = os.path.join(package_path, 'pyfluids.json')
+
 with open(file_path) as config_file:
     config_data = json.load(config_file)
-
+"""
 import pyfluids as fld
 
 

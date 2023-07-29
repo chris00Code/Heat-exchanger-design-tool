@@ -32,7 +32,6 @@ class FlowOutputContent(QDMNodeContentWidget):
         self.label_3.setObjectName(self.node.content_label_objname)
         self.grid_layout.addWidget(self.label_3, 1, 1, 1, 1)
 
-        # Setze den vertikalen Streckfaktor der dritten Zeile auf 1, um den verfügbaren Platz zu nutzen
         self.grid_layout.setRowStretch(2, 1)
 
 

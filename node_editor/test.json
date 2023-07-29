@@ -1,17 +1,17 @@
 {
-    "id": 1759798959120,
+    "id": 2461311219152,
     "scene_width": 64000,
     "scene_height": 64000,
     "nodes": [
         {
-            "id": 1759872488016,
+            "id": 2461311337680,
             "title": "Input Flow",
-            "pos_x": -146.0,
-            "pos_y": -130.0,
+            "pos_x": -47.0,
+            "pos_y": -117.0,
             "inputs": [],
             "outputs": [
                 {
-                    "id": 1759872550160,
+                    "id": 2461311349712,
                     "index": 0,
                     "multi_edges": true,
                     "position": 5,
@@ -22,7 +22,7 @@
                 "flow": {
                     "fluid": "Water",
                     "pressure": 101325,
-                    "temperature": 293.15,
+                    "temperature": 1.0,
                     "mass_flow": 1.0
                 }
             },
@@ -31,40 +31,9 @@
                 "1": null
             },
             "output_ids": {
-                "1": 1759872561744
-            }
-        },
-        {
-            "id": 1759872561744,
-            "title": "output flow",
-            "pos_x": 151.0,
-            "pos_y": -72.0,
-            "inputs": [
-                {
-                    "id": 1759798685584,
-                    "index": 0,
-                    "multi_edges": false,
-                    "position": 2,
-                    "socket_type": 1
-                }
-            ],
-            "outputs": [],
-            "content": {},
-            "op_code": 2,
-            "input_ids": {
-                "1": 1759872488016
-            },
-            "output_ids": {
                 "1": null
             }
         }
     ],
-    "edges": [
-        {
-            "id": 1759872602064,
-            "edge_type": 2,
-            "start": 1759872550160,
-            "end": 1759798685584
-        }
-    ]
+    "edges": []
 }

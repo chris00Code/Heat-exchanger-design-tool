@@ -100,6 +100,7 @@ class NetworkNode_Input(FlowNode):
 
         # @TODO change to stream class
         fluid = Fluid(fluid, temperature=temp)
+        print(fluid)
         flow = Flow(fluid, mfr)
         self.flow = flow
 
