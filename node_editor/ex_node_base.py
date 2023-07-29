@@ -169,6 +169,7 @@ class ExNode(Node):
         value = (self.flows[str(input_nb + 1)], self.id)
         return value
 
+
     def onCapFlowChanged(self):
         print("%s::__onCapChanged" % self.__class__.__name__)
         if self.content.label_8.text() != '' \
@@ -299,8 +300,8 @@ class ExNode(Node):
             self.markDirty()
             self.markDescendantsDirty()
             # dumpException("heat transferability not defined")
-        self.markDescendantsDirty()
-        self.evalChildren()
+        #self.markDescendantsDirty()
+        #self.evalChildren()
 
     def onInputChanged(self, socket=None):
         print("%s::__onInputChanged" % self.__class__.__name__)
@@ -310,10 +311,11 @@ class ExNode(Node):
     # @TODO also serialize/deserialize k and A
     def serialize(self):
         res = super().serialize()
+        self.eval_ids()
         res['op_code'] = self.__class__.op_code
         res['input_ids'] = self.input_ids
         res['output_ids'] = self.output_ids
-        res['flow_ids'] = self.flow_ids
+        res['flows_ids'] = self.flow_ids
         return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
