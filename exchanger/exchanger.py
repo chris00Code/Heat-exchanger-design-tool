@@ -15,6 +15,10 @@ class HeatExchanger:
         self._p = None
 
     @property
+    def id(self):
+        return id(self)
+
+    @property
     def flow_1(self):
         return self._flow_1
 
@@ -113,13 +117,23 @@ class HeatExchanger:
             return f"dimensionslose Temperaturänderungen:\nP_1 = %.3f\nP_2 = %.3f\n" % (self.p)
         except TypeError:
             raise NotImplementedError
+        except NotImplementedError:
+            return f"dimensionslose Temperaturänderungen:\nnot defined for HeatExchanger"
 
     def str_dimensionless_parameters(self):
         return f"Dimensionslose Parameter:\n" + self.str_ntu() + self.str_r() + self.str_p()
 
+    def repr_short(self):
+        output = f"Typ: {self.__class__.__name__},Id:{id(self)} \n\n"
+        output += f"Fluid 1:{self.flow_1.mean_fluid.temperature}\n" \
+                  f"Fluid 2:{self.flow_2.mean_fluid.temperature}\n"
+        output += self.str_dimensionless_parameters()
+        return output
+
     def __repr__(self) -> str:
         output = "\nWärmeübertrager:\n"
-        output += f"Typ: {self.__class__.__name__}\n\n"
+        output += f"Typ: {self.__class__.__name__}\n" \
+                  f"Id:{id(self)}\n\n"
         output += "Fluids:\n" \
                   f"Fluid 1:{self.flow_1}\n" \
                   f"Fluid 2:{self.flow_2}\n"
@@ -148,6 +162,16 @@ class CounterCurrentFlow(HeatExchanger):
         r1, r2 = self.r
         p1 = (1 - exp(n1 * (r1 - 1))) / (1 - r1 * exp(n1 * (r1 - 1)))
         p2 = (1 - exp(n2 * (r2 - 1))) / (1 - r2 * exp(n2 * (r2 - 1)))
+        return p1, p2
+
+
+class CrossFlowOneRow(HeatExchanger):
+    @property
+    def p(self):
+        n1, n2 = self.ntu
+        r1, r2 = self.r
+        p1 = 1 - exp((exp(-r1 * n1) - 1) / r1)
+        p2 = 1 - exp((exp(-r2 * n2) - 1) / r2)
         return p1, p2
 
 
@@ -198,9 +222,9 @@ if __name__ == "__main__":
     # ex = HeatExchanger(flow_1, flow_2, 10, 56)
     ex = ParallelFlow(flow_1, flow_2, 10, 56)
     print(ex)
-    #print(ex.r)
-    #print(ex.str_r())
-    #print(ex.p)
-    #print(ex.str_p())
+    # print(ex.r)
+    # print(ex.str_r())
+    # print(ex.p)
+    # print(ex.str_p())
     # ex.heat_transferability = 50
     # print(ex.heat_transferability)

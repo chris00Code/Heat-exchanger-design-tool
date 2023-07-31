@@ -70,6 +70,10 @@ class Fluid:
         # create new fluid object at NTP (normal temperature and pressure)
         return Fluid(self._title)
 
+    def with_state(self):
+        # clones fluid object
+        return Fluid(self.title,self.pressure,self.temperature)
+
     def __repr__(self):
         try:
             str_fluid = str(self._fluid.as_dict())
@@ -99,7 +103,8 @@ class Flow:
 
     # sets the out fluid at NTP state
     def _set_out_fluid(self):
-        f = self._in_fluid.factory()
+        #f = self._in_fluid.factory()
+        f = self._in_fluid.with_state()
         return f
 
     @property
