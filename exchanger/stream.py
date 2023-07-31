@@ -72,7 +72,7 @@ class Fluid:
 
     def with_state(self):
         # clones fluid object
-        return Fluid(self.title,self.pressure,self.temperature)
+        return Fluid(self.title, self.pressure, self.temperature)
 
     def __repr__(self):
         try:
@@ -90,6 +90,10 @@ class Flow:
         self._mass_flow = mass_flow
 
     @property
+    def id(self):
+        return id(self)
+
+    @property
     def in_fluid(self):
         return self._in_fluid
 
@@ -103,7 +107,7 @@ class Flow:
 
     # sets the out fluid at NTP state
     def _set_out_fluid(self):
-        #f = self._in_fluid.factory()
+        # f = self._in_fluid.factory()
         f = self._in_fluid.with_state()
         return f
 
@@ -153,6 +157,9 @@ class Flow:
                 "temperature": self.in_fluid.temperature,
                 "mass_flow": self.mass_flow}
         return dict
+
+    def copy(self):
+        return Flow(self.in_fluid,self.mass_flow)
 
     @staticmethod
     def deserialize(data):

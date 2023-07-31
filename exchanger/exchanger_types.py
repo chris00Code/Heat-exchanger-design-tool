@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -71,7 +73,6 @@ class ShellTube:
     def flatten(self, order):
         flattened = []
         array = self.exchangers
-        rows, cols = array.shape
         match order:
             case 'ul2r':  # beginning up left to right
                 flattened = self._l2r(array)
@@ -93,6 +94,25 @@ class ShellTube:
                 flattened.append(cell)
         return flattened
 
+    def paths(self, order_1, order_2):
+        path_1 = self.flatten(order_1)
+        path_1.insert(0, self.flow_1)
+        out_1 = flow_1.copy()
+        path_1.append(out_1)
+
+        nodes = path_1
+
+        tuples_list_1 = [(path_1[i], path_1[i + 1]) for i in range(len(path_1) - 1)]
+
+        path_2 = self.flatten(order_2)
+        path_2.insert(0, self.flow_2)
+        nodes.insert(1, self.flow_2)
+        out_2 = flow_2.copy()
+        path_2.append(out_2)
+        nodes.append(out_2)
+        tuples_list_2 = [(path_2[i], path_2[i + 1]) for i in range(len(path_2) - 1)]
+        return nodes, tuples_list_1, tuples_list_2
+
     def __repr__(self):
         output = f"Network:\ncell numbers={self.cell_numbers}\n"
         for i, ex in enumerate(self.exchangers.flatten()):
@@ -106,6 +126,32 @@ def id_repr(matrix):
     return output
 
 
+def matrix_repr(nodes, path_1,path_2):
+    G1 = nx.DiGraph()
+    G1.add_nodes_from(nodes)
+    G1.add_edges_from(path_1)
+    ad_1 = nx.adjacency_matrix(G1, nodelist=nodes).todense()
+    print(ad_1)
+    S11 = ad_1[2:-2, 2:-2]
+    print(S11)
+    Inp1 = ad_1[:2, 2:-2]
+    print(Inp1)
+    Out1 = ad_1[2:-2, -2:]
+    print(Out1)
+
+    G2 = nx.DiGraph()
+    G2.add_nodes_from(nodes)
+    G2.add_edges_from(path_2)
+    ad_2 = nx.adjacency_matrix(G2, nodelist=nodes).todense()
+    print(ad_2)
+    S22 = ad_2[2:-2, 2:-2]
+    print(S22)
+    Inp2 = ad_2[:2, 2:-2]
+    print(Inp2)
+    Out2 = ad_2[2:-2, -2:]
+    print(Out2)
+
+
 if __name__ == "__main__":
     kA = 4749
     W = 3500
@@ -114,19 +160,15 @@ if __name__ == "__main__":
     fld_2 = Fluid("Water", temperature=293.15)
     flow_2 = Flow(fld_2, W / fld_2.get_specific_heat())
 
-    sh = ShellTube((4, 3), flow_1, flow_2)
+    sh = ShellTube((2, 2), flow_1, flow_2)
     sh.transferability = kA
     sh.fill('CrossFlowOneRow')
     # print(sh)
     print(id_repr(sh.exchangers))
     flat = sh.flatten('ur2d')
-    print(id_repr(flat))
+    # print(id_repr(flat))
     # print(flat)
-    """
-    ex = CrossFlowOneRow(flow_1, flow_2)
-    ex.heat_transferability = kA / 4
-    sh = ShellTube(flow_1, flow_2)
-    sh.fill(ex)
-    sh._exchangers[0, 0].flow_1._out_fluid.temperature = 400
-    print(sh)
-    """
+    nodes, path_1, path_2 = sh.paths('ur2d', 'dl2r')
+    print(id_repr(nodes))
+    # print(id_repr(path_1))
+    matrix_repr(nodes,path_1,path_2)
