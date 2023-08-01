@@ -173,21 +173,21 @@ class Layout:
         s11 = self.adjacency[0][2:-2, 2:-2]
         s22 = self.adjacency[1][2:-2, 2:-2]
         zeros = np.zeros_like(s11)
-        structure = np.block([[s11, zeros], [zeros, s22]])
+        structure = np.block([[s11, zeros], [zeros, s22]]).T
         return structure
 
     @property
     def input_matrix(self):
         in_1 = self.adjacency[0][:2, 2:-2]
         in_2 = self.adjacency[1][:2, 2:-2]
-        input = np.hstack((in_1, in_2))
+        input = np.hstack((in_1, in_2)).T
         return input
 
     @property
     def output_matrix(self):
         out_1 = self.adjacency[0][2:-2, -2:]
         out_2 = self.adjacency[1][2:-2, -2:]
-        output = np.vstack((out_1, out_2))
+        output = np.vstack((out_1, out_2)).T
         return output
 
     @property
@@ -215,7 +215,7 @@ class Layout:
         return value
 
     @property
-    def temperatures(self):
+    def temperature_matrix(self):
         phi = self.phi_matrix
         s = self.structure_matrix
         inp = self.input_matrix
@@ -227,6 +227,11 @@ class Layout:
         value = inv((identity - ps)) @ phi @ inp @ ti
         return value
 
+    @property
+    def temperature_outputs(self):
+        value = self.output_matrix@self.temperature_matrix
+        return value
+
     def __repr__(self):
         output = f"Network:\ncell numbers={self.cell_numbers}\n"
         for i, ex in enumerate(self.layout.flatten()):
@@ -235,7 +240,7 @@ class Layout:
 
 
 if __name__ == "__main__":
-    kA = 4749
+    kA = 4000
     W = 3500
     fld_1 = Fluid("Water", temperature=373.15)
     flow_1 = Flow(fld_1, W / fld_1.get_specific_heat())
@@ -255,6 +260,5 @@ if __name__ == "__main__":
     print(sh.input_matrix)
     print(sh.output_matrix)
     print(sh.phi_matrix)
-    print(sh.temperatures)
-    # matrix_repr(nodes, path_1, path_2)
-    # @TODO check why output shapes a transposed
+    print(sh.temperature_matrix)
+    print(sh.temperature_outputs)
