@@ -15,6 +15,7 @@ class Layout:
         self.layout = shape
         self.flow_1 = flow_1
         self.flow_2 = flow_2
+        self.input_temps = None
         self.transferability = transferability
         self.order_1 = 'dl2r'
         self.order_2 = 'ur2d'
@@ -64,6 +65,23 @@ class Layout:
     @transferability.setter
     def transferability(self, value):
         self._transferability = value
+
+    @property
+    def input_temps(self):
+        return self._input_temps
+
+    @input_temps.setter
+    def input_temps(self, value):
+        if value is not None:
+            raise NotImplementedError
+        else:
+            temp_1 = flow_1.mean_fluid.temperature
+            temp_2 = flow_2.mean_fluid.temperature
+            if temp_1 >= temp_2:
+                dimles_matrix = np.matrix([[1], [0]])
+            else:
+                dimles_matrix = np.matrix([[0], [1]])
+        self._input_temps = temp_1, temp_2, dimles_matrix
 
     def fill(self, ex_type: str = 'HeatExchanger', order: str = 'equal'):
         """
@@ -173,31 +191,26 @@ class Layout:
         s11 = self.adjacency[0][2:-2, 2:-2]
         s22 = self.adjacency[1][2:-2, 2:-2]
         zeros = np.zeros_like(s11)
-        structure = np.block([[s11, zeros], [zeros, s22]])
+        structure = np.block([[s11, zeros], [zeros, s22]]).T
         return structure
 
     @property
     def input_matrix(self):
         in_1 = self.adjacency[0][:2, 2:-2]
         in_2 = self.adjacency[1][:2, 2:-2]
-        input = np.hstack((in_1, in_2))
+        input = np.hstack((in_1, in_2)).T
         return input
 
     @property
     def output_matrix(self):
         out_1 = self.adjacency[0][2:-2, -2:]
         out_2 = self.adjacency[1][2:-2, -2:]
-        output = np.vstack((out_1, out_2))
+        output = np.vstack((out_1, out_2)).T
         return output
 
     @property
     def temperature_input_matrix(self):
-        temp_1 = flow_1.mean_fluid.temperature
-        temp_2 = flow_2.mean_fluid.temperature
-        if temp_1 >= temp_2:
-            return np.matrix([[1], [0]])
-        else:
-            return np.matrix([[0], [1]])
+        return self.input_temps[2]
 
     @property
     def phi_matrix(self):
@@ -215,7 +228,7 @@ class Layout:
         return value
 
     @property
-    def temperatures(self):
+    def temperature_matrix(self):
         phi = self.phi_matrix
         s = self.structure_matrix
         inp = self.input_matrix
@@ -225,7 +238,49 @@ class Layout:
         identity = np.eye(ps.shape[0])
 
         value = inv((identity - ps)) @ phi @ inp @ ti
-        return value
+        return value, self._dimles_2_temp(value)
+
+    @property
+    def temperature_outputs(self):
+        value = self.output_matrix @ self.temperature_matrix[0]
+        return value, self._dimles_2_temp(value)
+
+    def _dimles_2_temp(self, matrix):
+        temp_1, temp_2, _ = self.input_temps
+        return (temp_1 - temp_2) * matrix + temp_2
+
+    @property
+    def cell_temperatures_input(self):
+        """
+        returns a tupel with input temperatures of each cell. the cells are sorted by the flattening order_1
+        :return:
+        """
+        # @TODO implement S11, S22 in property method
+        # @TODO check why temp input 1 wrong
+        temp_1 = self.adjacency[0][2:-2, 2:-2].T @ self.temperature_matrix[0][:4]
+        temp_2 = self.adjacency[1][2:-2, 2:-2].T @ self.temperature_matrix[0][4:]
+        value = (temp_1, temp_2)
+        dimles = (self._dimles_2_temp(temp_1), self._dimles_2_temp(temp_2))
+        return value, dimles
+
+    def _adjust_temperatures(self):
+        in_temps = self.cell_temperatures_input[1]
+        out_temps = self.temperature_outputs[1]
+
+        in_1, in_2,_ = self.input_temps
+        temps_1 = in_temps[0].flatten().tolist()[0]
+        temps = [in_1]+in_temps[0].flatten().tolist()[0]
+
+        exchangers = self.nodes[2:-2]
+        for i, ex in enumerate(exchangers):
+            ex.flow_1.in_fluid.temperature = in_temps[0][i][0, 0]
+            ex.flow_2.in_fluid.temperature = in_temps[1][i][0, 0]
+            try:
+                ex.flow_1.out_fluid.temperature = in_temps[0][i + 1][0, 0]
+                ex.flow_2.out_fluid.temperature = in_temps[1][i + 1][0, 0]
+            except IndexError:
+                ex.flow_1.out_fluid.temperature = out_temps[0][0, 0]
+                ex.flow_2.out_fluid.temperature = out_temps[1][0, 0]
 
     def __repr__(self):
         output = f"Network:\ncell numbers={self.cell_numbers}\n"
@@ -235,7 +290,7 @@ class Layout:
 
 
 if __name__ == "__main__":
-    kA = 4749
+    kA = 4000
     W = 3500
     fld_1 = Fluid("Water", temperature=373.15)
     flow_1 = Flow(fld_1, W / fld_1.get_specific_heat())
@@ -246,15 +301,21 @@ if __name__ == "__main__":
     sh.transferability = kA
     sh.fill('CrossFlowOneRow')
     # print(sh)
+    sh.order_1 = 'dr2u'
+    sh.order_2 = 'ul2r'
     print(id_repr(sh.layout))
     # sh._extract_node_paths('ur2d', 'dl2r')
     print(id_repr(sh.nodes))
     print(id_repr(sh.paths[0]))
     # print(sh.adjacency[1])
+
     print(sh.structure_matrix)
     print(sh.input_matrix)
     print(sh.output_matrix)
     print(sh.phi_matrix)
-    print(sh.temperatures)
-    # matrix_repr(nodes, path_1, path_2)
-    # @TODO check why output shapes a transposed
+    print(sh.temperature_matrix[1] - 273.15)
+    print(sh.temperature_outputs[1] - 273.15)
+    print(sh.cell_temperatures_input[1][0] - 273.15)
+    print(sh.cell_temperatures_input[1][1] - 273.15)
+    #sh._adjust_temperatures()
+    #print(sh)
