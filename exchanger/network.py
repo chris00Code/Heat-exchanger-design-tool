@@ -165,6 +165,7 @@ if __name__ == "__main__":
     phi = netw.phi
     print(phi)
     """
+    """
     phi = np.matrix([[0.75, 0., 0., 0., 0.25, 0., 0., 0.],
                      [0., 0.75, 0., 0., 0., 0.25, 0., 0.],
                      [0., 0., 0.75, 0., 0., 0., 0.25, 0.],
@@ -196,3 +197,4 @@ if __name__ == "__main__":
     netw.outputs = np.matrix([[0, 0, 0, 1, 0, 0, 0, 0],
                               [0, 0, 0, 0, 0, 0, 0, 1]])
     print(netw.temperature_outputs)
+    """
