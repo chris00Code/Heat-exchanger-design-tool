@@ -267,9 +267,9 @@ class Layout:
         in_temps = self.cell_temperatures_input[1]
         out_temps = self.temperature_outputs[1]
 
-        in_1, in_2,_ = self.input_temps
+        in_1, in_2, _ = self.input_temps
         temps_1 = in_temps[0].flatten().tolist()[0]
-        temps = [in_1]+in_temps[0].flatten().tolist()[0]
+        temps = [in_1] + in_temps[0].flatten().tolist()[0]
 
         exchangers = self.nodes[2:-2]
         for i, ex in enumerate(exchangers):
@@ -317,5 +317,5 @@ if __name__ == "__main__":
     print(sh.temperature_outputs[1] - 273.15)
     print(sh.cell_temperatures_input[1][0] - 273.15)
     print(sh.cell_temperatures_input[1][1] - 273.15)
-    #sh._adjust_temperatures()
-    #print(sh)
+    # sh._adjust_temperatures()
+    # print(sh)
