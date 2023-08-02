@@ -77,6 +77,16 @@ class HeatExchanger:
         self._heat_transferability = value
 
     @property
+    def heat_capacity_flow(self):
+        in_1, in_2 = self.flow_1.in_fluid.temperature, self.flow_2.in_fluid.temperature
+        out_1, out_2 = self.flow_1.out_fluid.temperature, self.flow_2.out_fluid.temperature
+        # @todo -+
+        delta_1, delta_2 = abs(in_1 - out_1), abs(in_2 - out_2)
+        return self.flow_1.heat_capacity_flow * delta_1, \
+               self.flow_2.heat_capacity_flow * delta_2
+
+
+    @property
     def ntu(self):
         kA = self.heat_transferability
         heat_capacity_flow_1 = self.flow_1.get_heat_capacity_flow()
@@ -125,8 +135,10 @@ class HeatExchanger:
 
     def repr_short(self):
         output = f"Typ: {self.__class__.__name__},Id:{id(self)} \n\n"
-        output += f"Fluid 1:{self.flow_1.in_fluid.temperature-273.15}\n" \
-                  f"Fluid 2:{self.flow_2.in_fluid.temperature-273.15}\n"
+        output += f"Wärmekapazitätsstrom:\n" \
+                  f"Fld1: {self.heat_capacity_flow[0]}, Fld2: {self.heat_capacity_flow[1]}\n\n"
+        output += f"Fluid 1:{self.flow_1.in_fluid.temperature - 273.15}\n" \
+                  f"Fluid 2:{self.flow_2.in_fluid.temperature - 273.15}\n"
         output += self.str_dimensionless_parameters()
         return output
 

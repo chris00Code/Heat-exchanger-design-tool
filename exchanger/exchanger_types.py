@@ -263,19 +263,27 @@ class Layout:
         cell_out_temps = self.temperature_matrix[1]
         in_1, in_2, _ = self.input_temps
 
-        n = self.temperature_matrix[0].shape[0]//2
+        n = self.temperature_matrix[0].shape[0] // 2
         cell_out_2 = self._dimles_2_temp(self.adjacency[1][2:-2, 2:-2].T @ self.temperature_matrix[0][n:])
-        out_2 = self.temperature_outputs[1][1][0,0]
+        out_2 = self.temperature_outputs[1][1][0, 0]
 
-        temps_1 = [in_1]+cell_out_temps[:n].flatten().tolist()[0]
-        #temps_2 = [in_2]+cell_out_temps[4:].flatten().tolist()[0]
-        temps_2 = cell_out_2.flatten().tolist()[0]+[out_2]
+        temps_1 = [in_1] + cell_out_temps[:n].flatten().tolist()[0]
+        # temps_2 = [in_2]+cell_out_temps[4:].flatten().tolist()[0]
+        temps_2 = cell_out_2.flatten().tolist()[0] + [out_2]
         exchangers = self.nodes[2:-2]
         for i, ex in enumerate(exchangers):
             ex.flow_1.in_fluid.temperature = temps_1[i]
             ex.flow_2.in_fluid.temperature = temps_2[i]
-            ex.flow_1.out_fluid.temperature = temps_1[i+1]
-            ex.flow_2.out_fluid.temperature = temps_2[i+1]
+            ex.flow_1.out_fluid.temperature = temps_1[i + 1]
+            ex.flow_2.out_fluid.temperature = temps_2[i + 1]
+
+    def heat_capacity_flow(self):
+        q_1, q_2 = 0, 0
+        for row in self.layout:
+            for ex in row:
+                q_1 += ex.heat_capacity_flow[0]
+                q_2 += ex.heat_capacity_flow[1]
+        return q_1, q_2
 
     def __repr__(self):
         output = f"Network:\ncell numbers={self.cell_numbers}\n"
@@ -292,7 +300,7 @@ if __name__ == "__main__":
     fld_2 = Fluid("Water", temperature=293.15)
     flow_2 = Flow(fld_2, W / fld_2.get_specific_heat())
 
-    sh = Layout((2, 3), flow_1, flow_2)
+    sh = Layout((2, 2), flow_1, flow_2)
     sh.transferability = kA
     sh.fill('CrossFlowOneRow')
     # print(sh)
@@ -311,8 +319,12 @@ if __name__ == "__main__":
     print(sh.temperature_matrix[1] - 273.15)
     print(sh.temperature_outputs[1] - 273.15)
 
+    print(sh)
+    print(sh.heat_capacity_flow())
     for i in range(5):
         sh._adjust_temperatures()
-        #print(sh)
-        print(sh.temperature_outputs[1]-273)
+        print(sh.heat_capacity_flow())
+        # print(sh)
+        print(sh.temperature_outputs[1] - 273)
     print(sh)
+    print(sh.heat_capacity_flow())
