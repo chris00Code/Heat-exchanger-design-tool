@@ -95,7 +95,7 @@ class Layout:
 
             for i in range(self.layout.shape[0]):
                 for j in range(self.layout.shape[1]):
-                    ex = ex_class(self.flow_1, self.flow_2)
+                    ex = ex_class(self.flow_1.copy(), self.flow_2.copy())
                     ex.heat_transferability = self.transferability / self.cell_numbers
                     self.layout[i, j] = ex
         else:
@@ -249,38 +249,32 @@ class Layout:
         temp_1, temp_2, _ = self.input_temps
         return (temp_1 - temp_2) * matrix + temp_2
 
-    @property
+    """@property
     def cell_temperatures_input(self):
-        """
-        returns a tupel with input temperatures of each cell. the cells are sorted by the flattening order_1
-        :return:
-        """
         # @TODO implement S11, S22 in property method
         # @TODO check why temp input 1 wrong
         temp_1 = self.adjacency[0][2:-2, 2:-2].T @ self.temperature_matrix[0][:4]
         temp_2 = self.adjacency[1][2:-2, 2:-2].T @ self.temperature_matrix[0][4:]
         value = (temp_1, temp_2)
         dimles = (self._dimles_2_temp(temp_1), self._dimles_2_temp(temp_2))
-        return value, dimles
+        return value, dimles"""
 
     def _adjust_temperatures(self):
-        in_temps = self.cell_temperatures_input[1]
-        out_temps = self.temperature_outputs[1]
-
+        cell_out_temps = self.temperature_matrix[1]
         in_1, in_2, _ = self.input_temps
-        temps_1 = in_temps[0].flatten().tolist()[0]
-        temps = [in_1] + in_temps[0].flatten().tolist()[0]
 
+        cell_out_2 = self._dimles_2_temp(self.adjacency[1][2:-2, 2:-2].T @ self.temperature_matrix[0][4:])
+        out_2 = self.temperature_outputs[1][1][0,0]
+
+        temps_1 = [in_1]+cell_out_temps[:4].flatten().tolist()[0]
+        #temps_2 = [in_2]+cell_out_temps[4:].flatten().tolist()[0]
+        temps_2 = cell_out_2.flatten().tolist()[0]+[out_2]
         exchangers = self.nodes[2:-2]
         for i, ex in enumerate(exchangers):
-            ex.flow_1.in_fluid.temperature = in_temps[0][i][0, 0]
-            ex.flow_2.in_fluid.temperature = in_temps[1][i][0, 0]
-            try:
-                ex.flow_1.out_fluid.temperature = in_temps[0][i + 1][0, 0]
-                ex.flow_2.out_fluid.temperature = in_temps[1][i + 1][0, 0]
-            except IndexError:
-                ex.flow_1.out_fluid.temperature = out_temps[0][0, 0]
-                ex.flow_2.out_fluid.temperature = out_temps[1][0, 0]
+            ex.flow_1.in_fluid.temperature = temps_1[i]
+            ex.flow_2.in_fluid.temperature = temps_2[i]
+            ex.flow_1.out_fluid.temperature = temps_1[i+1]
+            ex.flow_2.out_fluid.temperature = temps_2[i+1]
 
     def __repr__(self):
         output = f"Network:\ncell numbers={self.cell_numbers}\n"
@@ -315,7 +309,8 @@ if __name__ == "__main__":
     print(sh.phi_matrix)
     print(sh.temperature_matrix[1] - 273.15)
     print(sh.temperature_outputs[1] - 273.15)
-    print(sh.cell_temperatures_input[1][0] - 273.15)
-    print(sh.cell_temperatures_input[1][1] - 273.15)
-    # sh._adjust_temperatures()
-    # print(sh)
+
+    for i in range(5):
+        sh._adjust_temperatures()
+        print(sh)
+        print(sh.temperature_outputs[1]-273)

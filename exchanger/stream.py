@@ -159,7 +159,8 @@ class Flow:
         return dict
 
     def copy(self):
-        return Flow(self.in_fluid,self.mass_flow)
+        fluid = Fluid(self.in_fluid.title,self.in_fluid.pressure,self.in_fluid.temperature)
+        return Flow(fluid,self.mass_flow)
 
     @staticmethod
     def deserialize(data):

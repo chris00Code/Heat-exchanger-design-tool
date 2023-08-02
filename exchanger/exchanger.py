@@ -125,8 +125,8 @@ class HeatExchanger:
 
     def repr_short(self):
         output = f"Typ: {self.__class__.__name__},Id:{id(self)} \n\n"
-        output += f"Fluid 1:{self.flow_1.mean_fluid.temperature}\n" \
-                  f"Fluid 2:{self.flow_2.mean_fluid.temperature}\n"
+        output += f"Fluid 1:{self.flow_1.in_fluid.temperature-273.15}\n" \
+                  f"Fluid 2:{self.flow_2.in_fluid.temperature-273.15}\n"
         output += self.str_dimensionless_parameters()
         return output
 
