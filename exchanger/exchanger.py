@@ -78,19 +78,17 @@ class HeatExchanger:
 
     @property
     def heat_capacity_flow(self):
-        in_1, in_2 = self.flow_1.in_fluid.temperature, self.flow_2.in_fluid.temperature
-        out_1, out_2 = self.flow_1.out_fluid.temperature, self.flow_2.out_fluid.temperature
-        # @todo -+
-        delta_1, delta_2 = abs(in_1 - out_1), abs(in_2 - out_2)
-        return self.flow_1.heat_capacity_flow * delta_1, \
-               self.flow_2.heat_capacity_flow * delta_2
+        return self.flow_1.heat_capacity_flow, self.flow_2.heat_capacity_flow
 
+    @property
+    def heat_flows(self):
+        return self.flow_1.heat_flow, self.flow_2.heat_flow
 
     @property
     def ntu(self):
         kA = self.heat_transferability
-        heat_capacity_flow_1 = self.flow_1.get_heat_capacity_flow()
-        heat_capacity_flow_2 = self.flow_2.get_heat_capacity_flow()
+        heat_capacity_flow_1 = self.flow_1.heat_capacity_flow
+        heat_capacity_flow_2 = self.flow_2.heat_capacity_flow
         if (kA and heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
             ntu1 = kA / heat_capacity_flow_1
             ntu2 = kA / heat_capacity_flow_2
@@ -104,8 +102,8 @@ class HeatExchanger:
 
     @property
     def r(self):
-        heat_capacity_flow_1 = self.flow_1.get_heat_capacity_flow()
-        heat_capacity_flow_2 = self.flow_2.get_heat_capacity_flow()
+        heat_capacity_flow_1 = self.flow_1.heat_capacity_flow
+        heat_capacity_flow_2 = self.flow_2.heat_capacity_flow
         if (heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
             r1 = heat_capacity_flow_1 / heat_capacity_flow_2
             r2 = heat_capacity_flow_2 / heat_capacity_flow_1
@@ -135,10 +133,14 @@ class HeatExchanger:
 
     def repr_short(self):
         output = f"Typ: {self.__class__.__name__},Id:{id(self)} \n\n"
-        output += f"Wärmekapazitätsstrom:\n" \
-                  f"Fld1: {self.heat_capacity_flow[0]}, Fld2: {self.heat_capacity_flow[1]}\n\n"
-        output += f"Fluid 1:{self.flow_1.in_fluid.temperature - 273.15}\n" \
+        output += f"Wärmestrom:\n" \
+                  f"Fld1: {self.heat_flows[0]}, Fld2: {self.heat_flows[1]}\n\n"
+        output += f"Inputs: \n" \
+                  f"Fluid 1:{self.flow_1.in_fluid.temperature - 273.15}\n" \
                   f"Fluid 2:{self.flow_2.in_fluid.temperature - 273.15}\n"
+        output += f"Outputs: \n" \
+                  f"Fluid 1:{self.flow_1.out_fluid.temperature - 273.15}\n" \
+                  f"Fluid 2:{self.flow_2.out_fluid.temperature - 273.15}\n"
         output += self.str_dimensionless_parameters()
         return output
 
@@ -187,53 +189,15 @@ class CrossFlowOneRow(HeatExchanger):
         return p1, p2
 
 
-"""
-    def set_part(self, part: Part):
-        self.__part = part
-        return self
-
-    def get_part(self):
-        return self.__part
-
-
-    def get_p(self) -> tuple:
-        pass
-
-
-    
-    def __set_input_temperature(self, theta_1_1, theta_2_1):
-        self.__theta_1_1 = theta_1_1
-        self.__theta_2_1 = theta_2_1
-        return self
-
-    def get_input_temperature(self):
-        return self.__theta_1_1, self.__theta_2_1
-
-    def get_output_temperature(self):
-        p1, p2 = self.get_p()
-        theta_1_1, theta_2_1 = self.get_input_temperature()
-        theta_1_2 = -(p1 * (theta_1_1 - theta_2_1) - theta_1_1)
-        theta_2_2 = p2 * (theta_1_1 - theta_2_1) + theta_2_1
-        return theta_1_2, theta_2_2
-
-    def str_temperatures(self):
-        fluid1, fluid2 = self.get_flow_1().fluid.name, self.get_flow_2().fluid.name
-        theta_1_1, theta_2_1 = self.get_input_temperature()
-        theta_1_2, theta_2_2 = self.get_output_temperature()
-        output = f"Fluidtemperaturen:\n"
-        output += f"Fluid %s: \nEintritt: {theta_1_1}Austritt: {theta_1_2}\n" % (fluid1)
-        output += f"Fluid %s: \nEintritt: {theta_2_1}Austritt: {theta_2_2}\n" % (fluid2)
-        return output
-
-"""
 
 if __name__ == "__main__":
     print("Exchanger Test:")
-    flow_1 = Flow(Fluid("Water"), 2)
+    flow_1 = Flow(Fluid("Water",temperature=273.15+15), 0.33)
     flow_2 = Flow(Fluid("Air"), 1)
     # ex = HeatExchanger(flow_1, flow_2, 10, 56)
     ex = ParallelFlow(flow_1, flow_2, 10, 56)
-    print(ex)
+    ex.flow_1.out_fluid.temperature=273.15+23.11
+    print(ex.repr_short())
     # print(ex.r)
     # print(ex.str_r())
     # print(ex.p)

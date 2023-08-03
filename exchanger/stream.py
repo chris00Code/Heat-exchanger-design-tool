@@ -61,6 +61,8 @@ class Fluid:
             raise NotImplementedError("Fluid not implemented. Check spelling")
         fluid = fluid.with_state(fld.Input.pressure(self._pressure),
                                  fld.Input.temperature(self._temperature))
+        if fluid.phase.name == 'Gas':
+            raise NotImplementedError("phase = Gas is not implemented")
         return fluid
 
     def get_specific_heat(self):
@@ -138,13 +140,18 @@ class Flow:
 
     @property
     def heat_capacity_flow(self):
-        return self.mean_fluid.get_specific_heat() * self.mass_flow
-
-    def get_heat_capacity_flow(self):
-        return self.mean_fluid.get_specific_heat() * self.mass_flow
+        # return self.mean_fluid.get_specific_heat() * self.mass_flow*(self.in_fluid.temperature-self.out_fluid.temperature)
+        return self.mass_flow * self.mean_fluid.get_specific_heat()
 
     def str_heat_capacity_flow(self):
-        return f"Wärmekapazitätsstrom: W_dot = %.2f W/K\n" % (self.get_heat_capacity_flow())
+        return f"Wärmekapazitätsstrom: W_dot = %.2f W/K\n" % (self.heat_capacity_flow)
+
+    @property
+    def heat_flow(self):
+        return self.mass_flow * (self.in_fluid._fluid.enthalpy - self.out_fluid._fluid.enthalpy)
+
+    def str_heat_flow(self):
+        return f"Wärmestrom: Q_dot = %.2f W\n" % (self.heat_flow)
 
     def __repr__(self):
         str_in = str(self.in_fluid)
@@ -159,8 +166,8 @@ class Flow:
         return dict
 
     def copy(self):
-        fluid = Fluid(self.in_fluid.title,self.in_fluid.pressure,self.in_fluid.temperature)
-        return Flow(fluid,self.mass_flow)
+        fluid = Fluid(self.in_fluid.title, self.in_fluid.pressure, self.in_fluid.temperature)
+        return Flow(fluid, self.mass_flow)
 
     @staticmethod
     def deserialize(data):
@@ -169,6 +176,7 @@ class Flow:
 
 
 if __name__ == "__main__":
+    """
     fl = Fluid("Air")
     print(fl.get_specific_heat())
     fl.pressure = 500e3
@@ -188,3 +196,10 @@ if __name__ == "__main__":
     flow.in_fluid.temperature = 300
     print(flow)
     print(flow_2)
+    """
+    fluid_in = Fluid("Water", temperature=273.15 + 45)
+    flow = Flow(fluid_in, 0.83)
+    flow.out_fluid.temperature = 273.15 + 57
+    print(flow)
+    print(flow.str_heat_capacity_flow())
+    print(flow.str_heat_flow())

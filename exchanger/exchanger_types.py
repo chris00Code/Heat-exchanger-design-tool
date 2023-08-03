@@ -139,16 +139,18 @@ class Layout:
         if order_1 is not None: self.order_1 = order_1
         if order_2 is not None: self.order_2 = order_2
 
-        path_1 = flatten(self.layout, self.order_1)
+        ex_path_1 = flatten(self.layout, self.order_1)
+        path_1 = ex_path_1.copy()
         path_1.insert(0, self.flow_1)
         out_1 = flow_1.copy()
         path_1.append(out_1)
 
-        nodes = path_1
+        nodes = path_1.copy()
 
         tuples_list_1 = list_2_tuplelist(path_1)
 
-        path_2 = flatten(self.layout, self.order_2)
+        ex_path_2 = flatten(self.layout, self.order_2)
+        path_2 = ex_path_2.copy()
         path_2.insert(0, self.flow_2)
         nodes.insert(1, self.flow_2)
         out_2 = flow_2.copy()
@@ -158,6 +160,7 @@ class Layout:
         tuples_list_2 = list_2_tuplelist(path_2)
 
         self._nodes = nodes
+        self.exchangers_flattened = (ex_path_1, ex_path_2)
         self._paths = tuples_list_1, tuples_list_2
 
     @property
@@ -260,29 +263,51 @@ class Layout:
         return value, dimles"""
 
     def _adjust_temperatures(self):
+        """
         cell_out_temps = self.temperature_matrix[1]
         in_1, in_2, _ = self.input_temps
 
         n = self.temperature_matrix[0].shape[0] // 2
-        cell_out_2 = self._dimles_2_temp(self.adjacency[1][2:-2, 2:-2].T @ self.temperature_matrix[0][n:])
+        # cell_out_2 = self._dimles_2_temp(self.adjacency[1][2:-2, 2:-2].T @ self.temperature_matrix[0][n:])
         out_2 = self.temperature_outputs[1][1][0, 0]
 
         temps_1 = [in_1] + cell_out_temps[:n].flatten().tolist()[0]
         # temps_2 = [in_2]+cell_out_temps[4:].flatten().tolist()[0]
-        temps_2 = cell_out_2.flatten().tolist()[0] + [out_2]
+        temps_2 = [in_2] + cell_out_temps[n:].flatten().tolist()[0] + [out_2]
         exchangers = self.nodes[2:-2]
         for i, ex in enumerate(exchangers):
             ex.flow_1.in_fluid.temperature = temps_1[i]
             ex.flow_2.in_fluid.temperature = temps_2[i]
             ex.flow_1.out_fluid.temperature = temps_1[i + 1]
             ex.flow_2.out_fluid.temperature = temps_2[i + 1]
+        """
+        cell_out_temps = self.temperature_matrix[1].flatten().tolist()[0]
+        n = len(cell_out_temps) // 2
 
-    def heat_capacity_flow(self):
+        exchangers_flattened_1, exchangers_flattened_2 = self.exchangers_flattened
+        # for i, ex in enumerate(self.nodes[2:-2]):
+        for i, ex in enumerate(exchangers_flattened_1):
+            # adjust out temps
+            ex.flow_1.out_fluid.temperature = cell_out_temps[i]
+            ex.flow_2.out_fluid.temperature = cell_out_temps[n + i]
+
+            # adjust in temp 1
+            if i > 0:
+                ex.flow_1.in_fluid.temperature = cell_out_temps[i - 1]
+
+        # adjust in temp 2
+        for i, ex in enumerate(exchangers_flattened_2):
+            if i > 0:
+                ex.flow_2.in_fluid.temperature = prev_out_temp
+            prev_out_temp = ex.flow_2.out_fluid.temperature
+
+    @property
+    def heat_flows(self):
         q_1, q_2 = 0, 0
         for row in self.layout:
             for ex in row:
-                q_1 += ex.heat_capacity_flow[0]
-                q_2 += ex.heat_capacity_flow[1]
+                q_1 += ex.heat_flows[0]
+                q_2 += ex.heat_flows[1]
         return q_1, q_2
 
     def __repr__(self):
@@ -295,10 +320,13 @@ class Layout:
 if __name__ == "__main__":
     kA = 4000
     W = 3500
-    fld_1 = Fluid("Water", temperature=373.15)
+    fld_1 = Fluid("Water", pressure=101420 ,temperature=373.15)
+    print(fld_1)
     flow_1 = Flow(fld_1, W / fld_1.get_specific_heat())
+    #flow_1 = Flow(fld_1, 1.683)
     fld_2 = Fluid("Water", temperature=293.15)
     flow_2 = Flow(fld_2, W / fld_2.get_specific_heat())
+    #flow_2 = Flow(fld_2, 0.837)
 
     sh = Layout((2, 2), flow_1, flow_2)
     sh.transferability = kA
@@ -319,12 +347,16 @@ if __name__ == "__main__":
     print(sh.temperature_matrix[1] - 273.15)
     print(sh.temperature_outputs[1] - 273.15)
 
+    # print(sh)
+    print(sh.heat_flows)
+    sh._adjust_temperatures()
+    print(sh.heat_flows)
     print(sh)
-    print(sh.heat_capacity_flow())
+
     for i in range(5):
         sh._adjust_temperatures()
-        print(sh.heat_capacity_flow())
-        # print(sh)
+        print(sh.heat_flows)
+        print(sh)
         print(sh.temperature_outputs[1] - 273)
     print(sh)
-    print(sh.heat_capacity_flow())
+    print(sh.heat_flows)
