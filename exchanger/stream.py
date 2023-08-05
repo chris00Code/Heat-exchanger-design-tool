@@ -11,48 +11,137 @@ with open(file_path) as config_file:
 """
 import pyfluids as fld
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logging.debug(f'{__file__} will get logged')
+
 
 def update_fluid(func):
     def wrapper(self, value):
         func(self, value)
-        self._fluid.update(fld.Input.pressure(self._pressure), fld.Input.temperature(self._temperature))
+        try:
+            self.fluid.update(fld.Input.pressure(self._pressure), fld.Input.temperature(self._temperature))
+        except:
+            pass
 
     return wrapper
 
 
 class Fluid:
-    def __init__(self, title: str, pressure: float = 101325, temperature: float = 293.15):
-        self._title = title
-        self._pressure = pressure
-        self._temperature = temperature
-        self._fluid = self._set_fluid()
+    fluid_instances = {
+        'Fluid': fld.Fluid,
+        # @TODO implement Mixture and Humid Air
+        # 'Mixture': fld.Mixture,
+        # 'HumidAir': fld.HumidAir
+    }
+
+    def __init__(self, title: str, pressure: float = 101325, temperature: float = 293.15, instance: str = 'Fluid'):
+        if isinstance(title, fld.Fluid):
+            fluid = title
+            self.title = fluid.name
+            self.fluid = fluid
+        else:
+            self.instance = instance
+
+            self.title = title
+            self.fluid = None
+            # setting initial conditions at NTP
+            # @TODO could lead to problems with some fluids
+            self._pressure = pressure
+            self._temperature = temperature
+
+            self.pressure = pressure
+            self.temperature = temperature
+
+    @property
+    def instance(self):
+        return self.__instance
+
+    @instance.setter
+    def instance(self, value):
+        try:
+            self.__instance = self.fluid_instances[value]
+        except KeyError:
+            raise AttributeError("instance not implemented")
 
     @property
     def title(self):
+
         return self._title
 
     @title.setter
     def title(self, value):
         self._title = value
-        self._fluid = self._set_fluid()
+
+    @property
+    def fluid(self):
+        return self._fluid
+
+    @fluid.setter
+    def fluid(self, value=None):
+        if isinstance(value, fld.Fluid):
+            self._fluid = value
+            logging.debug(f'Creating Fluid by fld object\n id = {id(self)}\n Unit system = {self.fluid.units_system}')
+        elif value is not None:
+            raise NotImplementedError
+        else:
+            try:
+                self._fluid = self.instance(fld.FluidsList[self._title])
+                logging.debug(f'Creating Fluid by title\n id = {id(self)}\n Unit system = {self.fluid.units_system}')
+            except KeyError:
+                raise NotImplementedError("Fluid not implemented. Check spelling")
 
     @property
     def pressure(self):
-        return self._pressure
+        return self.fluid.pressure
 
     @pressure.setter
-    @update_fluid
     def pressure(self, value):
-        self._pressure = value
+        try:
+            self.fluid.update(fld.Input.pressure(value), fld.Input.temperature(self._temperature))
+            self._pressure = value
+            logging.debug("setting pressure")
+        except AttributeError:
+            logging.debug("pressure not yet defined")
+        except ValueError as e:
+            logging.debug(f"resetting pressure to {self._pressure}\n {e}")
+            self.fluid.update(fld.Input.pressure(self._pressure), fld.Input.temperature(self._temperature))
+            print(f"pressure not supported, please change pressure\n {e}")
 
     @property
     def temperature(self):
-        return self._temperature
+        return self.fluid.temperature
 
     @temperature.setter
-    @update_fluid
     def temperature(self, value):
-        self._temperature = value
+        try:
+            self.fluid.update(fld.Input.pressure(self._pressure), fld.Input.temperature(value))
+            self._temperature = value
+            logging.debug("setting temperature")
+        except AttributeError:
+            logging.debug("temperature not yet defined")
+        except ValueError as e:
+            logging.debug(f"resetting temperature to {self._temperature}\n {e}")
+            self.fluid.update(fld.Input.pressure(self._pressure), fld.Input.temperature(self._temperature))
+            print(f"Temperature not supported, please change temperature\n {e}")
+
+    @property
+    def specific_heat(self):
+        return self.fluid.specific_heat
+
+    def clone(self):
+        new_fluid = Fluid(self.fluid)
+        return new_fluid
+
+    def __repr__(self):
+        output = f"Fluid: title = {self.title} id = {id(self)}\n"
+        output += f"\tp = {self.pressure} Pa\n" \
+                  f"\tt = {self.temperature - 273.15} °C"
+        return output
+
+    """
+
 
     def _set_fluid(self):
         try:
@@ -61,8 +150,9 @@ class Fluid:
             raise NotImplementedError("Fluid not implemented. Check spelling")
         fluid = fluid.with_state(fld.Input.pressure(self._pressure),
                                  fld.Input.temperature(self._temperature))
-        if fluid.phase.name == 'Gas':
-            raise NotImplementedError("phase = Gas is not implemented")
+        
+        #if fluid.phase.name == 'Gas':
+        #    raise NotImplementedError("phase = Gas is not implemented")
         return fluid
 
     def get_specific_heat(self):
@@ -82,6 +172,8 @@ class Fluid:
         except:
             str_fluid = "state not yet defined"
         return str_fluid
+
+    """
 
 
 class Flow:
@@ -148,7 +240,7 @@ class Flow:
 
     @property
     def heat_flow(self):
-        return self.mass_flow * (self.in_fluid._fluid.enthalpy - self.out_fluid._fluid.enthalpy)
+        return self.mass_flow * (self.in_fluid.fluid.enthalpy - self.out_fluid.fluid.enthalpy)
 
     def str_heat_flow(self):
         return f"Wärmestrom: Q_dot = %.2f W\n" % (self.heat_flow)
@@ -197,9 +289,9 @@ if __name__ == "__main__":
     print(flow)
     print(flow_2)
     """
-    fluid_in = Fluid("Water", temperature=273.15 + 45)
-    flow = Flow(fluid_in, 0.83)
-    flow.out_fluid.temperature = 273.15 + 57
+    fluid_in = Fluid("Water", temperature=273.15 + 100)
+    flow = Flow(fluid_in, 1)
+    flow.out_fluid.temperature = 273.15 + 99
     print(flow)
     print(flow.str_heat_capacity_flow())
     print(flow.str_heat_flow())
