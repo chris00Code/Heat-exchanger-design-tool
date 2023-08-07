@@ -6,7 +6,7 @@ import pyfluids
 class FluidTests(unittest.TestCase):
     from pyfluids import Fluid as fldFluid
     from pyfluids import Mixture as fldMixture
-    from stream import Fluid
+    from stream import Fluid, Flow
 
     def test_fluid_init(self):
         with self.assertRaises(TypeError):
@@ -15,6 +15,16 @@ class FluidTests(unittest.TestCase):
         self.assertEqual(fluid.title, "Water")
 
         self.assertEqual(fluid.fluid.units_system, pyfluids.UnitsSystem.SI)
+
+        fluid = self.Fluid("Water", temperature=300)
+        self.assertEqual(fluid.temperature, 300)
+
+        fluid = self.Fluid("Water", pressure=300)
+        self.assertEqual(fluid.pressure, 300)
+
+        fluid = self.Fluid("Water", temperature=350, pressure=100)
+        self.assertEqual(fluid.temperature, 350)
+        self.assertEqual(fluid.pressure, 100)
 
     def test_fluid_instance(self):
         fluid = self.Fluid("Water")
@@ -53,16 +63,68 @@ class FluidTests(unittest.TestCase):
         fluid.temperature = 60
         self.assertEqual(fluid.temperature, 293.15)
 
-
-    def test_something(self):
+    def test_fluid_print(self):
         fluid = self.Fluid("Water")
-        print(fluid.fluid.enthalpy)
-        new_fluid = fluid.fluid.heating_to_enthalpy(90000)
+        fluid.temperature = 350
+        fluid.pressure = 10
         print(fluid)
-        n = self.Fluid(new_fluid)
-        print(n)
-        n2 = n.clone()
-        print(n2)
+
+    def test_fluid_clone(self):
+        fluid = self.Fluid("Water")
+        new_fluid = fluid.clone()
+        self.assertNotEqual(fluid, new_fluid)
+        new_fluid.pressure = 100e3
+
+        fluid = self.Fluid("Water", temperature=280)
+        new_fluid = fluid.clone()
+        self.assertNotEqual(fluid, new_fluid)
+        new_fluid.pressure = 100e3
+        new_fluid.temperature = 350
+        fluid.pressure = 150e3
+
+        self.assertEqual(fluid.temperature, 280)
+        self.assertEqual(new_fluid.temperature, 350)
+        self.assertEqual(fluid.pressure, 150e3)
+        self.assertEqual(new_fluid.pressure, 100e3)
+
+    def test_flow_init(self):
+        with self.assertRaises(TypeError):
+            flow = self.Fluid()
+        fluid = self.Fluid("Water")
+        flow = self.Flow(fluid)
+        self.assertEqual(flow.in_fluid, fluid)
+
+        flow.volume_flow = 10
+        self.assertEqual(flow.volume_flow, 10)
+
+        flow.mass_flow = 15
+        self.assertEqual(flow.mass_flow, 15)
+        in_density = fluid.density
+        self.assertEqual(flow.volume_flow, 15 / in_density)
+
+    def test_flow_phasechange(self):
+        fluid = self.Fluid("Water")
+        flow = self.Flow(fluid, 15)
+        flow.pressure_loss = -5000
+        with self.assertRaises(Warning):
+            flow.out_temperature = 250 + 273.15
+        flow.out_temperature = 101 + 273.15
+
+    def test_flow_heatflow(self):
+        fluid = self.Fluid("Water", temperature=273.15 + 15)
+        flow = self.Flow(fluid, 0.33)
+        self.assertAlmostEqual(flow.heat_capacity_flow, 1382, 0)
+        self.assertEqual(flow.heat_flow, 0)
+        flow.out_temperature = 273.15 + 23.11
+        self.assertAlmostEqual(flow.heat_flow, -11.2e3, delta=0.1e3)
+
+    def test_flow_print(self):
+        fluid = self.Fluid("Water", temperature=273.15 + 15)
+        flow = self.Flow(fluid, 1)
+        print(flow)
+        flow.out_temperature = 273.15 + 99
+        print(flow)
+
 
 if __name__ == '__main__':
     unittest.main()
