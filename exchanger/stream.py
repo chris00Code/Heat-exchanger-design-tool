@@ -95,18 +95,6 @@ class Fluid:
             logging.debug(f"resetting pressure to {prev_pressure}\n {e}")
             self.fluid.update(fld.Input.pressure(prev_pressure), fld.Input.temperature(temp))
             print(f"pressure not supported, please change pressure\n {e}")
-        """
-        try:
-            self.fluid.update(fld.Input.pressure(value), fld.Input.temperature(self._temperature))
-            self._pressure = value
-            logging.debug("setting pressure")
-        except AttributeError:
-            logging.debug("pressure not yet defined")
-        except ValueError as e:
-            logging.debug(f"resetting pressure to {self._pressure}\n {e}")
-            self.fluid.update(fld.Input.pressure(self._pressure), fld.Input.temperature(self._temperature))
-            print(f"pressure not supported, please change pressure\n {e}")
-        """
 
     @property
     def temperature(self):
@@ -125,18 +113,6 @@ class Fluid:
             logging.debug(f"resetting temperature to {prev_temp}\n {e}")
             self.fluid.update(fld.Input.pressure(pressure), fld.Input.temperature(prev_temp))
             print(f"Temperature not supported, please change temperature\n {e}")
-        """
-        try:
-            self.fluid.update(fld.Input.pressure(self._pressure), fld.Input.temperature(value))
-            self._temperature = value
-            logging.debug("setting temperature")
-        except AttributeError:
-            logging.debug("temperature not yet defined")
-        except ValueError as e:
-            logging.debug(f"resetting temperature to {self._temperature}\n {e}")
-            self.fluid.update(fld.Input.pressure(self._pressure), fld.Input.temperature(self._temperature))
-            print(f"Temperature not supported, please change temperature\n {e}")
-        """
 
     def ntp_state(self):
         self.fluid.update(fld.Input.pressure(101325), fld.Input.temperature(293.15))
