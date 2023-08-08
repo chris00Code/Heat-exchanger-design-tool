@@ -12,7 +12,7 @@ with open(file_path) as config_file:
 import pyfluids as fld
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.CRITICAL)
 logging.debug(f'{__file__} will get logged')
 
 

@@ -6,13 +6,24 @@ from stream import Fluid, Flow
 from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow
 
 
-class Network:
-    def __init__(self):
-        self._exchangers = []
-        # self._inputs = []
-        # self._outputs = []
-        # self._paths = []
-        # self._structure = None
+class ExchangerNetwork:
+    def __init__(self, input_flows: list = [], exchangers: list = [], output_flows: list = []):
+        self.input_flows = input_flows
+        self.exchangers = exchangers
+        self.output_flows = output_flows
+
+        self._input_temps = [],None
+
+    @property
+    def input_flows(self):
+        return self._input_flows
+
+    @input_flows.setter
+    def input_flows(self, value):
+        if isinstance(value, list):
+            self._input_flows = value
+        else:
+            raise NotImplementedError
 
     @property
     def exchangers(self):
@@ -25,6 +36,47 @@ class Network:
         elif isinstance(value, HeatExchanger):
             self._exchangers.append(value)
 
+    @property
+    def output_flows(self):
+        return self._output_flows
+
+    @output_flows.setter
+    def output_flows(self, value):
+        if isinstance(value, list):
+            self._output_flows = value
+        else:
+            raise NotImplementedError
+
+    @property
+    def input_temps(self):
+        value = self._input_temps
+        if value[0] is None:  # only if input temps is set dirrectly
+            return self._input_temps
+        else:  # calculating input temps
+            temps = []
+            for flow in self.input_flows:
+                temp = flow.in_fluid.temperature
+                temps.append(temp)
+            dimensionless_matrix = np.zeros((len(temps),1))
+            if len(temps) != 0:
+                max_temp = max(temps)
+                for i, temp in enumerate(temps):
+                    if temp == max_temp:
+                        dimensionless_matrix[i,0] = 1
+                        break
+            self._input_temps = temps, dimensionless_matrix
+        return self._input_temps
+
+    @input_temps.setter
+    def input_temps(self, value):
+        if isinstance(value, np.matrix):
+            dimensionless_matrix = value
+            temps = None
+        else:
+            raise NotImplementedError
+        self._input_temps = temps, dimensionless_matrix
+
+    """
     @property
     def phi(self):
         dim = len(self.exchangers)
@@ -125,15 +177,17 @@ class Network:
             self._outputs = value
         else:
             raise NotImplementedError
+
     @property
     def temperature_outputs(self):
-        value = self.outputs@self.temperatures
+        value = self.outputs @ self.temperatures
         return value
 
     def __repr__(self):
         output = "Heat Exchanger Network:\n"
         output += f"{self.exchangers}"
         return output
+    """
 
 
 if __name__ == "__main__":
