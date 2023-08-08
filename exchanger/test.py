@@ -125,6 +125,65 @@ class FluidTests(unittest.TestCase):
         flow.out_temperature = 273.15 + 99
         print(flow)
 
+    """
+    part.py tests
+    """
+    from parts import Part
+    def test_part_init(self):
+        part = self.Part()
+        self.assertEqual(part.heat_transferability, 0)
+
+        part = self.Part(10)
+        self.assertEqual(part.heat_transferability, 10)
+        self.assertEqual(part.heat_transfer_area, None)
+        part = self.Part(heat_transfer_area=10, heat_transfer_coefficient=5)
+        self.assertEqual(part.heat_transferability, 50)
+        self.assertEqual(part.heat_transfer_area, 10)
+
+    def test_part_setter(self):
+        part = self.Part(10)
+        with self.assertRaises(AttributeError):
+            part.heat_transfer_coefficient = 10
+        with self.assertRaises(AttributeError):
+            part.heat_transfer_area = 10
+        part = self.Part(heat_transfer_area=10, heat_transfer_coefficient=5)
+        part.heat_transferability = 10
+        print(part)
+
+    def test_part_print(self):
+        part = self.Part(heat_transfer_area=10, heat_transfer_coefficient=5)
+        part.hydraulic_diameter = 50
+        print(part)
+
+    """
+    exchanger.py tests
+    """
+    from exchanger import HeatExchanger, ParallelFlow
+    def test_exchanger_init(self):
+        flow_1 = self.Flow(self.Fluid("Water", temperature=273.15 + 15), 0.33)
+        flow_2 = self.Flow(self.Fluid("Air"), 1)
+        ex = self.HeatExchanger(flow_1, flow_2)
+        print(ex.part)
+        print(ex)
+        ex.heat_transferability = 560
+        self.assertEqual(ex.heat_transferability, 560)
+        self.assertAlmostEqual(ex.ntu[0], 0.405, 2)
+
+    def test_exchanger_parallel(self):
+        flow_1 = self.Flow(self.Fluid("Water", temperature=273.15 + 15), 0.33)
+        flow_2 = self.Flow(self.Fluid("Air"), 1)
+        part = self.Part(560)
+        ex = self.ParallelFlow(flow_1, flow_2,part)
+        p = ex.p
+        self.assertIsInstance(p, tuple)
+
+    def test_exchanger_print(self):
+        flow_1 = self.Flow(self.Fluid("Water", temperature=273.15 + 15), 0.33)
+        flow_2 = self.Flow(self.Fluid("Air"), 1)
+        part = self.Part(560)
+        ex = self.ParallelFlow(flow_1, flow_2, part)
+        print(ex)
+
 
 if __name__ == '__main__':
     unittest.main()
