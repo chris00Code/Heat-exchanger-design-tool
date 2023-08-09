@@ -7,12 +7,20 @@ from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow
 
 
 class ExchangerNetwork:
-    def __init__(self, input_flows: list = [], exchangers: list = [], output_flows: list = []):
+    def __init__(self, input_flows: list = None, exchangers: list = None, output_flows: list = None):
+        if input_flows is None:
+            input_flows = list()
         self.input_flows = input_flows
+
+        if exchangers is None:
+            exchangers = list()
         self.exchangers = exchangers
+
+        if output_flows is None:
+            output_flows = list()
         self.output_flows = output_flows
 
-        self._input_temps = [],None
+        self._input_temps = [], None
 
     @property
     def input_flows(self):
@@ -57,137 +65,127 @@ class ExchangerNetwork:
             for flow in self.input_flows:
                 temp = flow.in_fluid.temperature
                 temps.append(temp)
-            dimensionless_matrix = np.zeros((len(temps),1))
             if len(temps) != 0:
+                dimensionless_matrix = np.asarray(temps, dtype=float)
                 max_temp = max(temps)
-                for i, temp in enumerate(temps):
-                    if temp == max_temp:
-                        dimensionless_matrix[i,0] = 1
-                        break
+                min_temp = min(temps)
+                dimensionless_matrix = np.interp(dimensionless_matrix, (min_temp, max_temp), (0, 1))
+                dimensionless_matrix = dimensionless_matrix.reshape((dimensionless_matrix.shape[0], 1))
+            else:
+                dimensionless_matrix = None
             self._input_temps = temps, dimensionless_matrix
         return self._input_temps
 
     @input_temps.setter
     def input_temps(self, value):
-        if isinstance(value, np.matrix):
+        if isinstance(value, np.ndarray):
             dimensionless_matrix = value
             temps = None
         else:
             raise NotImplementedError
         self._input_temps = temps, dimensionless_matrix
 
-    """
     @property
-    def phi(self):
-        dim = len(self.exchangers)
-        shape = (dim, dim)
+    def structure_matrix(self):
+        try:
+            return self._structure_matrix
+        except AttributeError:
+            pass
 
-        if dim != 0:
+    @structure_matrix.setter
+    def structure_matrix(self, value):
+        if isinstance(value, np.ndarray):
+            self._structure_matrix = value
+        else:
+            raise NotImplementedError
+
+    @property
+    def input_matrix(self):
+        try:
+            return self._input_matrix
+        except AttributeError:
+            pass
+
+    @input_matrix.setter
+    def input_matrix(self, value):
+        if isinstance(value, np.ndarray):
+            self._input_matrix = value
+        else:
+            raise NotImplementedError
+
+    @property
+    def output_matrix(self):
+        try:
+            return self._output_matrix
+        except AttributeError:
+            pass
+
+    @output_matrix.setter
+    def output_matrix(self, value):
+        if isinstance(value, np.ndarray):
+            self._output_matrix = value
+        else:
+            raise NotImplementedError
+
+    @property
+    def temperature_input_matrix(self):
+        return self.input_temps[1]
+
+    @property
+    def phi_matrix(self):
+        try:
+            value = self._phi_matrix
+        except AttributeError:
+            exchangers = self.exchangers
+            dim = len(exchangers)
+            shape = (dim, dim)
+
             phi_1 = np.zeros(shape)
             phi_2 = np.zeros(shape)
             identity = np.eye(dim)
 
-            for i, ex in enumerate(self.exchangers):
+            for i, ex in enumerate(exchangers):
                 phi_1[i, i], phi_2[i, i] = ex.p
-            self._phi = np.block([[identity - phi_1, phi_1], [phi_2, identity - phi_2]])
-        return self._phi
-
-    @phi.setter
-    def phi(self, value):
-        if len(self.exchangers) != 0:
-            raise ValueError("exchangers already implemented")
-        elif isinstance(value, np.matrix):
-            self._phi = value
-        else:
-            raise NotImplementedError
-
-    @property
-    def structure(self):
-        try:
-            value = self._structure
-        except AttributeError:
-            value = None
+            value = np.block([[identity - phi_1, phi_1], [phi_2, identity - phi_2]])
         return value
 
-    @structure.setter
-    def structure(self, value):
-        # @TODO implement graph converting
-        if isinstance(value, np.matrix):
-            self._structure = value
+    @phi_matrix.setter
+    def phi_matrix(self, value):
+        if isinstance(value, np.ndarray):
+            self._phi_matrix = value
         else:
             raise NotImplementedError
 
     @property
-    def input(self):
-        try:
-            value = self._input
-        except AttributeError:
-            value = None
-        return value
-
-    @input.setter
-    def input(self, value):
-        # @TODO implement graph converting
-        if isinstance(value, np.matrix):
-            self._input = value
-        else:
-            raise NotImplementedError
-
-    @property
-    def temperature_inputs(self):
-        try:
-            value = self._temperature_inputs
-        except AttributeError:
-            value = None
-        return value
-
-    @temperature_inputs.setter
-    def temperature_inputs(self, value):
-        # @TODO implement graph converting
-        if isinstance(value, np.matrix):
-            self._temperature_inputs = value
-        else:
-            raise NotImplementedError
-
-    @property
-    def temperatures(self):
-        phi = self.phi
-        s = self.structure
-        inp = self.input
-        ti = self.temperature_inputs
+    def temperature_matrix(self):
+        phi = self.phi_matrix
+        s = self.structure_matrix
+        inp = self.input_matrix
+        ti = self.temperature_input_matrix
 
         ps = phi @ s
         identity = np.eye(ps.shape[0])
 
-        self._temperatures = inv((identity - ps)) @ phi @ inp @ ti
-        return self._temperatures
+        value = inv((identity - ps)) @ phi @ inp @ ti
+        return value, self._dimles_2_temp(value)
 
-    @property
-    def outputs(self):
-        try:
-            value = self._outputs
-        except AttributeError:
-            value = None
-        return value
-
-    @outputs.setter
-    def outputs(self, value):
-        # @TODO implement graph converting
-        if isinstance(value, np.matrix):
-            self._outputs = value
-        else:
-            raise NotImplementedError
+    def _dimles_2_temp(self, matrix):
+        temps = self.input_temps[0]
+        min_temp = min(temps)
+        max_temp = max(temps)
+        return (max_temp - min_temp) * matrix + min_temp
 
     @property
     def temperature_outputs(self):
-        value = self.outputs @ self.temperatures
-        return value
+        value = self.output_matrix @ self.temperature_matrix[0]
+        return value, self._dimles_2_temp(value)
 
     def __repr__(self):
         output = "Heat Exchanger Network:\n"
-        output += f"{self.exchangers}"
+        output += f"\tcell numbers: {len(self.exchangers)}\n"
+        for i, ex in enumerate(self.exchangers):
+            output += f"\ncell:{i}\n{ex}\n"
         return output
-    """
 
 
 if __name__ == "__main__":
