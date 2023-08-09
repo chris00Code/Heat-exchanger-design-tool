@@ -45,6 +45,11 @@ class ExchangerNetwork:
             self._exchangers.append(value)
 
     @property
+    def cell_numbers(self):
+        value = self.exchangers.size
+        return value
+
+    @property
     def output_flows(self):
         return self._output_flows
 
@@ -63,7 +68,7 @@ class ExchangerNetwork:
         else:  # calculating input temps
             temps = []
             for flow in self.input_flows:
-                temp = flow.in_fluid.temperature
+                temp = flow.mean_fluid.temperature
                 temps.append(temp)
             if len(temps) != 0:
                 dimensionless_matrix = np.asarray(temps, dtype=float)
@@ -182,7 +187,7 @@ class ExchangerNetwork:
 
     def __repr__(self):
         output = "Heat Exchanger Network:\n"
-        output += f"\tcell numbers: {len(self.exchangers)}\n"
+        output += f"\tcell numbers: {self.cell_numbers}\n"
         for i, ex in enumerate(self.exchangers):
             output += f"\ncell:{i}\n{ex}\n"
         return output

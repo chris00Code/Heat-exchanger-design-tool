@@ -8,6 +8,8 @@ from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow, CrossFlow
 from matrix_converter import *
 from numpy.linalg import inv
 
+from network import ExchangerNetwork
+
 
 class Layout:
 
@@ -317,16 +319,137 @@ class Layout:
         return output
 
 
+class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
+    def __init__(self, shape: tuple = (1, 1), type: str = 'CounterCurrentFlow', flow_1: Flow=None,
+                 flow_2: Flow = None,
+                 transferability: float = None):
+        self.layout_matrix = shape
+        self.type = type
+        self.fill()
+        # @TODO implement FLow copy
+        if flow_1 is not None and flow_2 is not None:
+            input_flows = [flow_1, flow_2]
+            output_flows = [flow_1.copy(),flow_2.copy()]
+            super().__init__(input_flows)
+        else:
+            super().__init__()
+        self.flow_order_1 = 'dl2r'
+        self.flow_order_2 = 'ur2d'
+        self.transferability = transferability
+
+
+    @property
+    def layout_matrix(self):
+        return self._layout_matrix
+
+    @layout_matrix.setter
+    def layout_matrix(self, shape):
+        if isinstance(shape, tuple):
+            self._layout_matrix = np.zeros(shape, dtype=HeatExchanger)
+        else:
+            raise NotImplementedError
+
+    @property
+    def total_transferability(self):
+        return self._total_transferability
+
+    @total_transferability.setter
+    def total_transferability(self, value):
+        self._total_transferability = value
+
+    def fill(self, ex_type: str = 'HeatExchanger', order: str = 'equal'):
+        """
+        fills the Layout with Heat Exchanger objects
+        :param ex_type: type of HeatExchanger (must be implemented in exchangers)
+        :param order: if equal, all cells are same heat Exchanger type,
+                        transferability is divided equal by number of cells
+        """
+        if order == 'equal':
+            ex_class = globals()[ex_type]
+
+            for i in range(self.layout_matrix.shape[0]):
+                for j in range(self.layout_matrix.shape[1]):
+                    flow_1, flow_2 = self.input_flows[0].copy(), self.input_flows[1].copy()
+                    ex = ex_class(flow_1, flow_2)
+                    ex.heat_transferability = self.transferability / self.cell_numbers
+                    self.layout_matrix[i, j] = ex
+        else:
+            pass
+
+    @property
+    def flow_order_1(self):
+        return self._flow_order_1
+
+    @flow_order_1.setter
+    def flow_order_1(self, value: str):
+        self._flow_order_1 = value
+
+    @property
+    def flow_order_2(self):
+        return self._flow_order_2
+
+    @flow_order_2.setter
+    def flow_order_2(self, value: str):
+        self._flow_order_2 = value
+
+    @property
+    def nodes(self):
+        try:
+            value = self._nodes
+        except AttributeError:
+            self._extract_node_paths()
+            value = self._nodes
+        return value
+
+    @property
+    def paths(self):
+        try:
+            value = self._paths
+        except AttributeError:
+            self._extract_node_paths()
+            value = self._paths
+        return value
+
+    def _extract_node_paths(self, order_1: str = None, order_2: str = None):
+        if order_1 is not None: self.order_1 = order_1
+        if order_2 is not None: self.order_2 = order_2
+        flow_1, flow_2 = self.input_flows[0], self.input_flows[1]
+
+        ex_path_1 = flatten(self.layout_matrix, self.order_1)
+        path_1 = ex_path_1.copy()
+        path_1.insert(0, flow_1)
+        out_1 = flow_1.copy()
+        path_1.append(out_1)
+
+        nodes = path_1.copy()
+
+        tuples_list_1 = list_2_tuplelist(path_1)
+
+        ex_path_2 = flatten(self.layout_matrix, self.order_2)
+        path_2 = ex_path_2.copy()
+        path_2.insert(0, flow_2)
+        nodes.insert(1, flow_2)
+        out_2 = flow_2.copy()
+        path_2.append(out_2)
+        nodes.append(out_2)
+
+        tuples_list_2 = list_2_tuplelist(path_2)
+
+        self._nodes = nodes
+        self.exchangers_flattened = (ex_path_1, ex_path_2)
+        self._paths = tuples_list_1, tuples_list_2
+
+
 if __name__ == "__main__":
     kA = 4000
     W = 3500
-    fld_1 = Fluid("Water", pressure=101420 ,temperature=373.15)
+    fld_1 = Fluid("Water", pressure=101420, temperature=373.15)
     print(fld_1)
     flow_1 = Flow(fld_1, W / fld_1.get_specific_heat())
-    #flow_1 = Flow(fld_1, 1.683)
+    # flow_1 = Flow(fld_1, 1.683)
     fld_2 = Fluid("Water", temperature=293.15)
     flow_2 = Flow(fld_2, W / fld_2.get_specific_heat())
-    #flow_2 = Flow(fld_2, 0.837)
+    # flow_2 = Flow(fld_2, 0.837)
 
     sh = Layout((2, 2), flow_1, flow_2)
     sh.transferability = kA

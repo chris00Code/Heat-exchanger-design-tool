@@ -196,11 +196,11 @@ class NetworkTests(unittest.TestCase):
     def test_print(self):
         ex_1, ex_2 = init_ex()
         network = ExchangerNetwork()
-        print(network)
+
 
         exchangers = [ex_2, ex_1]
         network.exchangers = exchangers
-
+        print(network)
 
 if __name__ == '__main__':
     unittest.main()
