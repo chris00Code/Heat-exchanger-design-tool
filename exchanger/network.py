@@ -46,7 +46,7 @@ class ExchangerNetwork:
 
     @property
     def cell_numbers(self):
-        value = self.exchangers.size
+        value = len(self.exchangers)
         return value
 
     @property
@@ -185,9 +185,24 @@ class ExchangerNetwork:
         value = self.output_matrix @ self.temperature_matrix[0]
         return value, self._dimles_2_temp(value)
 
+    @property
+    def heat_flows(self):
+        pass
+
+    def heat_flows_str(self):
+        try:
+            return f"\theat flows q_1=%.2f,\tq_2=%.2f\n" % (self.heat_flows)
+        except TypeError:
+            return ""
+
     def __repr__(self):
         output = "Heat Exchanger Network:\n"
         output += f"\tcell numbers: {self.cell_numbers}\n"
+        output += self.heat_flows_str()
+        output += f"input flows: n={len(self.input_flows)}\n"
+        for i, flow in enumerate(self.input_flows):
+            output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
+
         for i, ex in enumerate(self.exchangers):
             output += f"\ncell:{i}\n{ex}\n"
         return output

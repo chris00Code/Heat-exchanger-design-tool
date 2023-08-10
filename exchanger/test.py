@@ -118,6 +118,17 @@ class FluidTests(unittest.TestCase):
         flow.out_temperature = 273.15 + 23.11
         self.assertAlmostEqual(flow.heat_flow, -11.2e3, delta=0.1e3)
 
+    def test_flow_clone(self):
+        fluid = self.Fluid("Water")
+        flow = self.Flow(fluid, 1)
+        new_flow = flow.clone()
+        self.assertNotEqual(flow, new_flow)
+        self.assertNotEqual(flow.in_fluid, new_flow.in_fluid)
+        self.assertNotEqual(flow.mean_fluid, new_flow.mean_fluid)
+        self.assertNotEqual(flow.out_fluid, new_flow.out_fluid)
+        self.assertEqual(flow.mass_flow,new_flow.mass_flow)
+
+
     def test_flow_print(self):
         fluid = self.Fluid("Water", temperature=273.15 + 15)
         flow = self.Flow(fluid, 1)
@@ -173,7 +184,7 @@ class FluidTests(unittest.TestCase):
         flow_1 = self.Flow(self.Fluid("Water", temperature=273.15 + 15), 0.33)
         flow_2 = self.Flow(self.Fluid("Air"), 1)
         part = self.Part(560)
-        ex = self.ParallelFlow(flow_1, flow_2,part)
+        ex = self.ParallelFlow(flow_1, flow_2, part)
         p = ex.p
         self.assertIsInstance(p, tuple)
 

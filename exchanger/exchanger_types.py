@@ -320,23 +320,26 @@ class Layout:
 
 
 class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
-    def __init__(self, shape: tuple = (1, 1), type: str = 'CounterCurrentFlow', flow_1: Flow=None,
+    def __init__(self, shape: tuple = (0, 0), type: str = 'CounterCurrentFlow', flow_1: Flow = None,
                  flow_2: Flow = None,
                  transferability: float = None):
         self.layout_matrix = shape
         self.type = type
-        self.fill()
-        # @TODO implement FLow copy
+
         if flow_1 is not None and flow_2 is not None:
             input_flows = [flow_1, flow_2]
-            output_flows = [flow_1.copy(),flow_2.copy()]
-            super().__init__(input_flows)
+            output_flows = [flow_1.clone(), flow_2.clone()]
+            super().__init__(input_flows, output_flows=output_flows)
         else:
             super().__init__()
+
         self.flow_order_1 = 'dl2r'
         self.flow_order_2 = 'ur2d'
         self.transferability = transferability
-
+        try:
+            self.fill(self.type)
+        except IndexError:
+            pass
 
     @property
     def layout_matrix(self):
@@ -348,6 +351,10 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
             self._layout_matrix = np.zeros(shape, dtype=HeatExchanger)
         else:
             raise NotImplementedError
+
+    @property
+    def cell_numbers(self):
+        return self.layout_matrix.size
 
     @property
     def total_transferability(self):
@@ -369,7 +376,7 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
 
             for i in range(self.layout_matrix.shape[0]):
                 for j in range(self.layout_matrix.shape[1]):
-                    flow_1, flow_2 = self.input_flows[0].copy(), self.input_flows[1].copy()
+                    flow_1, flow_2 = self.input_flows[0].clone(), self.input_flows[1].clone()
                     ex = ex_class(flow_1, flow_2)
                     ex.heat_transferability = self.transferability / self.cell_numbers
                     self.layout_matrix[i, j] = ex
@@ -394,11 +401,7 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
 
     @property
     def nodes(self):
-        try:
-            value = self._nodes
-        except AttributeError:
-            self._extract_node_paths()
-            value = self._nodes
+        value = self.input_flows + self.exchangers + self.output_flows
         return value
 
     @property
@@ -413,31 +416,87 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
     def _extract_node_paths(self, order_1: str = None, order_2: str = None):
         if order_1 is not None: self.order_1 = order_1
         if order_2 is not None: self.order_2 = order_2
-        flow_1, flow_2 = self.input_flows[0], self.input_flows[1]
+        in_flow_1, in_flow_2 = self.input_flows[0], self.input_flows[1]
+        out_flow_1, out_flow_2 = self.output_flows[0], self.output_flows[1]
 
         ex_path_1 = flatten(self.layout_matrix, self.order_1)
+        self.exchangers = ex_path_1
         path_1 = ex_path_1.copy()
-        path_1.insert(0, flow_1)
-        out_1 = flow_1.copy()
-        path_1.append(out_1)
-
-        nodes = path_1.copy()
+        path_1.insert(0, in_flow_1)
+        path_1.append(out_flow_1)
 
         tuples_list_1 = list_2_tuplelist(path_1)
 
         ex_path_2 = flatten(self.layout_matrix, self.order_2)
         path_2 = ex_path_2.copy()
-        path_2.insert(0, flow_2)
-        nodes.insert(1, flow_2)
-        out_2 = flow_2.copy()
-        path_2.append(out_2)
-        nodes.append(out_2)
+        path_2.insert(0, in_flow_2)
+        path_2.append(out_flow_2)
 
         tuples_list_2 = list_2_tuplelist(path_2)
 
-        self._nodes = nodes
         self.exchangers_flattened = (ex_path_1, ex_path_2)
         self._paths = tuples_list_1, tuples_list_2
+
+    @property
+    def heat_flows(self):
+        q_1, q_2 = 0, 0
+        for row in self.exchangers:
+            for ex in row:
+                q_1 += ex.heat_flows[0]
+                q_2 += ex.heat_flows[1]
+        return q_1, q_2
+
+    @property
+    def adjacency(self):
+        try:
+            value = self._adj_1, self._adj_2
+        except AttributeError:
+            self._matrix_representation()
+            value = self._adj_1, self._adj_2
+        return value
+
+    def _matrix_representation(self):
+        path_1, path_2 = self.paths
+        nodes = self.nodes
+        graph_1 = nx.DiGraph()
+        graph_1.add_nodes_from(nodes)
+        graph_1.add_edges_from(path_1)
+        adj_1 = nx.adjacency_matrix(graph_1, nodelist=nodes).todense()
+
+        graph_2 = nx.DiGraph()
+        graph_2.add_nodes_from(nodes)
+        graph_2.add_edges_from(path_2)
+        adj_2 = nx.adjacency_matrix(graph_2, nodelist=nodes).todense()
+
+        self._adj_1 = adj_1
+        self._adj_2 = adj_2
+
+    @property
+    def structure_matrix(self):
+        s11 = self.adjacency[0][2:-2, 2:-2]
+        s22 = self.adjacency[1][2:-2, 2:-2]
+        zeros = np.zeros_like(s11)
+        structure = np.block([[s11, zeros], [zeros, s22]]).T
+        return structure
+
+    @property
+    def input_matrix(self):
+        in_1 = self.adjacency[0][:2, 2:-2]
+        in_2 = self.adjacency[1][:2, 2:-2]
+        input = np.hstack((in_1, in_2)).T
+        return input
+
+    @property
+    def output_matrix(self):
+        out_1 = self.adjacency[0][2:-2, -2:]
+        out_2 = self.adjacency[1][2:-2, -2:]
+        output = np.vstack((out_1, out_2)).T
+        return output
+
+    @property
+    def phi_matrix(self):
+        _ = self.structure_matrix
+        return super().phi_matrix
 
 
 if __name__ == "__main__":

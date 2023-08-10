@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 
@@ -53,7 +54,6 @@ class Fluid:
 
     @property
     def title(self):
-
         return self._title
 
     @title.setter
@@ -138,14 +138,20 @@ class Fluid:
 
 class Flow:
     def __init__(self, fluid: Fluid = None, mass_flow: float = None, volume_flow: float = None):
-        self.in_fluid = fluid
-        self.out_fluid = None
-        if mass_flow is not None and volume_flow is not None:
-            raise NotImplementedError("Only implement one flow rate")
-        elif volume_flow is not None:
-            self.volume_flow = volume_flow
-        elif mass_flow is not None:
-            self.mass_flow = mass_flow
+        if isinstance(fluid, Flow):
+            flow = fluid
+            self.in_fluid = flow.in_fluid.clone()
+            self.out_fluid = flow.out_fluid.clone()
+            self.volume_flow = flow.volume_flow
+        else:
+            self.in_fluid = fluid
+            self.out_fluid = None
+            if mass_flow is not None and volume_flow is not None:
+                raise NotImplementedError("Only implement one flow rate")
+            elif volume_flow is not None:
+                self.volume_flow = volume_flow
+            elif mass_flow is not None:
+                self.mass_flow = mass_flow
 
     @property
     def in_fluid(self):
@@ -163,14 +169,14 @@ class Flow:
     def out_fluid(self, value):
         if value is None:
             self._out_fluid = self.in_fluid.clone()
-        elif value is Fluid:
+        elif isinstance(value,Fluid):
             self._out_fluid = value
 
     @property
     def mean_fluid(self):
         mean_temp = sum([self.in_fluid.temperature, self.out_fluid.temperature]) / 2
         mean_pressure = sum([self.in_fluid.pressure, self.out_fluid.pressure]) / 2
-        fluid = Fluid(self.in_fluid.title, pressure=mean_pressure, temperature=mean_temp)
+        fluid = Fluid(str(self.in_fluid.title), pressure=mean_pressure, temperature=mean_temp)
         return fluid
 
     @property
@@ -230,11 +236,15 @@ class Flow:
         if self.phase_change:
             raise Warning("the phase changes, this could lead to some problems")
         heat_flow_enthalpy = self.mass_flow * (self.in_fluid.fluid.enthalpy - self.out_fluid.fluid.enthalpy)
-        #heat_flow_temps = self.heat_capacity_flow * (self.in_fluid.temperature - self.out_fluid.temperature)
+        # heat_flow_temps = self.heat_capacity_flow * (self.in_fluid.temperature - self.out_fluid.temperature)
         return heat_flow_enthalpy
 
     def heat_flow_str(self):
-        return f"heat flow: Q_dot = %.5f kW\n" % (self.heat_flow*1e-3)
+        return f"heat flow: Q_dot = %.5f kW\n" % (self.heat_flow * 1e-3)
+
+    def clone(self):
+        new_flow = Flow(self)
+        return new_flow
 
     def __repr__(self):
         output = f"Flow: id = {id(self)}\n"
@@ -244,7 +254,6 @@ class Flow:
         output += f"Input Fluid:\n\t{self.in_fluid}\n"
         output += f"Output Fluid:\n\t{self.out_fluid}\n"
         return output
-
 
 
 if __name__ == "__main__":
