@@ -121,19 +121,6 @@ class HeatExchanger:
     def dimensionless_parameters_str(self):
         return f"dimensionless parameters:\n" + self.ntu_str() + self.r_str() + self.p_str()
 
-    def repr_short(self):
-        output = f"Typ: {self.__class__.__name__},Id:{id(self)} \n\n"
-        output += f"Wärmestrom:\n" \
-                  f"Fld1: {self.heat_flows[0]}, Fld2: {self.heat_flows[1]}\n\n"
-        output += f"Inputs: \n" \
-                  f"Fluid 1:{self.flow_1.in_fluid.temperature - 273.15}\n" \
-                  f"Fluid 2:{self.flow_2.in_fluid.temperature - 273.15}\n"
-        output += f"Outputs: \n" \
-                  f"Fluid 1:{self.flow_1.out_fluid.temperature - 273.15}\n" \
-                  f"Fluid 2:{self.flow_2.out_fluid.temperature - 273.15}\n"
-        output += self.dimensionless_parameters_str()
-        return output
-
     def __repr__(self) -> str:
         output = f"\nheat exchanger:\n" \
                  f"\tid = {id(self)}\n" \
@@ -161,8 +148,14 @@ class CounterCurrentFlow(HeatExchanger):
     def p(self):
         n1, n2 = self.ntu
         r1, r2 = self.r
-        p1 = (1 - exp(n1 * (r1 - 1))) / (1 - r1 * exp(n1 * (r1 - 1)))
-        p2 = (1 - exp(n2 * (r2 - 1))) / (1 - r2 * exp(n2 * (r2 - 1)))
+        if r1 == 1:
+            p1 = n1 / (1 + n1)
+        else:
+            p1 = (1 - exp(n1 * (r1 - 1))) / (1 - r1 * exp(n1 * (r1 - 1)))
+        if r2 == 1:
+            p2 = n2 / (1 + n2)
+        else:
+            p2 = (1 - exp(n2 * (r2 - 1))) / (1 - r2 * exp(n2 * (r2 - 1)))
         return p1, p2
 
 

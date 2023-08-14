@@ -97,7 +97,7 @@ class Layout:
 
             for i in range(self.layout.shape[0]):
                 for j in range(self.layout.shape[1]):
-                    ex = ex_class(self.flow_1.copy(), self.flow_2.copy())
+                    ex = ex_class(self.flow_1.clone(), self.flow_2.clone())
                     ex.heat_transferability = self.transferability / self.cell_numbers
                     self.layout[i, j] = ex
         else:
@@ -144,7 +144,7 @@ class Layout:
         ex_path_1 = flatten(self.layout, self.order_1)
         path_1 = ex_path_1.copy()
         path_1.insert(0, self.flow_1)
-        out_1 = flow_1.copy()
+        out_1 = flow_1.clone()
         path_1.append(out_1)
 
         nodes = path_1.copy()
@@ -155,7 +155,7 @@ class Layout:
         path_2 = ex_path_2.copy()
         path_2.insert(0, self.flow_2)
         nodes.insert(1, self.flow_2)
-        out_2 = flow_2.copy()
+        out_2 = flow_2.clone()
         path_2.append(out_2)
         nodes.append(out_2)
 
@@ -315,7 +315,7 @@ class Layout:
     def __repr__(self):
         output = f"Network:\ncell numbers={self.cell_numbers}\n"
         for i, ex in enumerate(self.layout.flatten()):
-            output += f"\ncell:{i}\n{ex.repr_short()}\n"
+            output += f"\ncell:{i}\n{ex}\n"
         return output
 
 
@@ -328,7 +328,12 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
 
         if flow_1 is not None and flow_2 is not None:
             input_flows = [flow_1, flow_2]
-            output_flows = [flow_1.clone(), flow_2.clone()]
+            out_flow_1 = flow_1.clone()
+            out_flow_1.out_fluid = out_flow_1.in_fluid
+
+            out_flow_2 = flow_2.clone()
+            out_flow_2.out_fluid = out_flow_2.in_fluid
+            output_flows = [out_flow_1, out_flow_2]
             super().__init__(input_flows, output_flows=output_flows)
         else:
             super().__init__()
@@ -440,10 +445,9 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
     @property
     def heat_flows(self):
         q_1, q_2 = 0, 0
-        for row in self.exchangers:
-            for ex in row:
-                q_1 += ex.heat_flows[0]
-                q_2 += ex.heat_flows[1]
+        for ex in self.exchangers:
+            q_1 += ex.heat_flows[0]
+            q_2 += ex.heat_flows[1]
         return q_1, q_2
 
     @property
@@ -498,16 +502,52 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
         _ = self.structure_matrix
         return super().phi_matrix
 
+    def _adjust_temperatures(self, iterations=1):
+        for i in range(iterations):
+            out_temp_1, out_temp_2 = self.temperature_outputs[1][0, 0], self.temperature_outputs[1][1, 0]
+            self.output_flows[0].in_fluid.temperature = out_temp_1
+            self.output_flows[1].in_fluid.temperature = out_temp_2
+
+            cell_out_temps = self.temperature_matrix[1].flatten()
+            n = len(cell_out_temps) // 2
+
+            exchangers_flattened_1, exchangers_flattened_2 = self.exchangers_flattened
+            # for i, ex in enumerate(self.nodes[2:-2]):
+            for i, ex in enumerate(exchangers_flattened_1):
+                # adjust out temps
+                ex.flow_1.out_fluid.temperature = cell_out_temps[i]
+                ex.flow_2.out_fluid.temperature = cell_out_temps[n + i]
+
+                # adjust in temp 1
+                if i > 0:
+                    ex.flow_1.in_fluid.temperature = cell_out_temps[i - 1]
+
+            # adjust in temp 2
+            for i, ex in enumerate(exchangers_flattened_2):
+                if i > 0:
+                    ex.flow_2.in_fluid.temperature = prev_out_temp
+                prev_out_temp = ex.flow_2.out_fluid.temperature
+
+    def heat_flow_vis(self):
+        par_matrix = heat_flow_repr(self.layout_matrix)
+        plt.imshow(par_matrix, cmap='viridis', interpolation='nearest')
+        plt.colorbar(label='heat flow in W')
+        plt.title('heat flows')
+        num_rows, num_cols = par_matrix.shape
+        plt.xticks(range(num_cols), range(1, num_cols + 1))
+        plt.yticks(range(num_rows), range(1, num_rows + 1))
+        plt.show()
+
 
 if __name__ == "__main__":
     kA = 4000
     W = 3500
     fld_1 = Fluid("Water", pressure=101420, temperature=373.15)
     print(fld_1)
-    flow_1 = Flow(fld_1, W / fld_1.get_specific_heat())
+    flow_1 = Flow(fld_1, W / fld_1.specific_heat)
     # flow_1 = Flow(fld_1, 1.683)
     fld_2 = Fluid("Water", temperature=293.15)
-    flow_2 = Flow(fld_2, W / fld_2.get_specific_heat())
+    flow_2 = Flow(fld_2, W / fld_2.specific_heat)
     # flow_2 = Flow(fld_2, 0.837)
 
     sh = Layout((2, 2), flow_1, flow_2)

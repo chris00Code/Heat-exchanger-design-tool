@@ -121,6 +121,8 @@ class NetworkTests(unittest.TestCase):
                                                                                       [60.],
                                                                                       [60.]]) + 273.15, decimal=5)
         np.testing.assert_array_equal(network.temperature_outputs[1], np.array([[60], [60]]) + 273.15)
+        np.testing.assert_array_almost_equal(network.network_characteristics, np.array([[0.5, 0.5],
+                                                                                        [0.5, 0.5]]), decimal=5)
 
     def test_output(self):
         flow_1 = Flow(Fluid("Water", temperature=273.15 + 20), 1)
@@ -193,14 +195,94 @@ class NetworkTests(unittest.TestCase):
                                                                                 [335.],
                                                                                 [363.]]))
 
+        np.testing.assert_array_almost_equal(network.network_characteristics, np.array([[0.125, 0., 0.875],
+                                                                                        [0.38730, 0.09836, 0.51434],
+                                                                                        [0.55943, 0.22541, 0.21516]]),
+                                             decimal=5)
+
     def test_print(self):
         ex_1, ex_2 = init_ex()
+        ex_1.heat_transferability = 100
+        ex_2.heat_transferability = 200
         network = ExchangerNetwork()
-
 
         exchangers = [ex_2, ex_1]
         network.exchangers = exchangers
         print(network)
+
+    def test_bspHue(self):
+        flow_1 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
+        flow_2 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
+        flow_3 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
+        flow_4 = Flow(Fluid("Water", temperature=273.15 + 15), 1)
+        flows = [flow_1, flow_2,flow_3,flow_4]
+        network = ExchangerNetwork(flows)
+        network.phi_matrix = np.array([[0.392, 0., 0., 0.608, 0., 0.],
+                                       [0., 0.403, 0., 0., 0.597, 0.],
+                                       [0., 0., 0.395, 0., 0., 0.605],
+                                       [0.048, 0., 0., 0.952, 0., 0.],
+                                       [0., 0.047, 0., 0., 0.953, 0.],
+                                       [0., 0., 0.048, 0., 0., 0.952]])
+        network.structure_matrix = np.array([[0., 0., 0., 0., 0., 0.],
+                                             [0., 0., 0., 0., 0., 0.],
+                                             [0., 0., 0., 0., 0., 0.],
+                                             [0., 0., 0., 0., 0., 0.],
+                                             [0., 0., 0., 1., 0., 0.],
+                                             [0., 0., 0., 0., 1., 0.]])
+        network.input_matrix = np.array([[1, 0, 0, 0],
+                                         [0, 1, 0, 0],
+                                         [0, 0, 1, 0],
+                                         [0, 0, 0, 1],
+                                         [0, 0, 0, 0],
+                                         [0, 0, 0, 0]])
+        network.output_matrix = np.asarray([[1, 0, 0, 0, 0, 0],
+                                            [0, 1, 0, 0, 0, 0],
+                                            [0, 0, 1, 0, 0, 0],
+                                            [0, 0, 0, 0, 0, 1]])
+
+        print(network.temperature_matrix[1]-273.15)
+
+    def test_bspHue_mix(self):
+        flow_1 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
+        flow_2 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
+        flow_3 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
+        flow_4 = Flow(Fluid("Water", temperature=273.15 + 15), 1)
+        #flows = [flow_1, flow_2,flow_3,flow_4]
+        flows = [flow_1,flow_4]
+        network = ExchangerNetwork(flows)
+        network.phi_matrix = np.array([[0.392, 0., 0., 0.608, 0., 0.],
+                                       [0., 0.403, 0., 0., 0.597, 0.],
+                                       [0., 0., 0.395, 0., 0., 0.605],
+                                       [0.048, 0., 0., 0.952, 0., 0.],
+                                       [0., 0.047, 0., 0., 0.953, 0.],
+                                       [0., 0., 0.048, 0., 0., 0.952]])
+        network.structure_matrix = np.array([[0., 0., 0., 0., 0., 0.],
+                                             [0., 0., 0., 0., 0., 0.],
+                                             [0., 0., 0., 0., 0., 0.],
+                                             [0., 0., 0., 0., 0., 0.],
+                                             [0., 0., 0., 1., 0., 0.],
+                                             [0., 0., 0., 0., 1., 0.]])
+        """network.input_matrix = np.array([[1, 0, 0, 0],
+                                         [0, 1, 0, 0],
+                                         [0, 0, 1, 0],
+                                         [0, 0, 0, 1],
+                                         [0, 0, 0, 0],
+                                         [0, 0, 0, 0]])
+        network.output_matrix = np.asarray([[1/3, 0, 0, 0, 0, 0],
+                                            [0, 1/3, 0, 0, 0, 0],
+                                            [0, 0, 1/3, 0, 0, 0],
+                                            [0, 0, 0, 0, 0, 1]])
+        """
+        network.input_matrix = np.array([[1, 0],
+                                         [1, 0],
+                                         [1, 0],
+                                         [0, 1],
+                                         [0, 0],
+                                         [0, 0]])
+        network.output_matrix = np.asarray([[1/3, 1/3, 1/3, 0, 0, 0],
+                                            [0, 0, 0, 0, 0, 1]])
+
+        print(network.temperature_outputs[1]-273.15)
 
 if __name__ == '__main__':
     unittest.main()

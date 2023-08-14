@@ -1,7 +1,7 @@
 import numpy as np
 
 from numpy.linalg import inv
-
+import matplotlib.pyplot as plt
 from stream import Fluid, Flow
 from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow
 
@@ -161,18 +161,25 @@ class ExchangerNetwork:
         else:
             raise NotImplementedError
 
-    @property
-    def temperature_matrix(self):
+    def _cells_characteristic(self):
         phi = self.phi_matrix
         s = self.structure_matrix
         inp = self.input_matrix
-        ti = self.temperature_input_matrix
 
         ps = phi @ s
         identity = np.eye(ps.shape[0])
 
-        value = inv((identity - ps)) @ phi @ inp @ ti
+        value = inv((identity - ps)) @ phi @ inp
+        return value
+
+    @property
+    def temperature_matrix(self):
+        value = self._cells_characteristic() @ self.temperature_input_matrix
         return value, self._dimles_2_temp(value)
+
+    @property
+    def network_characteristics(self):
+        return self.output_matrix @ self._cells_characteristic()
 
     def _dimles_2_temp(self, matrix):
         temps = self.input_temps[0]
@@ -191,20 +198,32 @@ class ExchangerNetwork:
 
     def heat_flows_str(self):
         try:
-            return f"\theat flows q_1=%.2f,\tq_2=%.2f\n" % (self.heat_flows)
+            return f"\theat flows q_1=%.2f kW,\tq_2=%.2f kW\n" % (self.heat_flows[0] * 1e-3, self.heat_flows[1] * 1e-3)
         except TypeError:
             return ""
+
+    def heat_flow_vis(self):
+        pass
+
+
+    def extended_info(self):
+        output = self.__repr__()
+        for i, ex in enumerate(self.exchangers):
+            output += f"\ncell:{i}\n{ex}\n"
+        return output
 
     def __repr__(self):
         output = "Heat Exchanger Network:\n"
         output += f"\tcell numbers: {self.cell_numbers}\n"
         output += self.heat_flows_str()
+
         output += f"input flows: n={len(self.input_flows)}\n"
         for i, flow in enumerate(self.input_flows):
             output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
 
-        for i, ex in enumerate(self.exchangers):
-            output += f"\ncell:{i}\n{ex}\n"
+        output += f"output flows: n={len(self.output_flows)}\n"
+        for i, flow in enumerate(self.output_flows):
+            output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
         return output
 
 

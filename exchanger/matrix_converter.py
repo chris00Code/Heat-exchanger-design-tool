@@ -38,7 +38,14 @@ def flatten(matrix, order):
 def list_2_tuplelist(list):
     return [(list[i], list[i + 1]) for i in range(len(list) - 1)]
 
+
 def id_repr(matrix):
-    vectorized_get_id = np.vectorize(lambda obj: obj.id)
+    vectorized_get_id = np.vectorize(lambda obj: id(obj))
     output = vectorized_get_id(matrix)
+    return output
+
+
+def heat_flow_repr(matrix):
+    vectorized_get_heat_flow = np.vectorize(lambda obj: obj.heat_flows[0])
+    output = vectorized_get_heat_flow(matrix)
     return output
