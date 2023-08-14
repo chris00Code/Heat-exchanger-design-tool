@@ -2,6 +2,8 @@ import unittest
 import numpy as np
 from exchanger_types import ExchangerEqualCellsTwoFlow
 from stream import Fluid, Flow
+import matplotlib.pyplot as plt
+import matplotlib
 
 
 def init_extype():
@@ -17,6 +19,10 @@ def init_extype():
     ex.order_2 = 'ul2r'
     return ex
 
+
+def test_plot_setup():
+    matplotlib.use('Agg')
+    plt.close()
 
 
 class ExchangerTypesTest(unittest.TestCase):
@@ -59,7 +65,7 @@ class ExchangerTypesTest(unittest.TestCase):
 
     def test_temp_adjust(self):
         ex = init_extype()
-        #print(ex)
+        # print(ex)
         ex._adjust_temperatures(15)
         print(ex)
 
@@ -74,9 +80,9 @@ class ExchangerTypesTest(unittest.TestCase):
         ex = ExchangerEqualCellsTwoFlow((10, 10), 'CrossFlowOneRow', flow_1, flow_2, kA)
         ex.order_1 = 'ul2d'
         ex.order_2 = 'ul2r'
-        print(ex.temperature_outputs[1]-273.15)
+        print(ex.temperature_outputs[1] - 273.15)
         ex._adjust_temperatures(1)
-        print(ex.temperature_outputs[1]-273.15)
+        print(ex.temperature_outputs[1] - 273.15)
 
     def test_typedifferent(self):
         kA = 4749
@@ -86,10 +92,13 @@ class ExchangerTypesTest(unittest.TestCase):
         fld_2 = Fluid("Water", temperature=293.15)
         flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-        ex = ExchangerEqualCellsTwoFlow((2, 2), 'ParallelFlow', flow_1, flow_2, kA)
-        ex.order_1 = 'dr2u'
+        ex = ExchangerEqualCellsTwoFlow((2, 2), 'CounterCurrentFlow', flow_1, flow_2, kA)
+        ex.order_1 = 'ur2d'
         ex.order_2 = 'ul2r'
-        print(ex.temperature_outputs[1]-273.15)
+        print(ex.temperature_outputs[1] - 273.15)
+        ex._adjust_temperatures()
+        ex.heat_flow_vis()
+        print(ex.extended_info())
 
     def test_print(self):
         ex = init_extype()
@@ -101,8 +110,10 @@ class ExchangerTypesTest(unittest.TestCase):
     def test_heat_flow_vis(self):
         ex = init_extype()
         ex._adjust_temperatures()
+        test_plot_setup()
         ex.heat_flow_vis()
-        #print(ex.heat_flow_vis())
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
+
 
 if __name__ == '__main__':
     unittest.main()

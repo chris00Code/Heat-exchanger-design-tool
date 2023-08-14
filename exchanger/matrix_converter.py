@@ -46,6 +46,6 @@ def id_repr(matrix):
 
 
 def heat_flow_repr(matrix):
-    vectorized_get_heat_flow = np.vectorize(lambda obj: obj.heat_flows[0])
+    vectorized_get_heat_flow = np.vectorize(lambda obj: abs(obj.heat_flows[0]))
     output = vectorized_get_heat_flow(matrix)
     return output
