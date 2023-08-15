@@ -192,6 +192,9 @@ class ExchangerNetwork:
         value = self.output_matrix @ self.temperature_matrix[0]
         return value, self._dimles_2_temp(value)
 
+    def temperature_outputs_str(self):
+        pass
+
     @property
     def heat_flows(self):
         pass
@@ -202,7 +205,7 @@ class ExchangerNetwork:
         except TypeError:
             return ""
 
-    def heat_flow_vis(self):
+    def heat_flow_vis(self, plt=None, vmin=None, vmax=None):
         pass
 
 
@@ -225,5 +228,3 @@ class ExchangerNetwork:
         for i, flow in enumerate(self.output_flows):
             output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
         return output
-
-

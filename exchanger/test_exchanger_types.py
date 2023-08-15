@@ -4,6 +4,7 @@ from exchanger_types import ExchangerEqualCellsTwoFlow
 from stream import Fluid, Flow
 import matplotlib.pyplot as plt
 import matplotlib
+from characteristic_plots import *
 
 
 def init_extype():
@@ -15,8 +16,8 @@ def init_extype():
     flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
     ex = ExchangerEqualCellsTwoFlow((2, 2), 'CrossFlowOneRow', flow_1, flow_2, kA)
-    ex.order_1 = 'dr2u'
-    ex.order_2 = 'ul2r'
+    ex.flow_order_1 = 'dr2u'
+    ex.flow_order_2 = 'ul2r'
     return ex
 
 
@@ -78,8 +79,8 @@ class ExchangerTypesTest(unittest.TestCase):
         flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
         ex = ExchangerEqualCellsTwoFlow((10, 10), 'CrossFlowOneRow', flow_1, flow_2, kA)
-        ex.order_1 = 'ul2d'
-        ex.order_2 = 'ul2r'
+        ex.flow_order_1 = 'ul2d'
+        ex.flow_order_2 = 'ul2r'
         print(ex.temperature_outputs[1] - 273.15)
         ex._adjust_temperatures(1)
         print(ex.temperature_outputs[1] - 273.15)
@@ -93,12 +94,13 @@ class ExchangerTypesTest(unittest.TestCase):
         flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
         ex = ExchangerEqualCellsTwoFlow((2, 2), 'CounterCurrentFlow', flow_1, flow_2, kA)
-        ex.order_1 = 'ur2d'
-        ex.order_2 = 'ul2r'
+        ex.flow_order_1 = 'ur2d'
+        ex.flow_order_2 = 'ul2r'
         print(ex.temperature_outputs[1] - 273.15)
         ex._adjust_temperatures()
         ex.heat_flow_vis()
         print(ex.extended_info())
+
 
     def test_print(self):
         ex = init_extype()
@@ -113,6 +115,7 @@ class ExchangerTypesTest(unittest.TestCase):
         test_plot_setup()
         ex.heat_flow_vis()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
+
 
 
 if __name__ == '__main__':

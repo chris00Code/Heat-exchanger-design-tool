@@ -111,12 +111,12 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
         return value
 
     def _extract_node_paths(self, order_1: str = None, order_2: str = None):
-        if order_1 is not None: self.order_1 = order_1
-        if order_2 is not None: self.order_2 = order_2
+        if order_1 is not None: self.flow_order_1 = order_1
+        if order_2 is not None: self.flow_order_2 = order_2
         in_flow_1, in_flow_2 = self.input_flows[0], self.input_flows[1]
         out_flow_1, out_flow_2 = self.output_flows[0], self.output_flows[1]
 
-        ex_path_1 = flatten(self.layout_matrix, self.order_1)
+        ex_path_1 = flatten(self.layout_matrix, self.flow_order_1)
         self.exchangers = ex_path_1
         path_1 = ex_path_1.copy()
         path_1.insert(0, in_flow_1)
@@ -124,7 +124,7 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
 
         tuples_list_1 = list_2_tuplelist(path_1)
 
-        ex_path_2 = flatten(self.layout_matrix, self.order_2)
+        ex_path_2 = flatten(self.layout_matrix, self.flow_order_2)
         path_2 = ex_path_2.copy()
         path_2.insert(0, in_flow_2)
         path_2.append(out_flow_2)
@@ -219,13 +219,27 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
                     ex.flow_2.in_fluid.temperature = prev_out_temp
                 prev_out_temp = ex.flow_2.out_fluid.temperature
 
-    def heat_flow_vis(self):
+    def temperature_outputs_str(self):
+        try:
+            return f"\ttemperature outputs: flow 1=%.2f °C,\tflow 2=%.2f °C\n" % (
+                self.temperature_outputs[1][0, 0] - 273.15, self.temperature_outputs[1][1, 0] -273.15)
+        except TypeError:
+            return ""
+
+    def heat_flow_vis(self, ax=None, vmin=None, vmax=None):
         par_matrix = heat_flow_repr(self.layout_matrix)
-        max_value = par_matrix.max()
-        plt.imshow(par_matrix, cmap='viridis', interpolation='nearest',vmin=0,vmax=max_value)
-        plt.colorbar(label='heat flow in W')
-        plt.title('heat flows')
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        if vmin is None:
+            vmin = 0
+        if vmax is None:
+            vmax = par_matrix.max()
+        im = ax.imshow(par_matrix, cmap='viridis', interpolation='nearest', vmin=vmin, vmax=vmax)
+        ax.set_title('heat flows')
         num_rows, num_cols = par_matrix.shape
-        plt.xticks(range(num_cols), range(1, num_cols + 1))
-        plt.yticks(range(num_rows), range(1, num_rows + 1))
-        plt.show()
+        ax.set_xticks(range(num_cols))
+        ax.set_xticklabels(range(1, num_cols + 1))
+        ax.set_yticks(range(num_rows))
+        ax.set_yticklabels(range(1, num_rows + 1))
+        plt.colorbar(im, ax=ax, label='heat flow in W')

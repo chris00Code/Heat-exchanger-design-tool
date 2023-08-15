@@ -165,7 +165,8 @@ class CrossFlowOneRow(HeatExchanger):
         n1, n2 = self.ntu
         r1, r2 = self.r
         p1 = 1 - exp((exp(-r1 * n1) - 1) / r1)
-        p2 = 1 - exp((exp(-r2 * n2) - 1) / r2)
+        #p2 = 1 - exp((exp(-r2 * n2) - 1) / r2)
+        p2 = r1*p1
         return p1, p2
 
 
