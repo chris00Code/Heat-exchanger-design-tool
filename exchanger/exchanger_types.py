@@ -9,11 +9,14 @@ from matrix_converter import *
 from numpy.linalg import inv
 
 from network import ExchangerNetwork
+from parts import Assembly
 
+class TwoFlow(ExchangerNetwork):
+    pass
 
 class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
     def __init__(self, shape: tuple = (0, 0), type: str = 'CounterCurrentFlow', flow_1: Flow = None,
-                 flow_2: Flow = None,
+                 flow_2: Flow = None, assembly: Assembly = None,
                  transferability: float = None):
         self.layout_matrix = shape
         self.type = type
@@ -32,7 +35,10 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
 
         self.flow_order_1 = 'dl2r'
         self.flow_order_2 = 'ur2d'
-        self.transferability = transferability
+        if assembly is None:
+            self.transferability = transferability
+        else:
+            self.assembly = assembly
         try:
             self.fill(self.type)
         except IndexError:

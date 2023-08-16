@@ -255,32 +255,3 @@ class Flow:
         output += f"Output Fluid:\n\t{self.out_fluid}\n"
         return output
 
-
-if __name__ == "__main__":
-    """
-    fl = Fluid("Air")
-    print(fl.get_specific_heat())
-    fl.pressure = 500e3
-    print(fl._fluid.temperature)
-    print(fl.get_specific_heat())
-
-    flow = Flow(fl, 10)
-    flow.in_fluid.temperature = 500
-    print(flow)
-    mean = flow.mean_fluid
-
-    print(flow.mean_fluid.temperature)
-    print(flow.str_heat_capacity_flow())
-
-    ser_flow = flow.serialize()
-    flow_2 = Flow.deserialize(ser_flow)
-    flow.in_fluid.temperature = 300
-    print(flow)
-    print(flow_2)
-    """
-    fluid_in = Fluid("Water", temperature=273.15 + 100)
-    flow = Flow(fluid_in, 1)
-    flow.out_fluid.temperature = 273.15 + 99
-    print(flow)
-    print(flow.str_heat_capacity_flow())
-    print(flow.str_heat_flow())
