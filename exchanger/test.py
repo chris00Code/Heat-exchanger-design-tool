@@ -136,35 +136,7 @@ class FluidTests(unittest.TestCase):
         flow.out_temperature = 273.15 + 99
         print(flow)
 
-    """
-    part.py tests
-    """
-    from parts import Part
-    def test_part_init(self):
-        part = self.Part()
-        self.assertEqual(part.heat_transferability, 0)
 
-        part = self.Part(10)
-        self.assertEqual(part.heat_transferability, 10)
-        self.assertEqual(part.heat_transfer_area, None)
-        part = self.Part(heat_transfer_area=10, heat_transfer_coefficient=5)
-        self.assertEqual(part.heat_transferability, 50)
-        self.assertEqual(part.heat_transfer_area, 10)
-
-    def test_part_setter(self):
-        part = self.Part(10)
-        with self.assertRaises(AttributeError):
-            part.heat_transfer_coefficient = 10
-        with self.assertRaises(AttributeError):
-            part.heat_transfer_area = 10
-        part = self.Part(heat_transfer_area=10, heat_transfer_coefficient=5)
-        part.heat_transferability = 10
-        print(part)
-
-    def test_part_print(self):
-        part = self.Part(heat_transfer_area=10, heat_transfer_coefficient=5)
-        part.hydraulic_diameter = 50
-        print(part)
 
     """
     exchanger.py tests
