@@ -12,7 +12,8 @@ from network import ExchangerNetwork
 from parts import Assembly
 
 class TwoFlow(ExchangerNetwork):
-    pass
+    def __init__(self):
+        pass
 
 class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
     def __init__(self, shape: tuple = (0, 0), type: str = 'CounterCurrentFlow', flow_1: Flow = None,
