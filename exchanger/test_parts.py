@@ -2,7 +2,7 @@ import unittest
 from parts import *
 
 
-class MyTestCase(unittest.TestCase):
+class PartTests(unittest.TestCase):
     def test_part_init(self):
         part = Part()
         self.assertEqual(part.heat_transferability, 0)

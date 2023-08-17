@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
-from exchanger_types import ExchangerEqualCellsTwoFlow
+from exchanger import *
+from exchanger_types import *
 from stream import Fluid, Flow
+from parts import *
 import matplotlib.pyplot as plt
 import matplotlib
 from characteristic_plots import *
@@ -27,6 +29,55 @@ def test_plot_setup():
 
 
 class ExchangerTypesTest(unittest.TestCase):
+
+    def test_exchangertwoflow_init(self):
+        ex_layout = ExchangerTwoFlow()
+        self.assertEqual(ex_layout.cell_numbers, 0)
+        self.assertEqual(len(ex_layout.input_flows), 0)
+        self.assertEqual(len(ex_layout.output_flows), 0)
+        self.assertEqual(len(ex_layout.exchangers), 0)
+        self.assertEqual(ex_layout.flow_order_1, None)
+        self.assertEqual(ex_layout.flow_order_2, None)
+        self.assertEqual(ex_layout.layout_matrix, None)
+
+        flow_1 = Flow(Fluid("Water", temperature=373), 1)
+        flow_2 = Flow(Fluid("Water", temperature=405), 1)
+        ex_layout = ExchangerTwoFlow(flow_1=flow_1, flow_2=flow_2)
+        self.assertEqual(ex_layout.cell_numbers, 0)
+        self.assertEqual(len(ex_layout.input_flows), 2)
+        self.assertEqual(len(ex_layout.output_flows), 2)
+        self.assertEqual(len(ex_layout.exchangers), 0)
+        self.assertEqual(ex_layout.flow_order_1, None)
+        self.assertEqual(ex_layout.flow_order_2, None)
+
+        ex_1 = CounterCurrentFlow(flow_1.clone(), flow_2.clone())
+        ex_2 = CrossFlowOneRow(flow_1.clone(), flow_2.clone())
+        layout_matrix = np.array([ex_1, ex_2])
+        ex_layout.layout_matrix = layout_matrix
+        np.testing.assert_array_equal(ex_layout.layout_matrix, layout_matrix)
+        print(ex_layout)
+
+    def test_equalcells_init(self):
+        ex_layout = ExchangerEqualCells((2, 2))
+        self.assertEqual(ex_layout.cell_numbers, 4)
+        self.assertEqual(ex_layout.total_transferability, None)
+        self.assertEqual(len(ex_layout.input_flows), 0)
+        self.assertEqual(len(ex_layout.output_flows), 0)
+        self.assertEqual(len(ex_layout.exchangers), 0)
+
+        ex_layout = ExchangerEqualCells((2, 2), total_transferability=10)
+        self.assertEqual(ex_layout.total_transferability, 10)
+
+        shell = SquareShell(5, 2, 1)
+        pipe = StraightPipe(10, 13)
+        pipe_layout = PipeLayout(pipe)
+        assembly = Assembly(shell, pipe_layout)
+        ex_layout = ExchangerEqualCells((2, 2), assembly=assembly, total_transferability=10)
+        self.assertEqual(ex_layout.total_transferability, 10)
+
+        assembly.heat_transfer_coefficient = 200
+        self.assertAlmostEqual(ex_layout.total_transferability, 35922, 0)
+
 
     def test_init(self):
         ex = ExchangerEqualCellsTwoFlow()
@@ -101,7 +152,6 @@ class ExchangerTypesTest(unittest.TestCase):
         ex.heat_flow_vis()
         print(ex.extended_info())
 
-
     def test_print(self):
         ex = init_extype()
         ex._adjust_temperatures()
@@ -115,7 +165,6 @@ class ExchangerTypesTest(unittest.TestCase):
         test_plot_setup()
         ex.heat_flow_vis()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
-
 
 
 if __name__ == '__main__':

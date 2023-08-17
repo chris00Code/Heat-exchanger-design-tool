@@ -11,8 +11,147 @@ from numpy.linalg import inv
 from network import ExchangerNetwork
 from parts import Assembly
 
-class TwoFlow(ExchangerNetwork):
-    pass
+
+class ExchangerTwoFlow(ExchangerNetwork):
+    flow_orders = ['ul2r', 'dl2r', 'ur2l', 'dr2l', 'ul2d', 'ur2d', 'dl2u', 'dr2u']
+
+    def __init__(self, layout_matrix: np.ndarray = None, flow_1: Flow = None, flow_order_1: str = None,
+                 flow_2: Flow = None, flow_order_2: str = None, ):
+
+        self.layout_matrix = layout_matrix
+
+        if flow_1 is not None and flow_2 is not None:
+            input_flows = [flow_1, flow_2]
+            out_flow_1 = flow_1.clone()
+            out_flow_1.out_fluid = out_flow_1.in_fluid
+
+            out_flow_2 = flow_2.clone()
+            out_flow_2.out_fluid = out_flow_2.in_fluid
+            output_flows = [out_flow_1, out_flow_2]
+            super().__init__(input_flows=input_flows, output_flows=output_flows)
+        else:
+            super().__init__()
+
+        self.flow_order_1 = flow_order_1
+        self.flow_order_2 = flow_order_2
+
+    @property
+    def layout_matrix(self):
+        return self._layout_matrix
+
+    @layout_matrix.setter
+    def layout_matrix(self, value):
+        if isinstance(value, np.ndarray) or value is None:
+            self._layout_matrix = value
+        else:
+            raise NotImplementedError
+
+    @property
+    def flow_order_1(self):
+        return self._flow_order_1
+
+    @flow_order_1.setter
+    def flow_order_1(self, value: str):
+        if value in self.flow_orders or value is None:
+            self._flow_order_1 = value
+        else:
+            raise NotImplementedError
+
+    @property
+    def flow_order_2(self):
+        return self._flow_order_2
+
+    @flow_order_2.setter
+    def flow_order_2(self, value: str):
+        if value in self.flow_orders or value is None:
+            self._flow_order_2 = value
+        else:
+            raise NotImplementedError
+
+    @property
+    def cell_numbers(self):
+        layout_matrix = self.layout_matrix
+        if layout_matrix is None:
+            value = 0
+        else:
+            value = layout_matrix.size
+        return value
+
+    @property
+    def total_transferability(self):
+        values = []
+        for ex in self.exchangers:
+            values.append(ex.heat_transferability)
+        if len(values) == 0:
+            value = None
+        else:
+            value = sum(values)
+        return value
+
+
+class ExchangerEqualCells(ExchangerTwoFlow):
+    def __init__(self, shape: tuple = (0, 0),
+                 exchangers_type: str = 'CounterCurrentFlow',
+                 flow_1: Flow = None, flow_order_1: str = None,
+                 flow_2: Flow = None, flow_order_2: str = None,
+                 assembly: Assembly = None, total_transferability: float = None):
+        # layout matrix can be passed to super constructor because self layout_matrix setter will be used
+        self.exchangers_type = exchangers_type
+
+        super().__init__(layout_matrix=shape,
+                         flow_1=flow_1, flow_order_1=flow_order_1,
+                         flow_2=flow_2, flow_order_2=flow_order_2)
+
+        self.assembly = assembly
+        self.total_transferability = total_transferability
+
+
+    @property
+    def exchangers_type(self):
+        return self._exchangers_type
+
+    @exchangers_type.setter
+    def exchangers_type(self,value):
+        self._exchanger_types = value
+
+    @property
+    def layout_matrix(self):
+        return super().layout_matrix
+
+    @layout_matrix.setter
+    def layout_matrix(self, shape):
+        if isinstance(shape, tuple):
+            self._layout_matrix = np.zeros(shape, dtype=HeatExchanger)
+        else:
+            raise NotImplementedError
+
+    @property
+    def assembly(self):
+        return self._assembly
+
+    @assembly.setter
+    def assembly(self, value):
+        if isinstance(value, Assembly) or value is None:
+            self._assembly = value
+        else:
+            raise NotImplementedError
+
+    @property
+    def total_transferability(self):
+        value = None
+        if self.assembly is not None:
+            value = self.assembly.heat_transferability
+        if value is None:
+            value = self._total_transferability
+        else:
+            del self._total_transferability
+        return value
+
+    @total_transferability.setter
+    def total_transferability(self, value):
+        if self.assembly is None or self.assembly.heat_transferability is None:
+            self._total_transferability = value
+
 
 class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
     def __init__(self, shape: tuple = (0, 0), type: str = 'CounterCurrentFlow', flow_1: Flow = None,
@@ -228,7 +367,7 @@ class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
     def temperature_outputs_str(self):
         try:
             return f"\ttemperature outputs: flow 1=%.2f °C,\tflow 2=%.2f °C\n" % (
-                self.temperature_outputs[1][0, 0] - 273.15, self.temperature_outputs[1][1, 0] -273.15)
+                self.temperature_outputs[1][0, 0] - 273.15, self.temperature_outputs[1][1, 0] - 273.15)
         except TypeError:
             return ""
 
