@@ -33,8 +33,8 @@ class ExchangerTypesTest(unittest.TestCase):
     def test_exchangertwoflow_init(self):
         ex_layout = ExchangerTwoFlow()
         self.assertEqual(ex_layout.cell_numbers, 0)
-        self.assertEqual(len(ex_layout.input_flows), 0)
-        self.assertEqual(len(ex_layout.output_flows), 0)
+        self.assertEqual(ex_layout.input_flows, [NotImplemented, NotImplemented])
+        self.assertEqual(ex_layout.output_flows, [NotImplemented, NotImplemented])
         self.assertEqual(len(ex_layout.exchangers), 0)
         self.assertEqual(ex_layout.flow_order_1, None)
         self.assertEqual(ex_layout.flow_order_2, None)
@@ -61,8 +61,8 @@ class ExchangerTypesTest(unittest.TestCase):
         ex_layout = ExchangerEqualCells((2, 2))
         self.assertEqual(ex_layout.cell_numbers, 4)
         self.assertEqual(ex_layout.total_transferability, None)
-        self.assertEqual(len(ex_layout.input_flows), 0)
-        self.assertEqual(len(ex_layout.output_flows), 0)
+        self.assertEqual(ex_layout.input_flows, [NotImplemented, NotImplemented])
+        self.assertEqual(ex_layout.output_flows, [NotImplemented, NotImplemented])
         self.assertEqual(len(ex_layout.exchangers), 0)
 
         ex_layout = ExchangerEqualCells((2, 2), total_transferability=10)
@@ -78,6 +78,23 @@ class ExchangerTypesTest(unittest.TestCase):
         assembly.heat_transfer_coefficient = 200
         self.assertAlmostEqual(ex_layout.total_transferability, 35922, 0)
 
+    def test_equalcells_types(self):
+        exchanger = ExchangerEqualCells()
+        self.assertEqual(exchanger.exchangers_type, 'HeatExchanger')
+        exchanger = ExchangerEqualCells(exchangers_type='ParallelFlow')
+        self.assertEqual(exchanger.exchangers_type, 'ParallelFlow')
+        with self.assertRaises(NotImplementedError):
+            exchanger = ExchangerEqualCells(exchangers_type='Test')
+
+    def test_equalcells_fill(self):
+        exchangers = ExchangerEqualCells(exchangers_type='ParallelFlow')
+        with self.assertRaises(ValueError):
+            exchangers._fill()
+
+        flow_1 = Flow(Fluid("Water", temperature=273.15 + 15), 0.33)
+        flow_2 = Flow(Fluid("Air"), 1)
+        exchangers.in_flow_1 = flow_1
+        print(exchangers.input_flows)
 
     def test_init(self):
         ex = ExchangerEqualCellsTwoFlow()

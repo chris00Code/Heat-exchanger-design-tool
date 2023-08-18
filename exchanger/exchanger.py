@@ -19,7 +19,7 @@ class HeatExchanger:
         if isinstance(value, Flow):
             self._flow_1 = value
         else:
-            NotImplementedError
+            raise NotImplementedError
 
     @property
     def flow_2(self):
@@ -30,7 +30,7 @@ class HeatExchanger:
         if isinstance(value, Flow):
             self._flow_2 = value
         else:
-            NotImplementedError
+            raise NotImplementedError
 
     @property
     def part(self):
@@ -82,6 +82,8 @@ class HeatExchanger:
         if (kA and heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
             ntu1 = kA / heat_capacity_flow_1
             ntu2 = kA / heat_capacity_flow_2
+        else:
+            raise ValueError("heat capacity flow not defined")
         return ntu1, ntu2
 
     def ntu_str(self):
@@ -97,6 +99,8 @@ class HeatExchanger:
         if (heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
             r1 = heat_capacity_flow_1 / heat_capacity_flow_2
             r2 = heat_capacity_flow_2 / heat_capacity_flow_1
+        else:
+            raise ValueError("heat capacity flow not defined")
         return r1, r2
 
     def r_str(self):
@@ -165,22 +169,6 @@ class CrossFlowOneRow(HeatExchanger):
         n1, n2 = self.ntu
         r1, r2 = self.r
         p1 = 1 - exp((exp(-r1 * n1) - 1) / r1)
-        #p2 = 1 - exp((exp(-r2 * n2) - 1) / r2)
-        p2 = r1*p1
+        # p2 = 1 - exp((exp(-r2 * n2) - 1) / r2)
+        p2 = r1 * p1
         return p1, p2
-
-
-if __name__ == "__main__":
-    print("Exchanger Test:")
-    flow_1 = Flow(Fluid("Water", temperature=273.15 + 15), 0.33)
-    flow_2 = Flow(Fluid("Air"), 1)
-    # ex = HeatExchanger(flow_1, flow_2, 10, 56)
-    ex = ParallelFlow(flow_1, flow_2, 10, 56)
-    ex.flow_1.out_fluid.temperature = 273.15 + 23.11
-    print(ex.repr_short())
-    # print(ex.r)
-    # print(ex.str_r())
-    # print(ex.p)
-    # print(ex.str_p())
-    # ex.heat_transferability = 50
-    # print(ex.heat_transferability)

@@ -1,5 +1,5 @@
 import copy
-
+import exchanger
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -7,6 +7,7 @@ from stream import Fluid, Flow
 from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow, CrossFlowOneRow
 from matrix_converter import *
 from numpy.linalg import inv
+from utils import get_available_class_names
 
 from network import ExchangerNetwork
 from parts import Assembly
@@ -19,7 +20,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
                  flow_2: Flow = None, flow_order_2: str = None, ):
 
         self.layout_matrix = layout_matrix
-
+        """
         if flow_1 is not None and flow_2 is not None:
             input_flows = [flow_1, flow_2]
             out_flow_1 = flow_1.clone()
@@ -31,7 +32,12 @@ class ExchangerTwoFlow(ExchangerNetwork):
             super().__init__(input_flows=input_flows, output_flows=output_flows)
         else:
             super().__init__()
-
+        """
+        super().__init__(input_flows=[NotImplemented, NotImplemented], output_flows=[NotImplemented, NotImplemented])
+        self.in_flow_1 = flow_1
+        self.in_flow_2 = flow_2
+        if isinstance(flow_1, Flow): self.out_flow_1 = flow_1.clone()
+        if isinstance(flow_2, Flow): self.out_flow_2 = flow_2.clone()
         self.flow_order_1 = flow_order_1
         self.flow_order_2 = flow_order_2
 
@@ -45,6 +51,42 @@ class ExchangerTwoFlow(ExchangerNetwork):
             self._layout_matrix = value
         else:
             raise NotImplementedError
+
+    @property
+    def in_flow_1(self):
+        return self.input_flows[0]
+
+    @in_flow_1.setter
+    def in_flow_1(self, value):
+        if isinstance(value, Flow):
+            self.input_flows[0] = value
+
+    @property
+    def in_flow_2(self):
+        return self.input_flows[2]
+
+    @in_flow_2.setter
+    def in_flow_2(self, value):
+        if isinstance(value, Flow):
+            self.input_flows[1] = value
+
+    @property
+    def out_flow_1(self):
+        return self.output_flows[0]
+
+    @out_flow_1.setter
+    def out_flow_1(self, value):
+        if isinstance(value, Flow):
+            self.output_flows[0] = value
+
+    @property
+    def out_flow_2(self):
+        return self.output_flows[2]
+
+    @out_flow_2.setter
+    def out_flow_2(self, value):
+        if isinstance(value, Flow):
+            self.output_flows[1] = value
 
     @property
     def flow_order_1(self):
@@ -91,7 +133,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
 
 class ExchangerEqualCells(ExchangerTwoFlow):
     def __init__(self, shape: tuple = (0, 0),
-                 exchangers_type: str = 'CounterCurrentFlow',
+                 exchangers_type: str = 'HeatExchanger',
                  flow_1: Flow = None, flow_order_1: str = None,
                  flow_2: Flow = None, flow_order_2: str = None,
                  assembly: Assembly = None, total_transferability: float = None):
@@ -105,14 +147,16 @@ class ExchangerEqualCells(ExchangerTwoFlow):
         self.assembly = assembly
         self.total_transferability = total_transferability
 
-
     @property
     def exchangers_type(self):
         return self._exchangers_type
 
     @exchangers_type.setter
-    def exchangers_type(self,value):
-        self._exchanger_types = value
+    def exchangers_type(self, value):
+        if value in get_available_class_names(exchanger):
+            self._exchangers_type = value
+        else:
+            raise NotImplementedError
 
     @property
     def layout_matrix(self):
@@ -152,6 +196,29 @@ class ExchangerEqualCells(ExchangerTwoFlow):
         if self.assembly is None or self.assembly.heat_transferability is None:
             self._total_transferability = value
 
+    def _fill(self):
+        """
+        fills the Layout with Heat Exchanger objects
+        """
+        ex_class = globals()[self.exchangers_type]
+        """
+        for i in range(self.layout_matrix.shape[0]):
+            for j in range(self.layout_matrix.shape[1]):
+                flow_1, flow_2 = self.input_flows[0].clone(), self.input_flows[1].clone()
+                ex = ex_class(flow_1, flow_2)
+                ex.heat_transferability = self.total_transferability / self.cell_numbers
+                self.layout_matrix[i, j] = ex
+        """
+        self.layout_matrix.fill(self.__new_ex(ex_class))
+
+    def __new_ex(self, ex_class):
+        if not self.input_flows == [NotImplemented,NotImplemented]:
+            flow_1, flow_2 = self.input_flows[0].clone(), self.input_flows[1].clone()
+            ex = ex_class(flow_1, flow_2)
+            ex.heat_transferability = self.total_transferability / self.cell_numbers
+            return ex
+        else:
+            raise ValueError("Flows not implemented yet")
 
 class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
     def __init__(self, shape: tuple = (0, 0), type: str = 'CounterCurrentFlow', flow_1: Flow = None,
