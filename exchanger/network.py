@@ -220,11 +220,13 @@ class ExchangerNetwork:
         output += f"\tcell numbers: {self.cell_numbers}\n"
         output += self.heat_flows_str()
 
-        output += f"input flows: n={len(self.input_flows)}\n"
-        for i, flow in enumerate(self.input_flows):
-            output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
+        if all(isinstance(item, Flow) for item in self.input_flows):
+            output += f"input flows: n={len(self.input_flows)}\n"
+            for i, flow in enumerate(self.input_flows):
+                output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
 
-        output += f"output flows: n={len(self.output_flows)}\n"
-        for i, flow in enumerate(self.output_flows):
-            output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
+        if all(isinstance(item, Flow) for item in self.output_flows):
+            output += f"output flows: n={len(self.output_flows)}\n"
+            for i, flow in enumerate(self.output_flows):
+                output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
         return output

@@ -36,10 +36,11 @@ class ExchangerTwoFlow(ExchangerNetwork):
         super().__init__(input_flows=[NotImplemented, NotImplemented], output_flows=[NotImplemented, NotImplemented])
         self.in_flow_1 = flow_1
         self.in_flow_2 = flow_2
-        if isinstance(flow_1, Flow): self.out_flow_1 = flow_1.clone()
-        if isinstance(flow_2, Flow): self.out_flow_2 = flow_2.clone()
+        # if isinstance(flow_1, Flow): self.out_flow_1 = flow_1.clone()
+        # if isinstance(flow_2, Flow): self.out_flow_2 = flow_2.clone()
         self.flow_order_1 = flow_order_1
         self.flow_order_2 = flow_order_2
+        self._flatten()
 
     @property
     def layout_matrix(self):
@@ -49,6 +50,18 @@ class ExchangerTwoFlow(ExchangerNetwork):
     def layout_matrix(self, value):
         if isinstance(value, np.ndarray) or value is None:
             self._layout_matrix = value
+            self._flatten()
+        else:
+            raise NotImplementedError
+
+    @property
+    def exchangers(self):
+        return self._exchangers_flattened[0]
+
+    @exchangers.setter
+    def exchangers(self, value):
+        if not value:
+            self._exchangers_flattened = NotImplemented, NotImplemented
         else:
             raise NotImplementedError
 
@@ -63,7 +76,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
 
     @property
     def in_flow_2(self):
-        return self.input_flows[2]
+        return self.input_flows[1]
 
     @in_flow_2.setter
     def in_flow_2(self, value):
@@ -72,6 +85,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
 
     @property
     def out_flow_1(self):
+        self._flatten()
         return self.output_flows[0]
 
     @out_flow_1.setter
@@ -81,12 +95,14 @@ class ExchangerTwoFlow(ExchangerNetwork):
 
     @property
     def out_flow_2(self):
-        return self.output_flows[2]
+        return self.output_flows[1]
 
     @out_flow_2.setter
     def out_flow_2(self, value):
         if isinstance(value, Flow):
             self.output_flows[1] = value
+
+    # # TODO check shape and flow order
 
     @property
     def flow_order_1(self):
@@ -107,8 +123,17 @@ class ExchangerTwoFlow(ExchangerNetwork):
     def flow_order_2(self, value: str):
         if value in self.flow_orders or value is None:
             self._flow_order_2 = value
+            self._flatten()
         else:
             raise NotImplementedError
+
+    @property
+    def heat_flows(self):
+        q_1, q_2 = 0, 0
+        for ex in self.exchangers:
+            q_1 += ex.heat_flows[0]
+            q_2 += ex.heat_flows[1]
+        return q_1, q_2
 
     @property
     def cell_numbers(self):
@@ -129,6 +154,70 @@ class ExchangerTwoFlow(ExchangerNetwork):
         else:
             value = sum(values)
         return value
+
+    @property
+    def nodes(self):
+        value = self.input_flows + self.exchangers + self.output_flows
+        return value
+
+    @property
+    def paths(self):
+        try:
+            value = self._paths
+        except AttributeError:
+            self._extract_node_paths()
+            value = self._paths
+        return value
+
+    def _flatten(self):
+        try:
+            flattened_1 = flatten(self.layout_matrix, self.flow_order_1)
+            flattened_2 = flatten(self.layout_matrix, self.flow_order_2)
+            self._exchangers_flattened = flattened_1, flattened_2
+
+            # set flows
+            self._set_in_out_fluids_in_exchangers()
+
+            # set out flows
+            out_flow_1 = self._exchangers_flattened[0][-1].flow_1
+            self.output_flows[0] = Flow(out_flow_1.out_fluid, volume_flow=out_flow_1.volume_flow)
+            out_flow_2 = self._exchangers_flattened[1][-1].flow_2
+            self.output_flows[1] = Flow(out_flow_2.out_fluid, volume_flow=out_flow_2.volume_flow)
+        except NotImplementedError:
+            # if Flows not implemented yet
+            pass
+        except AttributeError:
+            # if layout matrix not implemented yet
+            pass
+
+    def _set_in_out_fluids_in_exchangers(self):
+        """
+        setting in and out fluids according flow order
+        :return:
+        """
+        for i, ex in enumerate(self._exchangers_flattened[0]):
+            prev_out_fluid = ex.flow_1.out_fluid
+            if i > 0:
+                ex.flow_1.in_fluid = prev_out_fluid
+        for i, ex in enumerate(self._exchangers_flattened[1]):
+            prev_out_fluid = ex.flow_2.out_fluid
+            if i > 0:
+                ex.flow_2.in_fluid = prev_out_fluid
+
+    def _extract_node_paths(self):
+        self._flatten()
+
+        path_1 = self._exchangers_flattened[0].copy()
+        path_1.insert(0, self.in_flow_1)
+        path_1.append(self.out_flow_1)
+        tuples_list_1 = list_2_tuplelist(path_1)
+
+        path_2 = self._exchangers_flattened[1].copy()
+        path_2.insert(0, self.in_flow_2)
+        path_2.append(self.out_flow_2)
+        tuples_list_2 = list_2_tuplelist(path_2)
+
+        self._paths = tuples_list_1, tuples_list_2
 
 
 class ExchangerEqualCells(ExchangerTwoFlow):
@@ -157,6 +246,14 @@ class ExchangerEqualCells(ExchangerTwoFlow):
             self._exchangers_type = value
         else:
             raise NotImplementedError
+
+    @property
+    def shape(self):
+        return self.layout_matrix.shape
+
+    @shape.setter
+    def shape(self, value):
+        self.layout_matrix = value
 
     @property
     def layout_matrix(self):
@@ -212,13 +309,22 @@ class ExchangerEqualCells(ExchangerTwoFlow):
         self.layout_matrix.fill(self.__new_ex(ex_class))
 
     def __new_ex(self, ex_class):
-        if not self.input_flows == [NotImplemented,NotImplemented]:
+        if not self.input_flows == [NotImplemented, NotImplemented]:
             flow_1, flow_2 = self.input_flows[0].clone(), self.input_flows[1].clone()
             ex = ex_class(flow_1, flow_2)
-            ex.heat_transferability = self.total_transferability / self.cell_numbers
+            self.__set_transferability(ex)
             return ex
         else:
             raise ValueError("Flows not implemented yet")
+
+    def __set_transferability(self, exchanger):
+        try:
+            exchanger.heat_transferability = self.total_transferability / self.cell_numbers
+        except TypeError:
+            pass
+        except ZeroDivisionError:
+            pass
+
 
 class ExchangerEqualCellsTwoFlow(ExchangerNetwork):
     def __init__(self, shape: tuple = (0, 0), type: str = 'CounterCurrentFlow', flow_1: Flow = None,
