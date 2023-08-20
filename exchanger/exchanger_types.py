@@ -73,6 +73,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
     def in_flow_1(self, value):
         if isinstance(value, Flow):
             self.input_flows[0] = value
+            self._fill()
 
     @property
     def in_flow_2(self):
@@ -82,6 +83,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
     def in_flow_2(self, value):
         if isinstance(value, Flow):
             self.input_flows[1] = value
+            self._fill()
 
     @property
     def out_flow_1(self):
@@ -169,6 +171,9 @@ class ExchangerTwoFlow(ExchangerNetwork):
             value = self._paths
         return value
 
+    def _fill(self):
+        pass
+
     def _flatten(self):
         try:
             flattened_1 = flatten(self.layout_matrix, self.flow_order_1)
@@ -219,6 +224,108 @@ class ExchangerTwoFlow(ExchangerNetwork):
 
         self._paths = tuples_list_1, tuples_list_2
 
+    @property
+    def adjacency(self):
+        try:
+            value = self._adj_1, self._adj_2
+        except AttributeError:
+            self._matrix_representation()
+            value = self._adj_1, self._adj_2
+        return value
+
+    def _matrix_representation(self):
+        path_1, path_2 = self.paths
+        nodes = self.nodes
+        graph_1 = nx.DiGraph()
+        graph_1.add_nodes_from(nodes)
+        graph_1.add_edges_from(path_1)
+        adj_1 = nx.adjacency_matrix(graph_1, nodelist=nodes).todense()
+
+        graph_2 = nx.DiGraph()
+        graph_2.add_nodes_from(nodes)
+        graph_2.add_edges_from(path_2)
+        adj_2 = nx.adjacency_matrix(graph_2, nodelist=nodes).todense()
+
+        self._adj_1 = adj_1
+        self._adj_2 = adj_2
+
+    @property
+    def structure_matrix(self):
+        s11 = self.adjacency[0][2:-2, 2:-2]
+        s22 = self.adjacency[1][2:-2, 2:-2]
+        zeros = np.zeros_like(s11)
+        structure = np.block([[s11, zeros], [zeros, s22]]).T
+        return structure
+
+    @property
+    def input_matrix(self):
+        in_1 = self.adjacency[0][:2, 2:-2]
+        in_2 = self.adjacency[1][:2, 2:-2]
+        input = np.hstack((in_1, in_2)).T
+        return input
+
+    @property
+    def output_matrix(self):
+        out_1 = self.adjacency[0][2:-2, -2:]
+        out_2 = self.adjacency[1][2:-2, -2:]
+        output = np.vstack((out_1, out_2)).T
+        return output
+
+    @property
+    def phi_matrix(self):
+        _ = self.structure_matrix
+        return super().phi_matrix
+
+    def _adjust_temperatures(self, iterations=1):
+        for i in range(iterations):
+            out_temp_1, out_temp_2 = self.temperature_outputs[1][0, 0], self.temperature_outputs[1][1, 0]
+            self.output_flows[0].in_fluid.temperature = out_temp_1
+            self.output_flows[1].in_fluid.temperature = out_temp_2
+
+            cell_out_temps = self.temperature_matrix[1].flatten()
+            n = len(cell_out_temps) // 2
+
+            exchangers_flattened_1, exchangers_flattened_2 = self._exchangers_flattened
+            for i, ex in enumerate(exchangers_flattened_1):
+                # adjust out temps
+                ex.flow_1.out_fluid.temperature = cell_out_temps[i]
+                ex.flow_2.out_fluid.temperature = cell_out_temps[n + i]
+
+                # adjust in temp 1
+                if i > 0:
+                    ex.flow_1.in_fluid.temperature = cell_out_temps[i - 1]
+
+            # adjust in temp 2
+            for i, ex in enumerate(exchangers_flattened_2):
+                if i > 0:
+                    ex.flow_2.in_fluid.temperature = prev_out_temp
+                prev_out_temp = ex.flow_2.out_fluid.temperature
+
+    def temperature_outputs_str(self):
+        try:
+            return f"\ttemperature outputs: flow 1=%.2f °C,\tflow 2=%.2f °C\n" % (
+                self.temperature_outputs[1][0, 0] - 273.15, self.temperature_outputs[1][1, 0] - 273.15)
+        except TypeError:
+            return ""
+
+    def heat_flow_vis(self, ax=None, vmin=None, vmax=None):
+        par_matrix = heat_flow_repr(self.layout_matrix)
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        if vmin is None:
+            vmin = 0
+        if vmax is None:
+            vmax = par_matrix.max()
+        im = ax.imshow(par_matrix, cmap='viridis', interpolation='nearest', vmin=vmin, vmax=vmax)
+        ax.set_title('heat flows')
+        num_rows, num_cols = par_matrix.shape
+        ax.set_xticks(range(num_cols))
+        ax.set_xticklabels(range(1, num_cols + 1))
+        ax.set_yticks(range(num_rows))
+        ax.set_yticklabels(range(1, num_rows + 1))
+        plt.colorbar(im, ax=ax, label='heat flow in W')
+
 
 class ExchangerEqualCells(ExchangerTwoFlow):
     def __init__(self, shape: tuple = (0, 0),
@@ -228,13 +335,11 @@ class ExchangerEqualCells(ExchangerTwoFlow):
                  assembly: Assembly = None, total_transferability: float = None):
         # layout matrix can be passed to super constructor because self layout_matrix setter will be used
         self.exchangers_type = exchangers_type
-
+        self.assembly = assembly
+        self.total_transferability = total_transferability
         super().__init__(layout_matrix=shape,
                          flow_1=flow_1, flow_order_1=flow_order_1,
                          flow_2=flow_2, flow_order_2=flow_order_2)
-
-        self.assembly = assembly
-        self.total_transferability = total_transferability
 
     @property
     def exchangers_type(self):
@@ -292,21 +397,28 @@ class ExchangerEqualCells(ExchangerTwoFlow):
     def total_transferability(self, value):
         if self.assembly is None or self.assembly.heat_transferability is None:
             self._total_transferability = value
+            self._fill()
 
     def _fill(self):
         """
         fills the Layout with Heat Exchanger objects
         """
-        ex_class = globals()[self.exchangers_type]
-        """
-        for i in range(self.layout_matrix.shape[0]):
-            for j in range(self.layout_matrix.shape[1]):
-                flow_1, flow_2 = self.input_flows[0].clone(), self.input_flows[1].clone()
-                ex = ex_class(flow_1, flow_2)
-                ex.heat_transferability = self.total_transferability / self.cell_numbers
-                self.layout_matrix[i, j] = ex
-        """
-        self.layout_matrix.fill(self.__new_ex(ex_class))
+        try:
+            ex_class = globals()[self.exchangers_type]
+
+            for i in range(self.layout_matrix.shape[0]):
+                for j in range(self.layout_matrix.shape[1]):
+                    ex = self.__new_ex(ex_class)
+                    # flow_1, flow_2 = self.input_flows[0].clone(), self.input_flows[1].clone()
+                    # ex = ex_class(flow_1, flow_2)
+                    # ex.heat_transferability = self.total_transferability / self.cell_numbers
+                    self.layout_matrix[i, j] = ex
+
+            # self.layout_matrix.fill(self.__new_ex(ex_class))
+        except AttributeError:
+            pass
+        except ValueError:
+            pass
 
     def __new_ex(self, ex_class):
         if not self.input_flows == [NotImplemented, NotImplemented]:

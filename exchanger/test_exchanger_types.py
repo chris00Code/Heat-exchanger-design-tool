@@ -17,7 +17,7 @@ def init_extype():
     fld_2 = Fluid("Water", temperature=293.15)
     flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-    ex = ExchangerEqualCellsTwoFlow((2, 2), 'CrossFlowOneRow', flow_1, flow_2, kA)
+    ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2,total_transferability=kA)
     ex.flow_order_1 = 'dr2u'
     ex.flow_order_2 = 'ul2r'
     return ex
@@ -35,7 +35,7 @@ class ExchangerTypesTest(unittest.TestCase):
         self.assertEqual(ex_layout.cell_numbers, 0)
         self.assertEqual(ex_layout.input_flows, [NotImplemented, NotImplemented])
         self.assertEqual(ex_layout.output_flows, [NotImplemented, NotImplemented])
-        # self.assertEqual(len(ex_layout.exchangers), 0)
+        self.assertEqual(ex_layout.exchangers, NotImplemented)
         self.assertEqual(ex_layout.flow_order_1, None)
         self.assertEqual(ex_layout.flow_order_2, None)
         self.assertEqual(ex_layout.layout_matrix, None)
@@ -43,12 +43,12 @@ class ExchangerTypesTest(unittest.TestCase):
         flow_1 = Flow(Fluid("Water", temperature=373), 1)
         flow_2 = Flow(Fluid("Water", temperature=405), 1)
         ex_layout = ExchangerTwoFlow(flow_1=flow_1, flow_2=flow_2)
-        # self.assertEqual(ex_layout.cell_numbers, 0)
-        # self.assertEqual(len(ex_layout.input_flows), 2)
-        # self.assertEqual(len(ex_layout.output_flows), 2)
-        # self.assertEqual(len(ex_layout.exchangers), 0)
-        # self.assertEqual(ex_layout.flow_order_1, None)
-        # self.assertEqual(ex_layout.flow_order_2, None)
+        self.assertEqual(ex_layout.cell_numbers, 0)
+        self.assertEqual(len(ex_layout.input_flows), 2)
+        self.assertEqual(len(ex_layout.output_flows), 2)
+        self.assertEqual(ex_layout.exchangers, NotImplemented)
+        self.assertEqual(ex_layout.flow_order_1, None)
+        self.assertEqual(ex_layout.flow_order_2, None)
 
         ex_1 = CounterCurrentFlow(flow_1.clone(), flow_2.clone())
         ex_2 = CrossFlowOneRow(flow_1.clone(), flow_2.clone())
@@ -106,7 +106,7 @@ class ExchangerTypesTest(unittest.TestCase):
         self.assertEqual(ex_layout.total_transferability, None)
         self.assertEqual(ex_layout.input_flows, [NotImplemented, NotImplemented])
         self.assertEqual(ex_layout.output_flows, [NotImplemented, NotImplemented])
-        self.assertEqual(len(ex_layout.exchangers), 0)
+        self.assertEqual(ex_layout.exchangers, NotImplemented)
 
         ex_layout = ExchangerEqualCells((2, 2), total_transferability=10)
         self.assertEqual(ex_layout.total_transferability, 10)
@@ -129,6 +129,7 @@ class ExchangerTypesTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             exchanger = ExchangerEqualCells(exchangers_type='Test')
 
+
     def test_equalcells_fill(self):
         exchangers = ExchangerEqualCells(exchangers_type='ParallelFlow')
         with self.assertRaises(ValueError):
@@ -149,29 +150,27 @@ class ExchangerTypesTest(unittest.TestCase):
         exchangers._fill()
         print(exchangers)
 
-    def test_init(self):
-        ex = ExchangerEqualCellsTwoFlow()
-        self.assertEqual(ex.cell_numbers, 0)
-        self.assertEqual(len(ex.input_flows), 0)
-        self.assertEqual(len(ex.output_flows), 0)
-        self.assertEqual(len(ex.exchangers), 0)
+    def test_equalcells_calc(self):
+        kA = 4000
+        W = 3500
+        fld_1 = Fluid("Water", pressure=101420, temperature=373.15)
+        flow_1 = Flow(fld_1, W / fld_1.specific_heat)
+        fld_2 = Fluid("Water", temperature=293.15)
+        flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-        flow_1 = Flow(Fluid("Water", temperature=373), 1)
-        flow_2 = Flow(Fluid("Water", temperature=405), 1)
-        ex = ExchangerEqualCellsTwoFlow(flow_1=flow_1, flow_2=flow_2)
-        self.assertEqual(ex.cell_numbers, 0)
-        self.assertEqual(len(ex.input_flows), 2)
-        self.assertEqual(len(ex.exchangers), 0)
+        ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2,total_transferability=kA)
+        ex.flow_order_1 = 'dr2u'
+        ex.flow_order_2 = 'ul2r'
 
-    def test_init_and_calc(self):
-        ex = init_extype()
         temp_check = np.array([[61.8],
                                [58.1]]) + 273.15
         np.testing.assert_array_almost_equal(ex.temperature_outputs[1], temp_check, decimal=1)
+        # @TODO temp adjustment
+        print(ex.extended_info())
 
     def test_calc(self):
         ex = init_extype()
-        self.assertEqual(ex.transferability, 4000)
+        self.assertEqual(ex.total_transferability, 4000)
 
         phi_check = np.array([[0.78, 0., 0., 0., 0.22, 0., 0., 0.],
                               [0., 0.78, 0., 0., 0., 0.22, 0., 0.],
