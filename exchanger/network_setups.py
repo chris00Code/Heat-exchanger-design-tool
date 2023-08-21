@@ -46,7 +46,7 @@ def plot_networks(network_list):
 
     plt.subplots_adjust(wspace=0.5, hspace=1.5)
 
-    plt.show()
+    #plt.show()
 
 
 def vis_temp_progress(data_list, title: str = 'temperature development'):
@@ -65,4 +65,4 @@ def vis_temp_progress(data_list, title: str = 'temperature development'):
 
     #x_ticks = range(len(data_list))
     #ax.set_xticks(x_ticks)
-    plt.show()
+    #plt.show()

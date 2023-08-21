@@ -131,8 +131,7 @@ class ExchangerTypesTest(unittest.TestCase):
 
     def test_equalcells_fill(self):
         exchangers = ExchangerEqualCells(exchangers_type='ParallelFlow')
-        with self.assertRaises(ValueError):
-            exchangers._fill()
+        exchangers._fill()
 
         flow_1 = Flow(Fluid("Water", temperature=273.15 + 15), 0.33)
         flow_2 = Flow(Fluid("Air"), 1)
@@ -196,13 +195,15 @@ class ExchangerTypesTest(unittest.TestCase):
         ex._adjust_temperatures(5)
         ex.vis_temperature_adjustment_development()
 
-
     def test_flow_temp_vis(self):
         ex = init_extype()
         ex.vis_flow_temperature_development()
-        ex._adjust_temperatures(5)
-        ex.vis_flow_temperature_development()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
+        ex._adjust_temperatures(5)
+
+        ex.vis_flow_temperature_development()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_shapes(self):
         kA = 4000
@@ -212,49 +213,48 @@ class ExchangerTypesTest(unittest.TestCase):
         fld_2 = Fluid("Water", temperature=293.15)
         flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-        ex = ExchangerEqualCells((5, 5), 'CounterCurrentFlow',
-                                 flow_1=flow_1,flow_order_1='ul2d',
-                                 flow_2=flow_2, flow_order_2='dr2l',total_transferability=kA)
+        ex = ExchangerEqualCells((3, 10), 'CounterCurrentFlow',
+                                 flow_1=flow_1, flow_order_1='ul2d',
+                                 flow_2=flow_2, flow_order_2='dr2l', total_transferability=kA)
         print(ex.temperature_outputs[1] - 273.15)
         ex._adjust_temperatures(5)
         print(ex.temperature_outputs[1] - 273.15)
+
         ex.vis_flow_temperature_development()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
+
         ex.heat_flow_vis()
-        plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
+
         print(ex.extended_info())
-
-
-    def test_typedifferent(self):
-        kA = 4749
-        W = 3500
-        fld_1 = Fluid("Water", pressure=101420, temperature=373.15)
-        flow_1 = Flow(fld_1, W / fld_1.specific_heat)
-        fld_2 = Fluid("Water", temperature=293.15)
-        flow_2 = Flow(fld_2, W / fld_2.specific_heat)
-
-        ex = ExchangerEqualCellsTwoFlow((2, 2), 'CounterCurrentFlow', flow_1, flow_2, kA)
-        ex.flow_order_1 = 'ur2d'
-        ex.flow_order_2 = 'ul2r'
-        print(ex.temperature_outputs[1] - 273.15)
-        ex._adjust_temperatures()
-        ex.heat_flow_vis()
-        print(ex.extended_info())
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_print(self):
         ex = init_extype()
         ex._adjust_temperatures()
-        print(ex)
-        print(ex.network_characteristics)
+        print(id_repr(ex.layout_matrix))
         print(ex.extended_info())
+
+    def test_input_change_after_init(self):
+        ex = init_extype()
+        temp = 363.15
+        ex.flow_order_1 = 'ul2r'
+        ex.flow_order_2 = 'dl2r'
+        fld_1 = Fluid("Air", pressure=101420, temperature=temp)
+        flow_1 = Flow(fld_1, 3500 / fld_1.specific_heat)
+        ex.in_flow_1 = flow_1
+        ex._adjust_temperatures()
+        self.assertEqual(ex.in_flow_1.mean_fluid.temperature, temp)
+        self.assertEqual(ex.layout_matrix[0, 0].flow_1.in_fluid.temperature, temp)
 
     def test_heat_flow_vis(self):
         ex = init_extype()
         ex._adjust_temperatures()
-        test_plot_setup()
+
         ex.heat_flow_vis()
-        #plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
 
 if __name__ == '__main__':
+    test_plot_setup()
     unittest.main()

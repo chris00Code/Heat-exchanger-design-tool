@@ -114,7 +114,15 @@ class ExchangerTwoFlow(ExchangerNetwork):
     @flow_order_1.setter
     def flow_order_1(self, value: str):
         if value in self.flow_orders or value is None:
-            self._flow_order_1 = value
+            try:
+                if value is not None and self._flow_order_1 != value:
+                    self._fill()
+                    self._flow_order_1 = value
+                    self._flatten()
+                else:
+                    raise AttributeError
+            except AttributeError:
+                self._flow_order_1 = value
         else:
             raise NotImplementedError
 
@@ -122,11 +130,28 @@ class ExchangerTwoFlow(ExchangerNetwork):
     def flow_order_2(self):
         return self._flow_order_2
 
+    """
     @flow_order_2.setter
     def flow_order_2(self, value: str):
         if value in self.flow_orders or value is None:
             self._flow_order_2 = value
             self._flatten()
+        else:
+            raise NotImplementedError
+    """
+
+    @flow_order_2.setter
+    def flow_order_2(self, value: str):
+        if value in self.flow_orders or value is None:
+            try:
+                if value is not None and self._flow_order_2 != value:
+                    self._fill()
+                    self._flow_order_2 = value
+                    self._flatten()
+                else:
+                    raise AttributeError
+            except AttributeError:
+                self._flow_order_2 = value
         else:
             raise NotImplementedError
 
