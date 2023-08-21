@@ -165,7 +165,6 @@ class ExchangerTypesTest(unittest.TestCase):
         temp_check = np.array([[61.8],
                                [58.1]]) + 273.15
         np.testing.assert_array_almost_equal(ex.temperature_outputs[1], temp_check, decimal=1)
-        # @TODO temp adjustment
         print(ex.extended_info())
 
     def test_calc(self):
@@ -186,9 +185,14 @@ class ExchangerTypesTest(unittest.TestCase):
 
     def test_temp_adjust(self):
         ex = init_extype()
+        print(id_repr(ex.layout_matrix))
+        temp_check = np.array([[61.8],
+                               [58.1]]) + 273.15
+        np.testing.assert_array_almost_equal(ex.temperature_outputs[1], temp_check, decimal=1)
+        #print(ex.extended_info())
         # print(ex)
-        ex._adjust_temperatures(15)
-        print(ex)
+        ex._adjust_temperatures()
+        print(ex.extended_info())
 
     def test_shapes(self):
         kA = 4000

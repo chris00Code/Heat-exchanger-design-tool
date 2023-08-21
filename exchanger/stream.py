@@ -169,7 +169,7 @@ class Flow:
     def out_fluid(self, value):
         if value is None:
             self._out_fluid = self.in_fluid.clone()
-        elif isinstance(value,Fluid):
+        elif isinstance(value, Fluid):
             self._out_fluid = value
 
     @property
@@ -246,6 +246,19 @@ class Flow:
         new_flow = Flow(self)
         return new_flow
 
+    def clone_by_fluid(self, clone_fluid='in'):
+        new_flow = self.clone()
+        if clone_fluid == 'in':
+            fluid = self.in_fluid
+        elif clone_fluid == 'out':
+            fluid = self.out_fluid
+        else:
+            raise NotImplementedError
+        new_flow.in_fluid = fluid
+        new_flow.out_fluid = fluid
+
+        return new_flow
+
     def __repr__(self):
         output = f"Flow: id = {id(self)}\n"
         output += f"\t" + self.mass_flow_str() + "\n"
@@ -254,4 +267,3 @@ class Flow:
         output += f"Input Fluid:\n\t{self.in_fluid}\n"
         output += f"Output Fluid:\n\t{self.out_fluid}\n"
         return output
-
