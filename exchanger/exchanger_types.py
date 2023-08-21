@@ -11,6 +11,7 @@ from utils import get_available_class_names
 
 from network import ExchangerNetwork
 from parts import Assembly
+from network_setups import *
 
 
 class ExchangerTwoFlow(ExchangerNetwork):
@@ -278,7 +279,13 @@ class ExchangerTwoFlow(ExchangerNetwork):
 
     def _adjust_temperatures(self, iterations=1):
         for i in range(iterations):
-            out_temp_1, out_temp_2 = self.temperature_outputs[1][0, 0], self.temperature_outputs[1][1, 0]
+            temperature_outputs = self.temperature_outputs[1]
+            try:
+                self._temperature_adjustment_development.append(temperature_outputs)
+            except AttributeError:
+                self._temperature_adjustment_development = [temperature_outputs]
+
+            out_temp_1, out_temp_2 = temperature_outputs[0, 0], temperature_outputs[1, 0]
             self.output_flows[0].in_fluid.temperature = out_temp_1
             self.output_flows[1].in_fluid.temperature = out_temp_2
 
@@ -325,6 +332,21 @@ class ExchangerTwoFlow(ExchangerNetwork):
         ax.set_yticks(range(num_rows))
         ax.set_yticklabels(range(1, num_rows + 1))
         plt.colorbar(im, ax=ax, label='heat flow in W')
+
+    def vis_temperature_adjustment_development(self):
+        super()._vis_temperature_adjusment_development(self._temperature_adjustment_development)
+
+    def vis_flow_temperature_development(self):
+        temp_1, temp_2 = [], []
+        for ex in self._exchangers_flattened[0]:
+            temp_1.append(ex.flow_1.in_fluid.temperature)
+        for ex in self._exchangers_flattened[1]:
+            temp_2.append(ex.flow_2.in_fluid.temperature)
+        temp_1.append(self.out_flow_1.mean_fluid.temperature)
+        temp_2.append(self.out_flow_2.mean_fluid.temperature)
+
+        temp_list = [np.array([x, y]) for x, y in zip(temp_1, temp_2)]
+        super()._vis_flow_temperature_development(temp_list)
 
 
 class ExchangerEqualCells(ExchangerTwoFlow):

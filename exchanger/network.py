@@ -4,7 +4,7 @@ from numpy.linalg import inv
 import matplotlib.pyplot as plt
 from stream import Fluid, Flow
 from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow
-
+from network_setups import *
 
 class ExchangerNetwork:
     def __init__(self, input_flows: list = None, exchangers: list = None, output_flows: list = None):
@@ -207,6 +207,12 @@ class ExchangerNetwork:
 
     def heat_flow_vis(self, plt=None, vmin=None, vmax=None):
         pass
+
+    def _vis_temperature_adjusment_development(self,temp_list):
+        vis_temp_progress(temp_list,'temperature adjustment development')
+
+    def _vis_flow_temperature_development(self,temp_list):
+        vis_temp_progress(temp_list,'flow temperature development')
 
 
     def extended_info(self):

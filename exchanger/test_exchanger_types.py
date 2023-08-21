@@ -17,7 +17,7 @@ def init_extype():
     fld_2 = Fluid("Water", temperature=293.15)
     flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-    ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2,total_transferability=kA)
+    ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, total_transferability=kA)
     ex.flow_order_1 = 'dr2u'
     ex.flow_order_2 = 'ul2r'
     return ex
@@ -129,7 +129,6 @@ class ExchangerTypesTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             exchanger = ExchangerEqualCells(exchangers_type='Test')
 
-
     def test_equalcells_fill(self):
         exchangers = ExchangerEqualCells(exchangers_type='ParallelFlow')
         with self.assertRaises(ValueError):
@@ -158,7 +157,7 @@ class ExchangerTypesTest(unittest.TestCase):
         fld_2 = Fluid("Water", temperature=293.15)
         flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-        ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2,total_transferability=kA)
+        ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, total_transferability=kA)
         ex.flow_order_1 = 'dr2u'
         ex.flow_order_2 = 'ul2r'
 
@@ -185,14 +184,25 @@ class ExchangerTypesTest(unittest.TestCase):
 
     def test_temp_adjust(self):
         ex = init_extype()
-        print(id_repr(ex.layout_matrix))
         temp_check = np.array([[61.8],
                                [58.1]]) + 273.15
         np.testing.assert_array_almost_equal(ex.temperature_outputs[1], temp_check, decimal=1)
-        #print(ex.extended_info())
-        # print(ex)
         ex._adjust_temperatures()
-        print(ex.extended_info())
+        self.assertAlmostEqual(ex.out_flow_1.mean_fluid.temperature, 61.8 + 273.15, delta=1)
+        self.assertAlmostEqual(ex.out_flow_2.mean_fluid.temperature, 58.1 + 273.15, delta=1)
+
+    def test_temp_adjustment_progress(self):
+        ex = init_extype()
+        ex._adjust_temperatures(5)
+        ex.vis_temperature_adjustment_development()
+
+
+    def test_flow_temp_vis(self):
+        ex = init_extype()
+        ex.vis_flow_temperature_development()
+        ex._adjust_temperatures(5)
+        ex.vis_flow_temperature_development()
+
 
     def test_shapes(self):
         kA = 4000
@@ -202,12 +212,17 @@ class ExchangerTypesTest(unittest.TestCase):
         fld_2 = Fluid("Water", temperature=293.15)
         flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-        ex = ExchangerEqualCellsTwoFlow((10, 10), 'CrossFlowOneRow', flow_1, flow_2, kA)
-        ex.flow_order_1 = 'ul2d'
-        ex.flow_order_2 = 'ul2r'
+        ex = ExchangerEqualCells((5, 5), 'CounterCurrentFlow',
+                                 flow_1=flow_1,flow_order_1='ul2d',
+                                 flow_2=flow_2, flow_order_2='dr2l',total_transferability=kA)
         print(ex.temperature_outputs[1] - 273.15)
-        ex._adjust_temperatures(1)
+        ex._adjust_temperatures(5)
         print(ex.temperature_outputs[1] - 273.15)
+        ex.vis_flow_temperature_development()
+        ex.heat_flow_vis()
+        plt.show()
+        print(ex.extended_info())
+
 
     def test_typedifferent(self):
         kA = 4749
@@ -237,6 +252,7 @@ class ExchangerTypesTest(unittest.TestCase):
         ex._adjust_temperatures()
         test_plot_setup()
         ex.heat_flow_vis()
+        #plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
 
