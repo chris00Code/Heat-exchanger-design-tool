@@ -1,3 +1,4 @@
+import collections
 import copy
 import exchanger
 import numpy as np
@@ -8,7 +9,7 @@ from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow, CrossFlow
 from matrix_converter import *
 from numpy.linalg import inv
 from utils import get_available_class_names
-
+from itertools import permutations
 from network import ExchangerNetwork
 from parts import Assembly
 from network_setups import *
@@ -340,16 +341,16 @@ class ExchangerTwoFlow(ExchangerNetwork):
         except TypeError:
             return ""
 
-    def heat_flow_vis(self, ax=None, vmin=None, vmax=None):
+    def vis_heat_flow(self, ax=None, **ax_parameters):
         par_matrix = heat_flow_repr(self.layout_matrix)
+
+        vmin = ax_parameters.pop('vmin', 0)
+        vmax = ax_parameters.pop('vmax', par_matrix.max())
 
         if ax is None:
             fig, ax = plt.subplots()
-        if vmin is None:
-            vmin = 0
-        if vmax is None:
-            vmax = par_matrix.max()
-        im = ax.imshow(par_matrix, cmap='viridis', interpolation='nearest', vmin=vmin, vmax=vmax)
+
+        im = ax.imshow(par_matrix, cmap='viridis', interpolation='nearest', vmin=vmin, vmax=vmax, **ax_parameters)
         ax.set_title('heat flows')
         num_rows, num_cols = par_matrix.shape
         ax.set_xticks(range(num_cols))
@@ -372,6 +373,11 @@ class ExchangerTwoFlow(ExchangerNetwork):
 
         temp_list = [np.array([x, y]) for x, y in zip(temp_1, temp_2)]
         super()._vis_flow_temperature_development(temp_list)
+
+    @staticmethod
+    def input_arrangements():
+        result = list(permutations(ExchangerTwoFlow.flow_orders, 2))
+        return result
 
 
 class ExchangerEqualCells(ExchangerTwoFlow):

@@ -7,6 +7,7 @@ from parts import *
 import matplotlib.pyplot as plt
 import matplotlib
 from characteristic_plots import *
+import network as exnet
 
 
 def init_extype():
@@ -194,6 +195,8 @@ class ExchangerTypesTest(unittest.TestCase):
         ex = init_extype()
         ex._adjust_temperatures(5)
         ex.vis_temperature_adjustment_development()
+        # plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_flow_temp_vis(self):
         ex = init_extype()
@@ -223,7 +226,7 @@ class ExchangerTypesTest(unittest.TestCase):
         ex.vis_flow_temperature_development()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
-        ex.heat_flow_vis()
+        ex.vis_heat_flow()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
         print(ex.extended_info())
@@ -251,8 +254,31 @@ class ExchangerTypesTest(unittest.TestCase):
         ex = init_extype()
         ex._adjust_temperatures()
 
-        ex.heat_flow_vis()
+        ex.vis_heat_flow()
+        # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
+
+    def test_input_arrangements(self):
+        networks = []
+        for inp in ExchangerTwoFlow.input_arrangements():
+            netw = init_extype()
+            netw.flow_order_1 = inp[0]
+            netw.flow_order_2 = inp[1]
+            netw._adjust_temperatures()
+            networks.append(netw)
+        plot_networks(networks)
+        plt.show()
+
+    def test_vis_setup(self):
+        networks = [init_extype(), init_extype(),init_extype(),init_extype(),init_extype(),init_extype(),init_extype()]
+        networks[-1].flow_order_1 = 'dr2l'
+        for n in networks:
+            n._adjust_temperatures(5)
+        ax_parameters = {'vmin':10000,'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
+        exnet.vis_setups(networks, 'vis_heat_flow', **ax_parameters)
+        plt.show()
+        exnet.vis_setups(networks, 'vis_heat_flow')
+        plt.show()
 
 
 if __name__ == '__main__':

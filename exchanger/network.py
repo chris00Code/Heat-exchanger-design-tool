@@ -6,6 +6,7 @@ from stream import Fluid, Flow
 from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow
 from network_setups import *
 
+
 class ExchangerNetwork:
     def __init__(self, input_flows: list = None, exchangers: list = None, output_flows: list = None):
         if input_flows is None:
@@ -205,15 +206,11 @@ class ExchangerNetwork:
         except TypeError:
             return ""
 
-    def heat_flow_vis(self, plt=None, vmin=None, vmax=None):
-        pass
+    def _vis_temperature_adjusment_development(self, temp_list):
+        vis_temp_progress(temp_list, 'temperature adjustment development')
 
-    def _vis_temperature_adjusment_development(self,temp_list):
-        vis_temp_progress(temp_list,'temperature adjustment development')
-
-    def _vis_flow_temperature_development(self,temp_list):
-        vis_temp_progress(temp_list,'flow temperature development')
-
+    def _vis_flow_temperature_development(self, temp_list):
+        vis_temp_progress(temp_list, 'flow temperature development')
 
     def extended_info(self):
         output = self.__repr__()
@@ -236,3 +233,49 @@ class ExchangerNetwork:
             for i, flow in enumerate(self.output_flows):
                 output += f"\tflow {i}: {flow.mean_fluid.title}, temp= {flow.mean_fluid.temperature - 273.15:.2f}°C\n"
         return output
+
+
+def vis_temp_progress(data_list, title: str = 'temperature development'):
+    fig, ax = plt.subplots()
+
+    data_list = [data - 273.15 for data in data_list]
+
+    for i, data_row in enumerate(zip(*data_list)):
+        ax.plot(data_row, label=f'temperature {i + 1}')
+
+    ax.set_xlabel('development')
+    ax.set_ylabel('temperatures')
+    ax.set_title(title)
+    ax.grid(True)
+    ax.legend()
+
+
+def vis_setups(network_list: list, plot_function, **ax_parameters):
+    num_networks = len(network_list)
+    """
+    num_rows = (num_networks + 5) // 6
+
+    fig, axs = plt.subplots(num_rows, 6, sharex='row', sharey='col', figsize=(15, 3 * num_rows))
+
+    for i, (network, ax) in enumerate(zip(network_list, axs.ravel())):
+        plot = getattr(network, plot_function)
+        # network.vis_heat_flow(ax, 0)
+        plot(ax, **ax_parameters)
+        ax.set_title(f"setup: {i + 1}")
+
+    # plt.subplots_adjust(wspace=2.5, hspace=2.5)
+    plt.tight_layout()
+    """
+    num_rows = (num_networks + 5) // 6
+    num_cols = (num_networks + num_rows - 1) // num_rows
+
+    fig, axs = plt.subplots(num_rows, num_cols, sharex='row', sharey='col', figsize=(15, 3 * num_rows))
+
+    for i, (network, ax) in enumerate(zip(network_list, axs.ravel())):
+            plot = getattr(network, plot_function)
+            plot(ax, **ax_parameters)
+            ax.set_title(f"setup: {i + 1}")
+    for ax in axs.ravel()[num_networks:]:
+        ax.set_visible(False)
+
+    plt.tight_layout()
