@@ -207,11 +207,11 @@ class ExchangerNetwork:
         except TypeError:
             return ""
 
-    def _vis_temperature_adjusment_development(self, temp_list):
-        vis_temp_progress(temp_list, 'temperature adjustment development')
+    def _vis_temperature_adjusment_development(self, temp_list, ax=None, **ax_parameters):
+        vis_temp_progress(temp_list, 'temperature adjustment development',ax,**ax_parameters)
 
-    def _vis_flow_temperature_development(self, temp_list):
-        vis_temp_progress(temp_list, 'flow temperature development')
+    def _vis_flow_temperature_development(self, temp_list, ax=None, **ax_parameters):
+        vis_temp_progress(temp_list, 'flow temperature development',ax,**ax_parameters)
 
     def extended_info(self):
         output = self.__repr__()
@@ -236,8 +236,9 @@ class ExchangerNetwork:
         return output
 
 
-def vis_temp_progress(data_list, title: str = 'temperature development'):
-    fig, ax = plt.subplots()
+def vis_temp_progress(data_list, title: str = 'temperature development', ax=None, **ax_parameters):
+    if ax is None:
+        fig, ax = plt.subplots()
 
     data_list = [data - 273.15 for data in data_list]
 
@@ -246,19 +247,25 @@ def vis_temp_progress(data_list, title: str = 'temperature development'):
 
     ax.set_xlabel('development')
     ax.set_ylabel('temperatures')
+
+    min_y = ax_parameters.get('min_y', None)  # Retrieve min_y from ax_parameters or set to None
+    max_y = ax_parameters.get('max_y', None)  # Retrieve max_y from ax_parameters or set to None
+    if min_y is not None and max_y is not None:
+        ax.set_ylim(min_y, max_y)
+
     ax.set_title(title)
     ax.grid(True)
     ax.legend()
 
 
-def vis_setups(network_list: list, plot_function, fig_title: str = "", description: str = None, **ax_parameters):
-    """
+def vis_setups(network_list: list, plot_function, fig_title: str = "", **ax_parameters):
     num_networks = len(network_list)
 
-    num_rows = (num_networks + 5) // 6
-    num_cols = (num_networks + num_rows - 1) // num_rows
 
-    fig, axs = plt.subplots(num_rows, num_cols, sharex='row', sharey='col', figsize=(15, 3 * num_rows))
+    num_cols = 6
+    num_rows = (num_networks + num_cols-1) // num_cols
+
+    fig, axs = plt.subplots(num_rows, num_cols, sharex='row', sharey='col', figsize=(3*num_cols, 3 * num_rows))
 
     fig.suptitle(fig_title, fontsize=25)
 
@@ -269,80 +276,5 @@ def vis_setups(network_list: list, plot_function, fig_title: str = "", descripti
     for ax in axs.ravel()[num_networks:]:
         ax.set_visible(False)
 
-    if description is not None:
-        fig.subplots_adjust(top=0.85)  # Leave space for the textbox above the subplots
-        anchored_text = matplotlib.offsetbox.AnchoredText(description, loc='upper center', frameon=True)
-        fig.add_artist(anchored_text)
     plt.tight_layout()
-    """
-
-    from matplotlib.gridspec import GridSpec
-    from matplotlib.offsetbox import AnchoredText
-
-    """
-    num_networks = len(network_list)
-
-    num_rows = (num_networks + 5) // 6
-    num_cols = (num_networks + num_rows - 1) // num_rows
-
-    fig = plt.figure(figsize=(15, 3 * num_rows))
-    if description is not None:
-        #num_rows += 1  # Add an extra row for the text box
-        num_cols+=1
-        description = 'description:\n' + description.replace('\t','   ')
-
-    gs = GridSpec(num_rows, num_cols, figure=fig)
-
-    fig.suptitle(fig_title, fontsize=16)  # Set the main title of the figure
-
-    for i, (network, col) in enumerate(zip(network_list, gs)):
-        ax = fig.add_subplot(col)
-        plot = getattr(network, plot_function)
-        plot(ax, **ax_parameters)
-        ax.set_title(f"setup: {i + 1}")
-
-    if description is not None:
-        anchored_text = AnchoredText(description, loc='upper left', frameon=False)
-        #text_box = fig.add_subplot(gs[-1, :])  # Add subplot for the text box
-        text_box = fig.add_subplot(gs[:,-1])
-        text_box.add_artist(anchored_text)
-        text_box.axis('off')  # Turn off axes for the text box
-
-    plt.tight_layout()
-    """
-    num_networks = len(network_list)
-
-    n_subplots_col = 6
-
-    num_rows = (num_networks + n_subplots_col - 1) // n_subplots_col
-    num_cols = n_subplots_col
-
-    fig = plt.figure(figsize=(15, 5 * num_rows * 2))
-
-    gs = GridSpec(num_rows * 2, num_cols, figure=fig)
-
-    fig.suptitle(fig_title, fontsize=16)  # Set the main title of the figure
-
-    for i, (network, col) in enumerate(zip(network_list, gs)):
-        row_index = i//n_subplots_col
-        col_index = i% n_subplots_col
-
-        ax = fig.add_subplot(gs[row_index*2, col_index])  # Adjusted for row and col
-        plot = getattr(network, plot_function)
-        plot(ax, **ax_parameters)
-        ax.set_title(f"setup: {i + 1}")
-
-        description = network.flow_orders_str() + network.heat_flows_str() + network.temperature_outputs_str()
-        anchored_text = AnchoredText(description.replace('\t','   '), loc='upper center', frameon=False)
-
-        text_box = fig.add_subplot(gs[row_index*2 + 1, col_index])  # Adjusted for row and col
-        text_box.add_artist(anchored_text)
-        text_box.axis('off')  # Turn off axes for the text box
-
-        """
-        if description is not None:
-            description = f'setup {i + 1}:\n' + description.replace('\t', '   ')
-            anchored_text = AnchoredText(description, loc='upper left', frameon=False)
-            ax.add_artist(anchored_text)
-        """
-    #plt.tight_layout()
+    #plt.subplots_adjust(hspace=0.5,wspace=2)

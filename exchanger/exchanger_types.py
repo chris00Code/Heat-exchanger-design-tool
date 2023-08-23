@@ -366,7 +366,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
     def vis_temperature_adjustment_development(self):
         super()._vis_temperature_adjusment_development(self._temperature_adjustment_development)
 
-    def vis_flow_temperature_development(self):
+    def vis_flow_temperature_development(self,ax=None, **ax_parameters):
         temp_1, temp_2 = [], []
         for ex in self._exchangers_flattened[0]:
             temp_1.append(ex.flow_1.in_fluid.temperature)
@@ -376,7 +376,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
         temp_2.append(self.out_flow_2.mean_fluid.temperature)
 
         temp_list = [np.array([x, y]) for x, y in zip(temp_1, temp_2)]
-        super()._vis_flow_temperature_development(temp_list)
+        super()._vis_flow_temperature_development(temp_list,ax,**ax_parameters)
 
     @staticmethod
     def input_arrangements():

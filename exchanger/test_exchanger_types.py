@@ -266,23 +266,30 @@ class ExchangerTypesTest(unittest.TestCase):
             netw.flow_order_2 = inp[1]
             netw._adjust_temperatures()
             networks.append(netw)
-        plot_networks(networks)
+
+        ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
+        exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
+        plt.show()
+        exnet.vis_setups(networks, 'vis_flow_temperature_development',fig_title='temperature development')
         plt.show()
 
     def test_vis_setup(self):
         networks = [init_extype(), init_extype(), init_extype(), init_extype(), init_extype(), init_extype(),
                     init_extype()]
         networks[-1].flow_order_1 = 'dr2l'
-        description = ""
+        networks[-2].in_flow_1.in_fluid.temperature = 273.15+50
+        networks[-2].in_flow_1.out_fluid.temperature = 273.15 + 50
+        networks[-2]._fill()
+        networks[-2]._flatten()
         for n in networks:
             n._adjust_temperatures(5)
-            description += n.flow_orders_str()+n.heat_flows_str()+n.temperature_outputs_str()
 
-        ax_parameters = {'vmin': 10000, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
+        ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
 
-        exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows',description=description, **ax_parameters)
+
+        exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
         plt.show()
-        exnet.vis_setups(networks, 'vis_heat_flow')
+        exnet.vis_setups(networks, 'vis_flow_temperature_development',fig_title='temperature development')
         plt.show()
 
 
