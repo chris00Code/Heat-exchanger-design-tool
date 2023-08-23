@@ -270,12 +270,17 @@ class ExchangerTypesTest(unittest.TestCase):
         plt.show()
 
     def test_vis_setup(self):
-        networks = [init_extype(), init_extype(),init_extype(),init_extype(),init_extype(),init_extype(),init_extype()]
+        networks = [init_extype(), init_extype(), init_extype(), init_extype(), init_extype(), init_extype(),
+                    init_extype()]
         networks[-1].flow_order_1 = 'dr2l'
+        description = ""
         for n in networks:
             n._adjust_temperatures(5)
-        ax_parameters = {'vmin':10000,'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
-        exnet.vis_setups(networks, 'vis_heat_flow', **ax_parameters)
+            description += n.flow_orders_str()+n.heat_flows_str()+n.temperature_outputs_str()
+
+        ax_parameters = {'vmin': 10000, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
+
+        exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows',description=description, **ax_parameters)
         plt.show()
         exnet.vis_setups(networks, 'vis_heat_flow')
         plt.show()

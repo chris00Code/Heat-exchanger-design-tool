@@ -1,3 +1,4 @@
+import matplotlib.offsetbox
 import numpy as np
 
 from numpy.linalg import inv
@@ -250,32 +251,98 @@ def vis_temp_progress(data_list, title: str = 'temperature development'):
     ax.legend()
 
 
-def vis_setups(network_list: list, plot_function, **ax_parameters):
+def vis_setups(network_list: list, plot_function, fig_title: str = "", description: str = None, **ax_parameters):
+    """
     num_networks = len(network_list)
-    """
-    num_rows = (num_networks + 5) // 6
 
-    fig, axs = plt.subplots(num_rows, 6, sharex='row', sharey='col', figsize=(15, 3 * num_rows))
-
-    for i, (network, ax) in enumerate(zip(network_list, axs.ravel())):
-        plot = getattr(network, plot_function)
-        # network.vis_heat_flow(ax, 0)
-        plot(ax, **ax_parameters)
-        ax.set_title(f"setup: {i + 1}")
-
-    # plt.subplots_adjust(wspace=2.5, hspace=2.5)
-    plt.tight_layout()
-    """
     num_rows = (num_networks + 5) // 6
     num_cols = (num_networks + num_rows - 1) // num_rows
 
     fig, axs = plt.subplots(num_rows, num_cols, sharex='row', sharey='col', figsize=(15, 3 * num_rows))
 
+    fig.suptitle(fig_title, fontsize=25)
+
     for i, (network, ax) in enumerate(zip(network_list, axs.ravel())):
-            plot = getattr(network, plot_function)
-            plot(ax, **ax_parameters)
-            ax.set_title(f"setup: {i + 1}")
+        plot = getattr(network, plot_function)
+        plot(ax, **ax_parameters)
+        ax.set_title(f"setup: {i + 1}")
     for ax in axs.ravel()[num_networks:]:
         ax.set_visible(False)
 
+    if description is not None:
+        fig.subplots_adjust(top=0.85)  # Leave space for the textbox above the subplots
+        anchored_text = matplotlib.offsetbox.AnchoredText(description, loc='upper center', frameon=True)
+        fig.add_artist(anchored_text)
     plt.tight_layout()
+    """
+
+    from matplotlib.gridspec import GridSpec
+    from matplotlib.offsetbox import AnchoredText
+
+    """
+    num_networks = len(network_list)
+
+    num_rows = (num_networks + 5) // 6
+    num_cols = (num_networks + num_rows - 1) // num_rows
+
+    fig = plt.figure(figsize=(15, 3 * num_rows))
+    if description is not None:
+        #num_rows += 1  # Add an extra row for the text box
+        num_cols+=1
+        description = 'description:\n' + description.replace('\t','   ')
+
+    gs = GridSpec(num_rows, num_cols, figure=fig)
+
+    fig.suptitle(fig_title, fontsize=16)  # Set the main title of the figure
+
+    for i, (network, col) in enumerate(zip(network_list, gs)):
+        ax = fig.add_subplot(col)
+        plot = getattr(network, plot_function)
+        plot(ax, **ax_parameters)
+        ax.set_title(f"setup: {i + 1}")
+
+    if description is not None:
+        anchored_text = AnchoredText(description, loc='upper left', frameon=False)
+        #text_box = fig.add_subplot(gs[-1, :])  # Add subplot for the text box
+        text_box = fig.add_subplot(gs[:,-1])
+        text_box.add_artist(anchored_text)
+        text_box.axis('off')  # Turn off axes for the text box
+
+    plt.tight_layout()
+    """
+    num_networks = len(network_list)
+
+    n_subplots_col = 6
+
+    num_rows = (num_networks + n_subplots_col - 1) // n_subplots_col
+    num_cols = n_subplots_col
+
+    fig = plt.figure(figsize=(15, 5 * num_rows * 2))
+
+    gs = GridSpec(num_rows * 2, num_cols, figure=fig)
+
+    fig.suptitle(fig_title, fontsize=16)  # Set the main title of the figure
+
+    for i, (network, col) in enumerate(zip(network_list, gs)):
+        row_index = i//n_subplots_col
+        col_index = i% n_subplots_col
+
+        ax = fig.add_subplot(gs[row_index*2, col_index])  # Adjusted for row and col
+        plot = getattr(network, plot_function)
+        plot(ax, **ax_parameters)
+        ax.set_title(f"setup: {i + 1}")
+
+        description = network.flow_orders_str() + network.heat_flows_str() + network.temperature_outputs_str()
+        anchored_text = AnchoredText(description.replace('\t','   '), loc='upper center', frameon=False)
+
+        text_box = fig.add_subplot(gs[row_index*2 + 1, col_index])  # Adjusted for row and col
+        text_box.add_artist(anchored_text)
+        text_box.axis('off')  # Turn off axes for the text box
+
+        """
+        if description is not None:
+            description = f'setup {i + 1}:\n' + description.replace('\t', '   ')
+            anchored_text = AnchoredText(description, loc='upper left', frameon=False)
+            ax.add_artist(anchored_text)
+        """
+    #plt.tight_layout()

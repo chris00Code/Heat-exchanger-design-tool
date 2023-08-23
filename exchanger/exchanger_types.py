@@ -156,6 +156,10 @@ class ExchangerTwoFlow(ExchangerNetwork):
         else:
             raise NotImplementedError
 
+    def flow_orders_str(self):
+        output = f"flow order: flow_1:{self.flow_order_1}\tflow_2:{self.flow_order_2}\n"
+        return output
+
     @property
     def heat_flows(self):
         q_1, q_2 = 0, 0
