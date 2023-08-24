@@ -349,7 +349,7 @@ class Shell:
 
 
 class SquareShell(Shell):
-    def __init__(self, length: float = 1, width_in: float = 1, height_in:float = 1):
+    def __init__(self, length: float = 1, width_in: float = 1, height_in: float = 1):
         super().__init__(length)
         self.width_in = width_in
         self.height_in = height_in
@@ -378,10 +378,48 @@ class TubeShell(Shell):
         return output
 
 
+class Baffle:
+    @property
+    def number_baffles(self):
+        return self._number_baffles
+
+    @number_baffles.setter
+    def number_baffles(self, value):
+        self._number_baffles = value
+
+    def ad_str(self):
+        pass
+
+    def __repr__(self):
+        output = f"baffle: type = {self.__class__.__name__}\n"
+        output += f"\tnumber of baffles = {self.number_baffles}\n"
+        output += self.ad_str()
+        return output
+
+
+class SegmentalBaffle(Baffle):
+    def __init__(self, number, baffle_cut):
+        self.number_baffles = number
+        self.baffle_cut = baffle_cut
+
+    @property
+    def baffle_cut(self):
+        return self._baffle_cut
+
+    @baffle_cut.setter
+    def baffle_cut(self, value):
+        self._baffle_cut = value
+
+    def ad_str(self):
+        output = f"\tbaffle cut: {self.baffle_cut} %"
+        return output
+
+
 class Assembly(Part):
-    def __init__(self, shell: Shell, pipe_layout: PipeLayout):
+    def __init__(self, shell: Shell, pipe_layout: PipeLayout, baffle: Baffle = NotImplemented):
         self.shell = shell
         self.pipe_layout = pipe_layout
+        self.baffles = baffle
 
     @property
     def pipe_layout(self):
@@ -403,8 +441,8 @@ class Assembly(Part):
     @property
     def flow_area(self):
         area_shell_inside = self.pipe_layout.flow_area
-        area_shell_outside = self.shell.area_in-self.pipe_layout.pipe.area
-        return area_shell_inside,area_shell_outside
+        area_shell_outside = self.shell.area_in - self.pipe_layout.pipe.area
+        return area_shell_inside, area_shell_outside
 
     def flow_area_str(self):
         value = self.flow_area
@@ -468,4 +506,5 @@ class Assembly(Part):
         output += f"PipeLayout:\n" + self.pipe_layout.geometrics_str()
         output += self.hydraulic_properties_str()
         output += self.thermic_properties_str()
+        output += f"\nBaffles:\n" + str(self.baffles)
         return output

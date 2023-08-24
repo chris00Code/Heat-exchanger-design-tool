@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from exchanger import *
+from exchanger import CounterCurrentFlow, CrossFlowOneRow
 from exchanger_types import *
 from stream import Fluid, Flow
 from parts import *
@@ -33,6 +33,7 @@ class ExchangerTypesTest(unittest.TestCase):
 
     def test_exchangertwoflow_init(self):
         ex_layout = ExchangerTwoFlow()
+        ex_layout.auto_adjust = False
         self.assertEqual(ex_layout.cell_numbers, 0)
         self.assertEqual(ex_layout.input_flows, [NotImplemented, NotImplemented])
         self.assertEqual(ex_layout.output_flows, [NotImplemented, NotImplemented])
@@ -44,6 +45,7 @@ class ExchangerTypesTest(unittest.TestCase):
         flow_1 = Flow(Fluid("Water", temperature=373), 1)
         flow_2 = Flow(Fluid("Water", temperature=405), 1)
         ex_layout = ExchangerTwoFlow(flow_1=flow_1, flow_2=flow_2)
+        ex_layout.auto_adjust = False
         self.assertEqual(ex_layout.cell_numbers, 0)
         self.assertEqual(len(ex_layout.input_flows), 2)
         self.assertEqual(len(ex_layout.output_flows), 2)
@@ -133,7 +135,6 @@ class ExchangerTypesTest(unittest.TestCase):
     def test_equalcells_fill(self):
         exchangers = ExchangerEqualCells(exchangers_type='ParallelFlow')
         exchangers._fill()
-
         flow_1 = Flow(Fluid("Water", temperature=273.15 + 15), 0.33)
         flow_2 = Flow(Fluid("Air"), 1)
         exchangers.in_flow_1 = flow_1
@@ -160,11 +161,31 @@ class ExchangerTypesTest(unittest.TestCase):
         ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, total_transferability=kA)
         ex.flow_order_1 = 'dr2u'
         ex.flow_order_2 = 'ul2r'
-
         temp_check = np.array([[61.8],
                                [58.1]]) + 273.15
         np.testing.assert_array_almost_equal(ex.temperature_outputs[1], temp_check, decimal=1)
         print(ex.extended_info())
+
+    def test_equalcells_calc_assembly(self):
+        kA = 4000
+        W = 3500
+        fld_1 = Fluid("Water", pressure=101420, temperature=373.15)
+        flow_1 = Flow(fld_1, W / fld_1.specific_heat)
+        fld_2 = Fluid("Water", temperature=293.15)
+        flow_2 = Flow(fld_2, W / fld_2.specific_heat)
+
+        shell = SquareShell(5, 2, 1)
+        pipe = StraightPipe(10, 13)
+        pipe_layout = PipeLayout(pipe)
+        assembly = Assembly(shell, pipe_layout)
+        assembly.heat_transfer_coefficient = 20
+        # @TODO assembly not working, deletes all exchagers?
+        ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, assembly=assembly)
+        ex.flow_order_1 = 'dr2u'
+        ex.flow_order_2 = 'ul2r'
+        #ex._adjust_temperatures()
+        ex.auto_adjust=False
+        print(ex)
 
     def test_calc(self):
         ex = init_extype()
@@ -238,6 +259,17 @@ class ExchangerTypesTest(unittest.TestCase):
         print(id_repr(ex.layout_matrix))
         print(ex.extended_info())
 
+    def test_autoadjust(self):
+        ex = init_extype()
+        ex.auto_adjust = False
+        str(ex)
+        self.assertAlmostEqual(ex.out_flow_1.mean_fluid.temperature, 100 + 273.15, delta=1)
+        self.assertAlmostEqual(ex.out_flow_2.mean_fluid.temperature, 20 + 273.15, delta=1)
+        ex = init_extype()
+        str(ex)
+        self.assertAlmostEqual(ex.out_flow_1.mean_fluid.temperature, 62.18 + 273.15, delta=1)
+        self.assertAlmostEqual(ex.out_flow_2.mean_fluid.temperature, 58.42 + 273.15, delta=1)
+
     def test_input_change_after_init(self):
         ex = init_extype()
         temp = 363.15
@@ -269,17 +301,17 @@ class ExchangerTypesTest(unittest.TestCase):
 
         ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
         exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
-        #plt.show()
+        # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
-        exnet.vis_setups(networks, 'vis_flow_temperature_development',fig_title='temperature development')
-        #plt.show()
+        exnet.vis_setups(networks, 'vis_flow_temperature_development', fig_title='temperature development')
+        # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_vis_setup(self):
         networks = [init_extype(), init_extype(), init_extype(), init_extype(), init_extype(), init_extype(),
                     init_extype()]
         networks[-1].flow_order_1 = 'dr2l'
-        networks[-2].in_flow_1.in_fluid.temperature = 273.15+50
+        networks[-2].in_flow_1.in_fluid.temperature = 273.15 + 50
         networks[-2].in_flow_1.out_fluid.temperature = 273.15 + 50
         networks[-2]._fill()
         networks[-2]._flatten()
@@ -288,13 +320,13 @@ class ExchangerTypesTest(unittest.TestCase):
 
         ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
 
-
         exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
-        #plt.show()
+        # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
-        exnet.vis_setups(networks, 'vis_flow_temperature_development',fig_title='temperature development')
-        #plt.show()
+        exnet.vis_setups(networks, 'vis_flow_temperature_development', fig_title='temperature development')
+        # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
+
 
 if __name__ == '__main__':
     test_plot_setup()

@@ -17,6 +17,8 @@ from network_setups import *
 
 class ExchangerTwoFlow(ExchangerNetwork):
     flow_orders = ['ul2r', 'dl2r', 'ur2l', 'dr2l', 'ul2d', 'ur2d', 'dl2u', 'dr2u']
+    auto_adjust = True
+
 
     def __init__(self, layout_matrix: np.ndarray = None, flow_1: Flow = None, flow_order_1: str = None,
                  flow_2: Flow = None, flow_order_2: str = None, ):
@@ -383,6 +385,13 @@ class ExchangerTwoFlow(ExchangerNetwork):
         result = list(permutations(ExchangerTwoFlow.flow_orders, 2))
         return result
 
+    def __repr__(self):
+        if self.auto_adjust:
+            try:
+                self._adjust_temperatures(5)
+            except AttributeError:
+                pass
+        return super().__repr__()
 
 class ExchangerEqualCells(ExchangerTwoFlow):
     def __init__(self, shape: tuple = (0, 0),
