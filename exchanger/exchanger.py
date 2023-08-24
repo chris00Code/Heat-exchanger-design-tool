@@ -75,6 +75,25 @@ class HeatExchanger:
         return self.flow_1.heat_flow, self.flow_2.heat_flow
 
     @property
+    def pressure_loss(self):
+        """
+        calcs the pressure loss of the two fluids in the heat exchanger. flow 1 is assumened as the flow inside of the part.
+        :return: pressure loss
+        """
+        zeta = self.part.pressure_coefficient
+        hydraulic_diameter = self.part.hydraulic_diameter
+        if isinstance(zeta,tuple):
+            v_dot_1 = self.flow_1.volume_flow
+            a_1 = self.part.flow_area
+        else:
+            value = NotImplemented
+        return value
+
+    @staticmethod
+    def _calc_pressure_loss(zeta,velocity,density):
+        return zeta*density/2*velocity**2
+
+    @property
     def ntu(self):
         kA = self.heat_transferability
         heat_capacity_flow_1 = self.flow_1.heat_capacity_flow

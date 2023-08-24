@@ -90,8 +90,8 @@ class EdgeIntersect:
         nodePos = node.grNode.scenePos()
         x = nodePos.x()
         y = nodePos.y()
-        w = node.grNode.width
-        h = node.grNode.height
+        w = node.grNode.width_in
+        h = node.grNode.height_in
         return QRectF(x, y, w, h)
 
 

@@ -26,7 +26,7 @@ def vis_results(networks):
     plt.show()
 """
 
-def plot_networks(network_list):
+"""def plot_networks(network_list):
     num_networks = len(network_list)
 
     num_rows = (num_networks + 5) // 6
@@ -89,4 +89,4 @@ def vis_setups_temp_progress(network_list: list):
         ax.set_title("")
 
     plt.subplots_adjust(wspace=0.5, hspace=1.5)
-
+"""

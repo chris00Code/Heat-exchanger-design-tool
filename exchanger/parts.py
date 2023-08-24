@@ -33,7 +33,7 @@ class Part:
 
     def heat_transfer_area_str(self) -> str:
         try:
-            return f"\theat transfer area: %.4f mm^2\n" % self.heat_transfer_area
+            return f"\theat transfer area: %.4f m^2\n" % self.heat_transfer_area
         except TypeError:
             return ""
 
@@ -87,8 +87,40 @@ class Part:
             output = ""
         return output
 
+    @property
+    def area(self):
+        try:
+            value = self._area
+        except AttributeError:
+            value = None
+        finally:
+            return value
+
+    @area.setter
+    def area(self, value):
+        self._area = value
+
     def geometrics_str(self):
         return ""
+
+    @property
+    def flow_area(self):
+        try:
+            value = self._flow_area
+        except AttributeError:
+            value = None
+        finally:
+            return value
+
+    @flow_area.setter
+    def flow_area(self, value):
+        self._flow_area = value
+
+    def flow_area_str(self) -> str:
+        try:
+            return f"\tflow area = %.6f m^2\n" % (self.flow_area * 1)
+        except TypeError:
+            return ""
 
     @property
     def hydraulic_diameter(self):
@@ -105,7 +137,7 @@ class Part:
 
     def hydraulic_diameter_str(self) -> str:
         try:
-            return f"\thydraulic diameter = %.4f mm\n" % (self.hydraulic_diameter * 1e-3)
+            return f"\thydraulic diameter = %.4f m\n" % (self.hydraulic_diameter * 1)
         except TypeError:
             return ""
 
@@ -129,6 +161,7 @@ class Part:
 
     def hydraulic_properties_str(self):
         output = f"\nhydraulic properties:\n" + \
+                 self.flow_area_str() + \
                  self.hydraulic_diameter_str() + \
                  self.pressure_coefficient_str()
         return output
@@ -180,6 +213,14 @@ class Pipe(Part):
         return value
 
     @property
+    def area(self):
+        return self.diameter_out ** 2 * pi / 4
+
+    @property
+    def flow_area(self):
+        return self.diameter_in ** 2 * pi / 4
+
+    @property
     def hydraulic_diameter(self):
         return self.diameter_in
 
@@ -209,7 +250,7 @@ class Pipe(Part):
         except TypeError:
             pass
         try:
-            output += f"\tdiameter: in = {self.diameter_in * 1e-3:.5f} mm, out = {self.diameter_out * 1e-3:.5f} mm\n"
+            output += f"\tdiameter: in = {self.diameter_in * 1:.5f} m, out = {self.diameter_out * 1:.5f} m\n"
         except TypeError:
             pass
         return output
@@ -257,6 +298,10 @@ class PipeLayout(Part):
         return value
 
     @property
+    def flow_area(self):
+        return self.number_pipes * self.pipe.flow_area
+
+    @property
     def pressure_coefficient_shellside(self):
         return self._pressure_coefficient_shellside
 
@@ -282,8 +327,8 @@ class Shell:
         self.length = length
 
     @property
-    def area(self):
-        return None
+    def area_in(self):
+        pass
 
     def geometrics_str(self):
         output = ""
@@ -304,32 +349,32 @@ class Shell:
 
 
 class SquareShell(Shell):
-    def __init__(self, length: float = 1, width: float = 1, height: float = 1):
+    def __init__(self, length: float = 1, width_in: float = 1, height_in:float = 1):
         super().__init__(length)
-        self.width = width
-        self.height = height
+        self.width_in = width_in
+        self.height_in = height_in
 
     @property
-    def area(self):
-        return self.height * self.width
+    def area_in(self):
+        return self.height_in * self.width_in
 
     def geometrics_additional_str(self):
-        output = f"\theight: {self.height:>7.3f} m\n" \
-                 f"\twidth: {self.width:>7.3f} m\n"
+        output = f"\theight: {self.height_in:>7.3f} m\n" \
+                 f"\twidth: {self.width_in:>7.3f} m\n"
         return output
 
 
 class TubeShell(Shell):
-    def __init__(self, length: float = 1, diameter: float = 1):
+    def __init__(self, length: float = 1, diameter_in: float = 1):
         super().__init__(length)
-        self.diameter = diameter
+        self.diameter_in = diameter_in
 
     @property
-    def area(self):
-        return self.diameter ** 2 * pi / 4
+    def area_in(self):
+        return self.diameter_in ** 2 * pi / 4
 
     def geometrics_additional_str(self):
-        output = f"\tdiameter = {self.diameter:.3f} m\n"
+        output = f"\tdiameter in = {self.diameter_in:.3f} m\n"
         return output
 
 
@@ -354,6 +399,23 @@ class Assembly(Part):
     @property
     def heat_transfer_area(self):
         return self.pipe_layout.heat_transfer_area
+
+    @property
+    def flow_area(self):
+        area_shell_inside = self.pipe_layout.flow_area
+        area_shell_outside = self.shell.area_in-self.pipe_layout.pipe.area
+        return area_shell_inside,area_shell_outside
+
+    def flow_area_str(self):
+        value = self.flow_area
+        output = f"\tflow area coefficient:\n"
+        if all(value) is None:
+            return f""
+        if value[0] is not None:
+            output += f"\t\tshell side: {value[0]:.6f} m^2\n"
+        if value[1] is not None:
+            output += f"\t\ttube side: {value[1]:.6f} m^2\n"
+        return output
 
     @property
     def pressure_coefficient(self):

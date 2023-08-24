@@ -5,7 +5,7 @@ from numpy.linalg import inv
 import matplotlib.pyplot as plt
 from stream import Fluid, Flow
 from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow
-from network_setups import *
+#from network_setups import *
 
 
 class ExchangerNetwork:

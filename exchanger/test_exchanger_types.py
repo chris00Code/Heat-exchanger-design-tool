@@ -269,9 +269,11 @@ class ExchangerTypesTest(unittest.TestCase):
 
         ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
         exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
-        plt.show()
+        #plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         exnet.vis_setups(networks, 'vis_flow_temperature_development',fig_title='temperature development')
-        plt.show()
+        #plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_vis_setup(self):
         networks = [init_extype(), init_extype(), init_extype(), init_extype(), init_extype(), init_extype(),
@@ -288,10 +290,11 @@ class ExchangerTypesTest(unittest.TestCase):
 
 
         exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
-        plt.show()
+        #plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         exnet.vis_setups(networks, 'vis_flow_temperature_development',fig_title='temperature development')
-        plt.show()
-
+        #plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
 if __name__ == '__main__':
     test_plot_setup()

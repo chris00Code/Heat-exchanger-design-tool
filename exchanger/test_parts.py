@@ -52,14 +52,21 @@ class PartTests(unittest.TestCase):
 
     def test_assembly(self):
         shell = SquareShell(5, 2, 1)
-        pipe = StraightPipe(10, 13)
+        pipe = StraightPipe(10e-3, 13e-3)
+        print(pipe)
         pipe.pipe_resistance_coefficient = 5e-2
-        pipe_layout = PipeLayout(pipe)
+        pipe_layout = PipeLayout(pipe,5)
         assembly = Assembly(shell, pipe_layout)
         assembly.heat_transfer_coefficient = 200
         assembly.pressure_coefficient_shellside = 0.3
         print(assembly)
 
+    def test_assembly_squaredShel(self):
+        shell = SquareShell(1,0.35,0.18)
+        pipe = StraightPipe(8e-3,12e-3,3.233)
+        pipe_layout = PipeLayout(pipe,20)
+        assembly = Assembly(shell,pipe_layout)
+        print(assembly)
 
 if __name__ == '__main__':
     unittest.main()
