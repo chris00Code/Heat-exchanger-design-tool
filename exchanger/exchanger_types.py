@@ -506,3 +506,9 @@ class ExchangerEqualCells(ExchangerTwoFlow):
             pass
         except ZeroDivisionError:
             pass
+
+
+def auto_create_exchanger(flow_1: Flow = None,flow_2: Flow = None,assembly: Assembly = None):
+
+
+    return ex

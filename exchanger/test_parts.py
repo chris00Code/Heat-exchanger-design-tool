@@ -46,12 +46,12 @@ class PartTests(unittest.TestCase):
         self.assertEqual(pipe_layout.number_pipes, 5)
         self.assertAlmostEqual(pipe_layout.heat_transfer_area, 35.92 * 5, 1)
 
-    def test_shell(self):
-        shell = SquareShell(5, 2, 1)
+    def test_shellGeometry(self):
+        shell = SquareShellGeometry(5, 2, 1)
         print(shell)
 
     def test_assembly(self):
-        shell = SquareShell(5, 2, 1)
+        shell = SquareShellGeometry(5, 2, 1)
         pipe = StraightPipe(10e-3, 13e-3)
         print(pipe)
         pipe.pipe_resistance_coefficient = 5e-2
@@ -62,14 +62,14 @@ class PartTests(unittest.TestCase):
         print(assembly)
 
     def test_assembly_squaredShel(self):
-        shell = SquareShell(1, 0.35, 0.18)
+        shell = SquareShellGeometry(1, 0.35, 0.18)
         pipe = StraightPipe(8e-3, 12e-3, 3.233)
         pipe_layout = PipeLayout(pipe, 20)
         assembly = Assembly(shell, pipe_layout)
         print(assembly)
 
     def test_assembly_baffles(self):
-        shell = SquareShell(5, 2, 1)
+        shell = SquareShellGeometry(5, 2, 1)
         pipe = StraightPipe(10e-3, 13e-3)
         pipe_layout = PipeLayout(pipe, 5)
         baffle = SegmentalBaffle(1, 50)
@@ -77,6 +77,13 @@ class PartTests(unittest.TestCase):
         assembly = Assembly(shell, pipe_layout, baffle)
         print(assembly)
 
+    def test_assembly_floworder(self):
+        shell = SquareShellGeometry(5, 2, 1)
+        pipe = StraightPipe(10e-3, 13e-3)
+        pipe_layout = PipeLayout(pipe, 5)
+        inlets = Inlets('ul','dl')
+        assembly = Assembly(shell, pipe_layout, inlets=inlets)
+        print(assembly)
 
 if __name__ == '__main__':
     unittest.main()

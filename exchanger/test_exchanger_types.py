@@ -114,7 +114,7 @@ class ExchangerTypesTest(unittest.TestCase):
         ex_layout = ExchangerEqualCells((2, 2), total_transferability=10)
         self.assertEqual(ex_layout.total_transferability, 10)
 
-        shell = SquareShell(5, 2, 1)
+        shell = SquareShellGeometry(5, 2, 1)
         pipe = StraightPipe(10, 13)
         pipe_layout = PipeLayout(pipe)
         assembly = Assembly(shell, pipe_layout)
@@ -174,7 +174,7 @@ class ExchangerTypesTest(unittest.TestCase):
         fld_2 = Fluid("Water", temperature=293.15)
         flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-        shell = SquareShell(5, 2, 1)
+        shell = SquareShellGeometry(5, 2, 1)
         pipe = StraightPipe(10, 13)
         pipe_layout = PipeLayout(pipe)
         assembly = Assembly(shell, pipe_layout)

@@ -322,7 +322,7 @@ class PipeLayout(Part):
         self._pressure_coefficient_tubeside = value
 
 
-class Shell:
+class ShellGeometry:
     def __init__(self, length: float = None):
         self.length = length
 
@@ -340,7 +340,7 @@ class Shell:
         return output
 
     def __repr__(self):
-        output = f"shell: type = {self.__class__.__name__}\n"
+        output = f"shell geometry: {self.__class__.__name__}\n"
         output += self.geometrics_str()
         return output
 
@@ -348,7 +348,7 @@ class Shell:
         return ""
 
 
-class SquareShell(Shell):
+class SquareShellGeometry(ShellGeometry):
     def __init__(self, length: float = 1, width_in: float = 1, height_in: float = 1):
         super().__init__(length)
         self.width_in = width_in
@@ -364,7 +364,7 @@ class SquareShell(Shell):
         return output
 
 
-class TubeShell(Shell):
+class TubeShellGeometry(ShellGeometry):
     def __init__(self, length: float = 1, diameter_in: float = 1):
         super().__init__(length)
         self.diameter_in = diameter_in
@@ -415,11 +415,77 @@ class SegmentalBaffle(Baffle):
         return output
 
 
+class Inlets:
+    positions = {
+        'ul': 'upp left',
+        'ur': 'upp right',
+        'dl': 'down left',
+        'dr': 'down right'
+    }
+
+    def __init__(self, shell_inlet: str=None, tube_inlet: str=None):
+        self.flow_order_1 = shell_inlet
+        self.flow_order_2 = tube_inlet
+
+    @property
+    def flow_order_1(self):
+        return self._flow_order_1
+
+    @flow_order_1.setter
+    def flow_order_1(self, value):
+        if value in self.positions:
+            match value[0]:
+                case 'u':
+                    value += '2d'
+                case 'd':
+                    value += '2u'
+                case None:
+                    pass
+                case _:
+                    raise ValueError
+        else:
+            value = None
+        self._flow_order_1 = value
+
+    @property
+    def flow_order_2(self):
+        return self._flow_order_2
+
+    @flow_order_2.setter
+    def flow_order_2(self, value):
+        if value in self.positions:
+            match value[1]:
+                case 'l':
+                    value += '2r'
+                case 'r':
+                    value += '2l'
+                case None:
+                    pass
+                case _:
+                    raise ValueError
+        else:
+            value = None
+        self._flow_order_2 = value
+
+    def __repr__(self):
+        value = [self.flow_order_1, self.flow_order_2]
+        output = f"flow orders:\n"
+        if all(value) is None:
+            return f""
+        if value[0] is not None:
+            output += f"\tshell flow (flow 1): {value[0]}\n"
+        if value[1] is not None:
+            output += f"\ttube flow (flow 2): {value[1]}\n"
+        return output
+
+
 class Assembly(Part):
-    def __init__(self, shell: Shell, pipe_layout: PipeLayout, baffle: Baffle = NotImplemented):
+    def __init__(self, shell: ShellGeometry, pipe_layout: PipeLayout, baffle: Baffle = NotImplemented,
+                 inlets: Inlets = Inlets()):
         self.shell = shell
         self.pipe_layout = pipe_layout
         self.baffles = baffle
+        self.flow_orders = inlets
 
     @property
     def pipe_layout(self):
@@ -506,5 +572,6 @@ class Assembly(Part):
         output += f"PipeLayout:\n" + self.pipe_layout.geometrics_str()
         output += self.hydraulic_properties_str()
         output += self.thermic_properties_str()
-        output += f"\nBaffles:\n" + str(self.baffles)
+        output += f"\nBaffles:\n" + str(self.baffles) + "\n\n"
+        output += str(self.flow_orders)
         return output
