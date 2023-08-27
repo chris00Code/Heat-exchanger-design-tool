@@ -44,6 +44,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
         # if isinstance(flow_2, Flow): self.out_flow_2 = flow_2.clone()
         self.flow_order_1 = flow_order_1
         self.flow_order_2 = flow_order_2
+        self._fill()
         self._flatten()
 
     @property
@@ -456,7 +457,10 @@ class ExchangerEqualCells(ExchangerTwoFlow):
         if value is None:
             value = self._total_transferability
         else:
-            del self._total_transferability
+            try:
+                del self._total_transferability
+            except AttributeError:
+                pass
         return value
 
     @total_transferability.setter

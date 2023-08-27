@@ -164,7 +164,7 @@ class ExchangerTypesTest(unittest.TestCase):
         temp_check = np.array([[61.8],
                                [58.1]]) + 273.15
         np.testing.assert_array_almost_equal(ex.temperature_outputs[1], temp_check, decimal=1)
-        print(ex.extended_info())
+
 
     def test_equalcells_calc_assembly(self):
         kA = 4000
@@ -178,14 +178,20 @@ class ExchangerTypesTest(unittest.TestCase):
         pipe = StraightPipe(10, 13)
         pipe_layout = PipeLayout(pipe)
         assembly = Assembly(shell, pipe_layout)
-        assembly.heat_transfer_coefficient = 20
-        # @TODO assembly not working, deletes all exchagers?
+        assembly.heat_transfer_coefficient = 22.271
         ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, assembly=assembly)
+        self.assertAlmostEqual(ex.total_transferability,4000,0)
         ex.flow_order_1 = 'dr2u'
         ex.flow_order_2 = 'ul2r'
-        #ex._adjust_temperatures()
         ex.auto_adjust=False
-        print(ex)
+        str(ex)
+        self.assertEqual(ex.out_flow_1.mean_fluid.temperature,100+273.15)
+        self.assertEqual(ex.out_flow_2.mean_fluid.temperature, 20 + 273.15)
+        ex.auto_adjust=True
+        str(ex)
+        self.assertAlmostEqual(ex.out_flow_1.mean_fluid.temperature, 62.18 + 273.15,2)
+        self.assertAlmostEqual(ex.out_flow_2.mean_fluid.temperature, 58.42 + 273.15,2)
+
 
     def test_calc(self):
         ex = init_extype()
