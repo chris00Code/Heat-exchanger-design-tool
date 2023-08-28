@@ -35,6 +35,7 @@ class PartTests(unittest.TestCase):
         pipe.length = 0.5
         self.assertAlmostEqual(pipe.heat_transfer_area, 17.96, 2)
         pipe.pipe_resistance_coefficient = 5e-2
+        pipe.heat_transfer_coefficient = 200
         print(pipe)
 
     def test_pipeLayout(self):
@@ -45,6 +46,11 @@ class PartTests(unittest.TestCase):
         pipe_layout.number_pipes = 5
         self.assertEqual(pipe_layout.number_pipes, 5)
         self.assertAlmostEqual(pipe_layout.heat_transfer_area, 35.92 * 5, 1)
+        pipe.heat_transfer_coefficient = 200
+        self.assertAlmostEqual(pipe.heat_transferability, 7184.49, 1)
+        self.assertAlmostEqual(pipe_layout.heat_transferability, 7184.49*5, 1)
+        #print(pipe_layout)
+
 
     def test_shellGeometry(self):
         shell = SquareShellGeometry(5, 2, 1)
@@ -53,7 +59,6 @@ class PartTests(unittest.TestCase):
     def test_assembly(self):
         shell = SquareShellGeometry(5, 2, 1)
         pipe = StraightPipe(10e-3, 13e-3)
-        print(pipe)
         pipe.pipe_resistance_coefficient = 5e-2
         pipe_layout = PipeLayout(pipe, 5)
         assembly = Assembly(shell, pipe_layout)
