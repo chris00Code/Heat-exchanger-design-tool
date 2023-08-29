@@ -3,7 +3,7 @@ from stream import *
 from parts import *
 from exchanger_creator import *
 import matplotlib.pyplot as plt
-
+from exchanger import *
 
 def init_assembly():
     shell = SquareShellGeometry(5, 2, 1)
@@ -32,6 +32,7 @@ class TestExchangerCreator(unittest.TestCase):
         ex_layout = auto_create_exchanger(flow_1, flow_2, assembly)
         # print(ex_layout.extended_info())
         print(ex_layout)
+        print(flow_2)
 
     def test_baffles(self):
         assembly = init_assembly()
@@ -60,7 +61,6 @@ class TestExchangerCreator(unittest.TestCase):
         assembly.baffles = baffle
         flow_1, flow_2 = init_fluids()
         ex_layout = auto_create_exchanger(flow_1, flow_2, assembly)
-        ex_layout.flow_order_2 ='ul2d'
         print(ex_layout.flow_orders_str())
         print(ex_layout.extended_info())
 
@@ -68,6 +68,34 @@ class TestExchangerCreator(unittest.TestCase):
         ex_layout.vis_flow_temperature_development()
         plt.show()
 
+
+    def test_parallel_flow(self):
+        fld_1 = Fluid("Water", pressure=101420, temperature=373.15)
+        flow_1 = Flow(fld_1, 1)
+        fld_2 = Fluid("Water", temperature=293.15)
+        flow_2 = Flow(fld_2,2)
+        assembly = init_assembly()
+        assembly.flow_orders = Inlets('ul','dl')
+        #print(assembly.heat_transferability)
+
+        #ex_parallel = ParallelFlow(flow_1,flow_2,assembly)
+        #ex_parallel._calc_output()
+        #print(ex_parallel)
+
+        #ex_counter = CounterCurrentFlow(flow_1,flow_2,assembly)
+        #ex_counter._calc_output()
+        #print(ex_counter)
+
+        assembly.tube_passes = 2
+        baffle = SegmentalBaffle(15, 50)
+        assembly.baffles = baffle
+        print(assembly)
+        ex_layout=auto_create_exchanger(flow_1,flow_2,assembly)
+        print(ex_layout.extended_info())
+        #print(ex_layout._cells_characteristic())
+        ex_layout.vis_heat_flow()
+        ex_layout.vis_flow_temperature_development()
+        plt.show()
 
 if __name__ == '__main__':
     unittest.main()

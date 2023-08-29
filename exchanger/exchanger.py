@@ -82,7 +82,7 @@ class HeatExchanger:
         """
         zeta = self.part.pressure_coefficient
         hydraulic_diameter = self.part.hydraulic_diameter
-        if isinstance(zeta,tuple):
+        if isinstance(zeta, tuple):
             v_dot_1 = self.flow_1.volume_flow
             a_1 = self.part.flow_area
         else:
@@ -90,8 +90,18 @@ class HeatExchanger:
         return value
 
     @staticmethod
-    def _calc_pressure_loss(zeta,velocity,density):
-        return zeta*density/2*velocity**2
+    def _calc_pressure_loss(zeta, velocity, density):
+        return zeta * density / 2 * velocity ** 2
+
+    def _calc_output(self):
+        for i in range(5):
+            temp_1_in = self.flow_1.in_fluid.temperature
+            temp_2_in = self.flow_2.in_fluid.temperature
+            p1, p2 = self.p
+            temp_1_out = -p1 * (temp_1_in - temp_2_in) + temp_1_in
+            temp_2_out = p2 * (temp_1_in - temp_2_in) + temp_2_in
+            self.flow_1.out_temperature = temp_1_out
+            self.flow_2.out_temperature = temp_2_out
 
     @property
     def ntu(self):
