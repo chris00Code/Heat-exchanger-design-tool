@@ -50,7 +50,7 @@ class Fluid:
         try:
             self.__instance = self.fluid_instances[value]
         except KeyError:
-            raise AttributeError("instance not implemented")
+            raise AttributeError(f"instance '{value}' not implemented")
 
     @property
     def title(self):
