@@ -3,26 +3,59 @@ from exchanger.parts import *
 
 
 class TestParts(unittest.TestCase):
-    def test_part_init(self):
-        part = Part()
-        self.assertEqual(part.heat_transferability, 0)
 
-        part = Part(10)
-        self.assertEqual(part.heat_transferability, 10)
-        self.assertEqual(part.heat_transfer_area, None)
-        part = Part(heat_transfer_area=10, heat_transfer_coefficient=5)
-        self.assertEqual(part.heat_transferability, 50)
+    def test_heat_parameter_setter(self):
+        part = Part()
+        self.assertEqual(part.heat_transferability, NotImplemented)
+        self.assertEqual(part.heat_transfer_coefficient, NotImplemented)
+        self.assertEqual(part.heat_transfer_area, NotImplemented)
+
+        part = Part(heat_transfer_area=10)
+        self.assertEqual(part.heat_transferability, NotImplemented)
+        self.assertEqual(part.heat_transfer_coefficient, NotImplemented)
         self.assertEqual(part.heat_transfer_area, 10)
 
-    def test_part_setter(self):
-        part = Part(10)
-        with self.assertRaises(AttributeError):
-            part.heat_transfer_coefficient = 10
-        with self.assertRaises(AttributeError):
-            part.heat_transfer_area = 10
-        part = Part(heat_transfer_area=10, heat_transfer_coefficient=5)
-        part.heat_transferability = 10
-        print(part)
+        part = Part(heat_transfer_coefficient=10)
+        self.assertEqual(part.heat_transferability, NotImplemented)
+        self.assertEqual(part.heat_transfer_coefficient, 10)
+        self.assertEqual(part.heat_transfer_area, NotImplemented)
+
+        part = Part(heat_transferability=10)
+        self.assertEqual(part.heat_transferability, 10)
+        self.assertEqual(part.heat_transfer_coefficient, NotImplemented)
+        self.assertEqual(part.heat_transfer_area, NotImplemented)
+
+        part = Part(heat_transfer_area=10, heat_transfer_coefficient=50)
+        self.assertEqual(part.heat_transferability, 500)
+        self.assertEqual(part.heat_transfer_coefficient, 50)
+        self.assertEqual(part.heat_transfer_area, 10)
+
+        part = Part(heat_transfer_area=10, heat_transfer_coefficient=50, heat_transferability=500)
+        self.assertEqual(part.heat_transferability, 500)
+        self.assertEqual(part.heat_transfer_coefficient, 50)
+        self.assertEqual(part.heat_transfer_area, 10)
+
+        part = Part(heat_transfer_area=10, heat_transfer_coefficient=50, heat_transferability=500)
+        with self.assertWarnsRegex(Warning,
+                                   'heat transfer parameters not consistent$',
+                                   msg='no warning when setting not consistent heat parameters'):
+            part.heat_transferability = 250
+        with self.assertWarnsRegex(Warning,
+                                   'heat transfer parameters are not consistent, '
+                                   'defined parameter will be returned \(not calculated one\)',
+                                   msg='no warning when heat parameters are not consistent'):
+            self.assertEqual(part.heat_transferability, 250)
+        with self.assertWarnsRegex(Warning,
+                                   'heat transfer parameters are not consistent, '
+                                   'defined parameter will be returned \(not calculated one\)',
+                                   msg='no warning when heat parameters are not consistent'):
+            self.assertEqual(part.heat_transfer_coefficient, 50)
+        with self.assertWarnsRegex(Warning,
+                                   'heat transfer parameters are not consistent, '
+                                   'defined parameter will be returned \(not calculated one\)',
+                                   msg='no warning when heat parameters are not consistent'):
+            self.assertEqual(part.heat_transfer_area, 10)
+
 
     def test_part_print(self):
         part = Part(heat_transfer_area=10, heat_transfer_coefficient=5)
@@ -48,9 +81,8 @@ class TestParts(unittest.TestCase):
         self.assertAlmostEqual(pipe_layout.heat_transfer_area, 35.92 * 5, 1)
         pipe.heat_transfer_coefficient = 200
         self.assertAlmostEqual(pipe.heat_transferability, 7184.49, 1)
-        self.assertAlmostEqual(pipe_layout.heat_transferability, 7184.49*5, 1)
-        #print(pipe_layout)
-
+        self.assertAlmostEqual(pipe_layout.heat_transferability, 7184.49 * 5, 1)
+        # print(pipe_layout)
 
     def test_shellGeometry(self):
         shell = SquareShellGeometry(5, 2, 1)
@@ -86,9 +118,10 @@ class TestParts(unittest.TestCase):
         shell = SquareShellGeometry(5, 2, 1)
         pipe = StraightPipe(10e-3, 13e-3)
         pipe_layout = PipeLayout(pipe, 5)
-        inlets = Inlets('ul','dl')
+        inlets = Inlets('ul', 'dl')
         assembly = Assembly(shell, pipe_layout, inlets=inlets)
         print(assembly)
+
 
 if __name__ == '__main__':
     unittest.main()

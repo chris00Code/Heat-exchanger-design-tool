@@ -1,35 +1,27 @@
 from math import pi, log
+import warnings
 
 
 class Part:
-    def __init__(self, heat_transferability: float = None, heat_transfer_area: float = None,
-                 heat_transfer_coefficient: float = None):
+    def __init__(self, heat_transferability: float = NotImplemented, heat_transfer_area: float = NotImplemented,
+                 heat_transfer_coefficient: float = NotImplemented):
 
-        if heat_transferability is None:
-            if heat_transfer_area is None and heat_transfer_coefficient is None:
-                self.heat_transferability = 0.0
-            else:
-                self.heat_transfer_area = heat_transfer_area
-                self.heat_transfer_coefficient = heat_transfer_coefficient
-        else:
-            self.heat_transferability = heat_transferability
-        # @TODO implement more init parameters
+        self.heat_transfer_area = heat_transfer_area
+        self.heat_transfer_coefficient = heat_transfer_coefficient
+        self.heat_transferability = heat_transferability
 
     @property
     def heat_transfer_area(self):
-        try:
-            value = self._heat_transfer_area
-        except AttributeError:
-            value = None
-        finally:
-            return value
+        if not self._is_heat_parameter_consistent():
+            warnings.warn(
+                "heat transfer parameters are not consistent, defined parameter will be returned (not calculated one)")
+        return self._heat_transfer_area
 
     @heat_transfer_area.setter
     def heat_transfer_area(self, value):
-        if self.heat_transferability is None:
-            self._heat_transfer_area = value
-        else:
-            raise AttributeError("heat_transferability already set")
+        if not self._is_heat_parameter_consistent(transfer_area=value):
+            warnings.warn("heat transfer parameters not consistent")
+        self._heat_transfer_area = value
 
     def heat_transfer_area_str(self) -> str:
         try:
@@ -39,19 +31,16 @@ class Part:
 
     @property
     def heat_transfer_coefficient(self):
-        try:
-            value = self._heat_transfer_coefficient
-        except AttributeError:
-            value = None
-        finally:
-            return value
+        if not self._is_heat_parameter_consistent():
+            warnings.warn(
+                "heat transfer parameters are not consistent, defined parameter will be returned (not calculated one)")
+        return self._heat_transfer_coefficient
 
     @heat_transfer_coefficient.setter
     def heat_transfer_coefficient(self, value):
-        if self.heat_transferability is None:
-            self._heat_transfer_coefficient = value
-        else:
-            raise AttributeError("heat_transferability already set")
+        if not self._is_heat_parameter_consistent(transfer_coefficient=value):
+            warnings.warn("heat transfer parameters not consistent")
+        self._heat_transfer_coefficient = value
 
     def heat_transfer_coefficient_str(self) -> str:
         try:
@@ -61,23 +50,21 @@ class Part:
 
     @property
     def heat_transferability(self):
-        try:
-            value = self._heat_transferability
-        except AttributeError:
+        if not self._is_heat_parameter_consistent():
+            warnings.warn(
+                "heat transfer parameters are not consistent, defined parameter will be returned (not calculated one)")
+        value = self._heat_transferability
+        if value is NotImplemented:
             try:
                 value = self.heat_transfer_area * self.heat_transfer_coefficient
             except TypeError:
-                value = None
+                pass
         return value
 
     @heat_transferability.setter
     def heat_transferability(self, value):
-        # @TODO better handling requiered
-        try:
-            del self._heat_transfer_area
-            del self._heat_transfer_coefficient
-        except AttributeError:
-            pass
+        if not self._is_heat_parameter_consistent(transferability=value):
+            warnings.warn("heat transfer parameters not consistent")
         self._heat_transferability = value
 
     def heat_transferability_str(self):
@@ -86,6 +73,27 @@ class Part:
         except TypeError:
             output = ""
         return output
+
+    def _is_heat_parameter_consistent(self, transferability=None, transfer_coefficient=None, transfer_area=None):
+        if transferability is None:
+            try:
+                transferability = self._heat_transferability
+            except AttributeError:
+                return True
+        if transfer_coefficient is None:
+            try:
+                transfer_coefficient = self._heat_transfer_coefficient
+            except AttributeError:
+                return True
+        if transfer_area is None:
+            try:
+                transfer_area = self._heat_transfer_area
+            except AttributeError:
+                return True
+        if any(item is NotImplemented for item in [transferability, transfer_coefficient, transfer_area]):
+            return True
+        else:
+            return transferability == transfer_coefficient * transfer_area
 
     @property
     def area(self):
