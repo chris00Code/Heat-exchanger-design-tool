@@ -141,18 +141,22 @@ class TestFlow(unittest.TestCase):
         fluid = Fluid("Water")
         flow = Flow(fluid, 1)
         new_flow = flow.clone()
-        self.assertNotEqual(flow, new_flow)
-        self.assertNotEqual(flow.in_fluid, new_flow.in_fluid)
-        self.assertNotEqual(flow.mean_fluid, new_flow.mean_fluid)
-        self.assertNotEqual(flow.out_fluid, new_flow.out_fluid)
-        self.assertEqual(flow.mass_flow, new_flow.mass_flow)
+        self.assertNotEqual(flow, new_flow, msg='cloned flow object is equal, has same hash value')
+        self.assertNotEqual(flow.in_fluid, new_flow.in_fluid, msg='cloned in fluids are equal, have same hash values')
+        self.assertNotEqual(flow.mean_fluid, new_flow.mean_fluid,
+                            msg='cloned mean fluids are equal, have same hash values')
+        self.assertNotEqual(flow.out_fluid, new_flow.out_fluid,
+                            msg='cloned out fluids are equal, have same hash values')
+        self.assertEqual(flow.mass_flow, new_flow.mass_flow, msg='mass flow was not cloned correct')
 
     def test_flow_print(self):
-        fluid = Fluid("Water", temperature=273.15 + 15)
-        flow = Flow(fluid, 1)
-        print(flow)
+        expected_output = r'^Flow: id = \d+\n\tmass flow = \d+(\.\d+)? kg\/s\n' \
+                          r'\theat capacity flow: W_dot = \d+(\.\d+)? W\/K\n' \
+                          r'\theat flow: Q_dot = -?\d+(\.\d+)? kW\n\n' \
+                          r'Input Fluid:\n.*\n.*\n.*\nOutput Fluid:\n.*'
+        flow = Flow(self.fluid_water, 1)
         flow.out_temperature = 273.15 + 99
-        print(flow)
+        self.assertRegex(str(flow), expected_output, msg='fluid str has not expected pattern')
 
 
 if __name__ == '__main__':
