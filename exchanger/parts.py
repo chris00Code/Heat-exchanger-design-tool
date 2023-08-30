@@ -1,5 +1,6 @@
 from math import pi, log
 import warnings
+from .utils import get_def_or_calc_value
 
 
 class Part:
@@ -9,6 +10,8 @@ class Part:
         self.heat_transfer_area = heat_transfer_area
         self.heat_transfer_coefficient = heat_transfer_coefficient
         self.heat_transferability = heat_transferability
+
+    # heat parameters
 
     @property
     def heat_transfer_area(self):
@@ -95,6 +98,8 @@ class Part:
         else:
             return transferability == transfer_coefficient * transfer_area
 
+    # geometric parameters
+
     @property
     def area(self):
         try:
@@ -110,6 +115,8 @@ class Part:
 
     def geometrics_str(self):
         return ""
+
+    # hydraulic parameters
 
     @property
     def flow_area(self):
@@ -193,18 +200,15 @@ class Part:
 
 
 class Pipe(Part):
-    def __init__(self, diameter_in: float = None, diameter_out: float = None, length: float = None):
+    def __init__(self, diameter_in: float = None, diameter_out: float = None, length: float = NotImplemented, **kwargs):
         self.diameter_in = diameter_in
         self.diameter_out = diameter_out
         self.length = length
+        super().__init__(**kwargs)
 
     @property
     def length(self):
-        try:
-            value = self._length
-        except AttributeError:
-            value = None
-        return value
+        return self._length
 
     @length.setter
     def length(self, value):
@@ -217,8 +221,18 @@ class Pipe(Part):
             l = self.length
             value = (d_in - d_out) / log(d_in / d_out) * pi * l
         except TypeError:
-            value = None
-        return value
+            value = NotImplemented
+        if not self._is_heat_parameter_consistent(transfer_area=value):
+            warnings.warn("heat transfer parameters not consistent")
+        self._heat_transfer_area = value
+
+        return super().heat_transfer_area
+
+    @heat_transfer_area.setter
+    def heat_transfer_area(self, value):
+        if value is not NotImplemented:
+            warnings.warn("function not available, value is not set")
+        pass
 
     @property
     def area(self):
@@ -269,11 +283,44 @@ class StraightPipe(Pipe):
 
 
 class PipeLayout(Part):
+
     def __init__(self, pipe: Pipe, number_pipes: float = 1, pattern: str = 'square', pipe_pitch: float = None):
         self.pipe = pipe
         self.number_pipes = number_pipes
         self.pattern = pattern
         self.pipe_pitch = pipe_pitch
+
+        super().__init__()
+
+    @property
+    def heat_transfer_area(self):
+        def_value = super().heat_transfer_area
+        calc_value = self.number_pipes * self.pipe.heat_transfer_area
+        return get_def_or_calc_value(def_value, calc_value)
+
+    @heat_transfer_area.setter
+    def heat_transfer_area(self, value):
+        Part.heat_transfer_area.fset(self, value)
+
+    @property
+    def heat_transfer_coefficient(self):
+        def_value = super().heat_transfer_coefficient
+        calc_value = self.pipe.heat_transfer_coefficient
+        return get_def_or_calc_value(def_value, calc_value)
+
+    @heat_transfer_coefficient.setter
+    def heat_transfer_coefficient(self, value):
+        Part.heat_transfer_coefficient.fset(self, value)
+
+    @property
+    def heat_transferability(self):
+        def_value = super().heat_transferability
+        calc_value = self.heat_transfer_area * self.heat_transfer_coefficient
+        return get_def_or_calc_value(def_value, calc_value)
+
+    @heat_transferability.setter
+    def heat_transferability(self, value):
+        Part.heat_transferability.fset(self, value)
 
     def geometrics_str(self):
         output = ""
@@ -299,26 +346,6 @@ class PipeLayout(Part):
     @number_pipes.setter
     def number_pipes(self, value):
         self._number_pipes = value
-
-    @property
-    def heat_transfer_area(self):
-        value = self.number_pipes * self.pipe.heat_transfer_area
-        return value
-
-    @property
-    def heat_transfer_coefficient(self):
-        value = super().heat_transfer_coefficient
-        if value is None:
-            value = self.pipe.heat_transfer_coefficient
-        return value
-
-    @heat_transfer_coefficient.setter
-    def heat_transfer_coefficient(self, value):
-        self._heat_transfer_coefficient = value
-
-    @property
-    def heat_transferability(self):
-        return super().heat_transferability
 
     @property
     def flow_area(self):
