@@ -314,9 +314,7 @@ class PipeLayout(Part):
 
     @property
     def heat_transferability(self):
-        def_value = super().heat_transferability
-        calc_value = self.heat_transfer_area * self.heat_transfer_coefficient
-        return get_def_or_calc_value(def_value, calc_value)
+        return super().heat_transferability
 
     @heat_transferability.setter
     def heat_transferability(self, value):
@@ -539,6 +537,36 @@ class Assembly(Part):
         self.baffles = baffle
         self.flow_orders = inlets
 
+        super().__init__()
+
+    @property
+    def heat_transfer_area(self):
+        def_value = super().heat_transfer_area
+        calc_value = self.pipe_layout.heat_transfer_area
+        return get_def_or_calc_value(def_value, calc_value)
+
+    @heat_transfer_area.setter
+    def heat_transfer_area(self, value):
+        Part.heat_transfer_area.fset(self, value)
+
+    @property
+    def heat_transfer_coefficient(self):
+        def_value = super().heat_transfer_coefficient
+        calc_value = self.pipe_layout.heat_transfer_coefficient
+        return get_def_or_calc_value(def_value, calc_value)
+
+    @heat_transfer_coefficient.setter
+    def heat_transfer_coefficient(self, value):
+        Part.heat_transfer_coefficient.fset(self, value)
+
+    @property
+    def heat_transferability(self):
+        return super().heat_transferability
+
+    @heat_transferability.setter
+    def heat_transferability(self, value):
+        Part.heat_transferability.fset(self, value)
+
     @property
     def pipe_layout(self):
         return self._pipe_layout
@@ -546,7 +574,7 @@ class Assembly(Part):
     @pipe_layout.setter
     def pipe_layout(self, value):
         if isinstance(value, PipeLayout):
-            if value.pipe.length is None:
+            if value.pipe.length is NotImplemented:
                 value.pipe.length = self.shell.length
             self._pipe_layout = value
         else:
@@ -566,21 +594,6 @@ class Assembly(Part):
 
     def flow_orders_str(self):
         return str(self._flow_orders)
-
-    @property
-    def heat_transfer_area(self):
-        return self.pipe_layout.heat_transfer_area
-
-    @property
-    def heat_transfer_coefficient(self):
-        value = super().heat_transfer_coefficient
-        if value is None:
-            value = self.pipe_layout.heat_transfer_coefficient
-        return value
-
-    @heat_transfer_coefficient.setter
-    def heat_transfer_coefficient(self, value):
-        self._heat_transfer_coefficient = value
 
     @property
     def flow_area(self):

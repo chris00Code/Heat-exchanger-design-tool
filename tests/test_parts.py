@@ -127,20 +127,27 @@ class TestParts(unittest.TestCase):
         self.assertAlmostEqual(pipe.heat_transferability, 7184.49, 1)
         self.assertAlmostEqual(pipe_layout.heat_transferability, 7184.49 * 5, 1)
 
-
     def test_shellGeometry(self):
         shell = SquareShellGeometry(5, 2, 1)
-        print(shell)
+        self.assertEqual(shell.area_in, 2)
 
     def test_assembly(self):
         shell = SquareShellGeometry(5, 2, 1)
+
         pipe = StraightPipe(10e-3, 13e-3)
         pipe.pipe_resistance_coefficient = 5e-2
         pipe_layout = PipeLayout(pipe, 5)
+
         assembly = Assembly(shell, pipe_layout)
+
         assembly.heat_transfer_coefficient = 200
         assembly.pressure_coefficient_shellside = 0.3
-        print(assembly)
+
+        self.assertEqual(pipe_layout.heat_transferability, NotImplemented)
+        self.assertAlmostEqual(pipe_layout.heat_transfer_area, 0.898, 2)
+
+        self.assertEqual(assembly.heat_transfer_coefficient, 200)
+        self.assertAlmostEqual(assembly.heat_transferability, 179.6, 0)
 
     def test_assembly_squaredShel(self):
         shell = SquareShellGeometry(1, 0.35, 0.18)
