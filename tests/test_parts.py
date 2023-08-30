@@ -1,8 +1,8 @@
 import unittest
-from parts import *
+from exchanger.parts import *
 
 
-class PartTests(unittest.TestCase):
+class TestParts(unittest.TestCase):
     def test_part_init(self):
         part = Part()
         self.assertEqual(part.heat_transferability, 0)
