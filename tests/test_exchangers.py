@@ -16,6 +16,7 @@ class ExchangerTests(unittest.TestCase):
         ex.heat_transferability = 560
         self.assertEqual(ex.heat_transferability, 560)
         self.assertAlmostEqual(ex.ntu[0], 0.405, 2)
+        print(ex)
 
     def test_exchanger_parallel(self):
         flow_1 = Flow(Fluid("Water", temperature=273.15 + 15), 0.33)

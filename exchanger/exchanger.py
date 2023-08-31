@@ -1,8 +1,9 @@
+import warnings
+
 from numpy import exp
 
 from .stream import Fluid, Flow
 from .parts import Part
-
 
 
 class HeatExchanger:
@@ -109,18 +110,19 @@ class HeatExchanger:
         kA = self.heat_transferability
         heat_capacity_flow_1 = self.flow_1.heat_capacity_flow
         heat_capacity_flow_2 = self.flow_2.heat_capacity_flow
-        if (kA and heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
+        ntu1, ntu2 = NotImplemented, NotImplemented
+        if kA is not NotImplemented and (heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
             ntu1 = kA / heat_capacity_flow_1
             ntu2 = kA / heat_capacity_flow_2
-        else:
-            raise ValueError("heat capacity flow not defined")
         return ntu1, ntu2
 
     def ntu_str(self):
+        output = "number of transfer units:\n"
         try:
-            return f"number of transfer units:\nNTU_1 = %.3f\nNTU_2 = %.3f\n" % (self.ntu)
+            output += f"\tNTU_1 = %.3f\n\tNTU_2 = %.3f\n" % (self.ntu)
         except TypeError:
-            raise NotImplementedError
+            output += "\tNot implemented\n"
+        return output
 
     @property
     def r(self):
@@ -134,10 +136,12 @@ class HeatExchanger:
         return r1, r2
 
     def r_str(self):
+        output = "heat capacity flow ratios:\n"
         try:
-            return f"heat capacity flow ratios:\nR_1 = %.3f\nR_2 = %.3f\n" % (self.r)
+            output += f"\tR_1 = %.3f\n\tR_2 = %.3f\n" % (self.r)
         except TypeError:
-            raise NotImplementedError
+            output += "\tNot implemented\n"
+        return output
 
     @property
     def p(self):
@@ -145,12 +149,14 @@ class HeatExchanger:
         raise NotImplementedError
 
     def p_str(self):
+        output = "dimensionless temperature change:\n"
         try:
-            return f"dimensionless temperature change:\nP_1 = %.3f\nP_2 = %.3f\n" % (self.p)
+            output += f"\tP_1 = %.3f\n\tP_2 = %.3f\n" % (self.p)
         except TypeError:
-            raise NotImplementedError
+            output += "\tNot implemented\n"
         except NotImplementedError:
-            return f"dimensionless temperature change:\nnot defined for HeatExchanger"
+            output += "\tnot defined for HeatExchanger"
+        return output
 
     def dimensionless_parameters_str(self):
         return f"dimensionless parameters:\n" + self.ntu_str() + self.r_str() + self.p_str()
