@@ -33,6 +33,15 @@ class ExchangerTests(unittest.TestCase):
         ex = ParallelFlow(flow_1, flow_2, part)
         print(ex)
 
+    def test_OneOuterThreeInnerTwoCounterflow(self):
+        flow_outside = Flow(Fluid("Air", temperature=20 + 273.15), mass_flow=0.4)
+        flow_inside = Flow(Fluid("Water", pressure=5e5, temperature=105 + 273.15), mass_flow=0.15)
+        pipe = StraightPipe(diameter_in=11.9e-3, diameter_out=12e-3, length=3.233)
+        pipe_layout = PipeLayout(pipe, 5000)
+        pipe_layout.heat_transfer_coefficient = 35
+        ex = OneOuterThreeInnerTwoCounterflow(flow_outside, flow_inside, pipe_layout)
+        print(ex)
+
 
 if __name__ == '__main__':
     unittest.main()

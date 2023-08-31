@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 from .stream import Fluid, Flow
 from .exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow
-#from network_setups import *
 
 
 class ExchangerNetwork:
@@ -208,10 +207,10 @@ class ExchangerNetwork:
             return ""
 
     def _vis_temperature_adjusment_development(self, temp_list, ax=None, **ax_parameters):
-        vis_temp_progress(temp_list, 'temperature adjustment development',ax,**ax_parameters)
+        vis_temp_progress(temp_list, 'temperature adjustment development', ax, **ax_parameters)
 
     def _vis_flow_temperature_development(self, temp_list, ax=None, **ax_parameters):
-        vis_temp_progress(temp_list, 'flow temperature development',ax,**ax_parameters)
+        vis_temp_progress(temp_list, 'flow temperature development', ax, **ax_parameters)
 
     def extended_info(self):
         output = self.__repr__()
@@ -261,11 +260,10 @@ def vis_temp_progress(data_list, title: str = 'temperature development', ax=None
 def vis_setups(network_list: list, plot_function, fig_title: str = "", **ax_parameters):
     num_networks = len(network_list)
 
-
     num_cols = 6
-    num_rows = (num_networks + num_cols-1) // num_cols
+    num_rows = (num_networks + num_cols - 1) // num_cols
 
-    fig, axs = plt.subplots(num_rows, num_cols, sharex='row', sharey='col', figsize=(3*num_cols, 3 * num_rows))
+    fig, axs = plt.subplots(num_rows, num_cols, sharex='row', sharey='col', figsize=(3 * num_cols, 3 * num_rows))
 
     fig.suptitle(fig_title, fontsize=25)
 
@@ -277,4 +275,4 @@ def vis_setups(network_list: list, plot_function, fig_title: str = "", **ax_para
         ax.set_visible(False)
 
     plt.tight_layout()
-    #plt.subplots_adjust(hspace=0.5,wspace=2)
+    # plt.subplots_adjust(hspace=0.5,wspace=2)

@@ -208,3 +208,32 @@ class CrossFlowOneRow(HeatExchanger):
         # p2 = 1 - exp((exp(-r2 * n2) - 1) / r2)
         p2 = r1 * p1
         return p1, p2
+
+
+class ShellTubeHeatExchanger(HeatExchanger):
+    pass
+
+
+class OneOuterThreeInnerTwoCounterflow(ShellTubeHeatExchanger):
+    @property
+    def p(self):
+        n1, n2 = self.ntu
+        r1, r2 = self.r
+
+        delta = (9 * r1 ** 2 + 4 * (1 - r1)) ** 0.5 / r1
+        lambda_1 = (-3 + delta) / 2
+        lambda_2 = (-3 - delta) / 2
+        xi_1 = exp(lambda_1 * r1 * n1 / 3) / (2 * delta)
+        xi_2 = exp(lambda_2 * r1 * n1 / 3) / (2 * delta)
+        E = 0.5 * exp(n1 / 3)
+        B = xi_1 * (1 - r1 * lambda_2) / r1 - xi_2 * (1 - r1 * lambda_1) / r1 + E
+        C = -xi_1 * (3 + r1 * lambda_2) / r1 + xi_2 * (3 + r1 * lambda_1) / r1 + E
+        if r1 == 1:
+            A = -exp(-n1) / 18 - exp(n1 / 3) / 2 + (5 + n1) / 9
+        else:
+            A = xi_1*(1 + r1 * lambda_1) * (1 - r1 * lambda_2) / (2 * r1 ** 2 * lambda_1) - E - \
+                xi_2*(1 + r1 * lambda_2) * (1 - r1 * lambda_1) / (2 * r1 ** 2 * lambda_2) + r1 / (r1 - 1)
+
+        p1 = 1 - (C / (A * C + B ** 2))
+        p2 = r1 * p1
+        return p1, p2

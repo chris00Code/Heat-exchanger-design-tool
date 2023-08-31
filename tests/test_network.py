@@ -2,9 +2,9 @@ import unittest
 
 import numpy as np
 
-from network import ExchangerNetwork
-from exchanger import ParallelFlow, CounterCurrentFlow
-from stream import Fluid, Flow
+from exchanger.network import ExchangerNetwork
+from exchanger.exchanger import ParallelFlow, CounterCurrentFlow
+from exchanger.stream import Fluid, Flow
 
 
 def init_flows():
