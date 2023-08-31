@@ -1,13 +1,15 @@
 import unittest
 import numpy as np
-from exchanger import CounterCurrentFlow, CrossFlowOneRow
-from exchanger_types import *
-from stream import Fluid, Flow
-from parts import *
 import matplotlib.pyplot as plt
 import matplotlib
-from characteristic_plots import *
-import network as exnet
+
+import exchanger
+from exchanger.exchanger import CounterCurrentFlow, CrossFlowOneRow
+from exchanger.exchanger_types import *
+from exchanger.stream import Fluid, Flow
+from exchanger.parts import *
+from exchanger.characteristic_plots import *
+import exchanger.network as exnet
 
 
 def init_extype():

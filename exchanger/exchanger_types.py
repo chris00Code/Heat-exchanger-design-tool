@@ -4,15 +4,16 @@ import exchanger
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from stream import Fluid, Flow
-from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow, CrossFlowOneRow
-from matrix_converter import *
 from numpy.linalg import inv
-from utils import get_available_class_names
 from itertools import permutations
-from network import ExchangerNetwork
-from parts import Assembly
-from network_setups import *
+
+from .stream import Fluid, Flow
+from .exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow, CrossFlowOneRow
+from .matrix_converter import *
+from .utils import get_available_class_names
+from .network import ExchangerNetwork
+from .parts import Assembly
+
 
 
 class ExchangerTwoFlow(ExchangerNetwork):

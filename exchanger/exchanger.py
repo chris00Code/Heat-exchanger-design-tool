@@ -1,7 +1,8 @@
-import stream
-from stream import Fluid, Flow
-from parts import Part
 from numpy import exp
+
+from .stream import Fluid, Flow
+from .parts import Part
+
 
 
 class HeatExchanger:

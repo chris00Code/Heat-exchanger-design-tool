@@ -1,7 +1,6 @@
 import unittest
 
-from network_setups import *
-from test_exchanger_types import init_extype
+from tests.test_exchanger_types import init_extype
 
 
 class NetworkSetupTest(unittest.TestCase):

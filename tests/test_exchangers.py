@@ -1,17 +1,12 @@
 import unittest
 
-from stream import *
-from parts import *
-import exchanger
-from exchanger import *
-from utils import *
+from exchanger.stream import *
+from exchanger.parts import *
+from exchanger.exchanger import *
+from exchanger.utils import *
+
 
 class ExchangerTests(unittest.TestCase):
-
-    def test_available_classes(self):
-        available_classes = get_available_class_names(exchanger)
-
-
     def test_exchanger_init(self):
         flow_1 = Flow(Fluid("Water", temperature=273.15 + 15), 0.33)
         flow_2 = Flow(Fluid("Air"), 1)

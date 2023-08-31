@@ -1,7 +1,7 @@
 import unittest
-from stream import *
-from parts import *
-from exchanger_creator import *
+from exchanger.stream import *
+from exchanger.parts import *
+from exchanger.exchanger_creator import *
 import matplotlib.pyplot as plt
 from exchanger import *
 
