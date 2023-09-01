@@ -1,12 +1,13 @@
 import warnings
 
-from numpy import exp
+from numpy import exp, sqrt
 
 from .stream import Fluid, Flow
 from .parts import Part
 
 
 class HeatExchanger:
+    auto_adjust = True
     def __init__(self, flow_1=None, flow_2=None, part: Part = None):
         self.flow_1 = flow_1
         self.flow_2 = flow_2
@@ -162,6 +163,8 @@ class HeatExchanger:
         return f"dimensionless parameters:\n" + self.ntu_str() + self.r_str() + self.p_str()
 
     def __repr__(self) -> str:
+        if self.auto_adjust:
+            self._calc_output()
         output = f"\nheat exchanger:\n" \
                  f"\tid = {id(self)}\n" \
                  f"\ttype: {self.__class__.__name__}\n"
@@ -219,7 +222,8 @@ class OneOuterThreeInnerTwoCounterflow(ShellTubeHeatExchanger):
     def p(self):
         n1, n2 = self.ntu
         r1, r2 = self.r
-
+        """
+        # from heat exchanger design handbook
         delta = (9 * r1 ** 2 + 4 * (1 - r1)) ** 0.5 / r1
         lambda_1 = (-3 + delta) / 2
         lambda_2 = (-3 - delta) / 2
@@ -235,5 +239,26 @@ class OneOuterThreeInnerTwoCounterflow(ShellTubeHeatExchanger):
                 xi_2*(1 + r1 * lambda_2) * (1 - r1 * lambda_1) / (2 * r1 ** 2 * lambda_2) + r1 / (r1 - 1)
 
         p1 = 1 - (C / (A * C + B ** 2))
+        """
+        # formula from VDI Waermeatlas
+        epsilon = 1 / 3
+        if r1 != 1:
+            p = n1 * (1 - 1 / 2 * r1 * (1 - 3 * epsilon))
+            q = 1 / 2 * epsilon * (1 - epsilon) * n1 ** 2 * r1 * (1 - r1)
+            s1 = -p / 2 + sqrt(p ** 2 / 4 - q)
+            s2 = -p / 2 - sqrt(p ** 2 / 4 - q)
+            s3 = 1 / 2 * r1 * n1 * (1 - epsilon)
+
+            p1 = (s1 * (exp(s1) + exp(s3)) * (exp(s2) - 1) +
+                  s2 * (exp(s2) + exp(s3)) * (1 - exp(s1)) +
+                  n1 * (1 - r1) * (exp(s2) - exp(s1)) * (1 + exp(s3))) / \
+                 (s1 * (exp(s1) + exp(s3)) * (r1 * exp(s2) - 1) +
+                  s2 * (exp(s2) + exp(s3)) * (1 - r1 * exp(s1)) +
+                  n1 * (1 - r1) * (exp(s2) - exp(s1)) * (1 + r1 * exp(s3)))
+        else:
+            x = n1 * (epsilon * (1 - epsilon)) / (1 + 3 * epsilon) - 2 * ((1 + epsilon) / (1 + 3 * epsilon)) ** 2 * \
+                ((exp(-0.5 * n1 * (1 + 3 * epsilon)) - 1) ** (-1) + (exp(0.5 * n1 * (1 - epsilon)) + 1) ** (-1)) ** (-1)
+            p1 = x / (x + 1)
         p2 = r1 * p1
+
         return p1, p2

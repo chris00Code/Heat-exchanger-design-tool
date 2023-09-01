@@ -64,7 +64,7 @@ class ExchangerNetwork:
     @property
     def input_temps(self):
         value = self._input_temps
-        if value[0] is None:  # only if input temps is set dirrectly
+        if value[0] is None:  # only if input temps is set directly
             return self._input_temps
         else:  # calculating input temps
             temps = []
