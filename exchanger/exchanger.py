@@ -1,10 +1,13 @@
-import stream
-from stream import Fluid, Flow
-from parts import Part
-from numpy import exp
+import warnings
+
+from numpy import exp, sqrt
+
+from .stream import Fluid, Flow
+from .parts import Part
 
 
 class HeatExchanger:
+    auto_adjust = True
     def __init__(self, flow_1=None, flow_2=None, part: Part = None):
         self.flow_1 = flow_1
         self.flow_2 = flow_2
@@ -108,18 +111,19 @@ class HeatExchanger:
         kA = self.heat_transferability
         heat_capacity_flow_1 = self.flow_1.heat_capacity_flow
         heat_capacity_flow_2 = self.flow_2.heat_capacity_flow
-        if (kA and heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
+        ntu1, ntu2 = NotImplemented, NotImplemented
+        if kA is not NotImplemented and (heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
             ntu1 = kA / heat_capacity_flow_1
             ntu2 = kA / heat_capacity_flow_2
-        else:
-            raise ValueError("heat capacity flow not defined")
         return ntu1, ntu2
 
     def ntu_str(self):
+        output = "number of transfer units:\n"
         try:
-            return f"number of transfer units:\nNTU_1 = %.3f\nNTU_2 = %.3f\n" % (self.ntu)
+            output += f"\tNTU_1 = %.3f\n\tNTU_2 = %.3f\n" % (self.ntu)
         except TypeError:
-            raise NotImplementedError
+            output += "\tNot implemented\n"
+        return output
 
     @property
     def r(self):
@@ -133,10 +137,12 @@ class HeatExchanger:
         return r1, r2
 
     def r_str(self):
+        output = "heat capacity flow ratios:\n"
         try:
-            return f"heat capacity flow ratios:\nR_1 = %.3f\nR_2 = %.3f\n" % (self.r)
+            output += f"\tR_1 = %.3f\n\tR_2 = %.3f\n" % (self.r)
         except TypeError:
-            raise NotImplementedError
+            output += "\tNot implemented\n"
+        return output
 
     @property
     def p(self):
@@ -144,17 +150,21 @@ class HeatExchanger:
         raise NotImplementedError
 
     def p_str(self):
+        output = "dimensionless temperature change:\n"
         try:
-            return f"dimensionless temperature change:\nP_1 = %.3f\nP_2 = %.3f\n" % (self.p)
+            output += f"\tP_1 = %.3f\n\tP_2 = %.3f\n" % (self.p)
         except TypeError:
-            raise NotImplementedError
+            output += "\tNot implemented\n"
         except NotImplementedError:
-            return f"dimensionless temperature change:\nnot defined for HeatExchanger"
+            output += "\tnot defined for HeatExchanger"
+        return output
 
     def dimensionless_parameters_str(self):
         return f"dimensionless parameters:\n" + self.ntu_str() + self.r_str() + self.p_str()
 
     def __repr__(self) -> str:
+        if self.auto_adjust:
+            self._calc_output()
         output = f"\nheat exchanger:\n" \
                  f"\tid = {id(self)}\n" \
                  f"\ttype: {self.__class__.__name__}\n"
@@ -200,4 +210,55 @@ class CrossFlowOneRow(HeatExchanger):
         p1 = 1 - exp((exp(-r1 * n1) - 1) / r1)
         # p2 = 1 - exp((exp(-r2 * n2) - 1) / r2)
         p2 = r1 * p1
+        return p1, p2
+
+
+class ShellTubeHeatExchanger(HeatExchanger):
+    pass
+
+
+class OneOuterThreeInnerTwoCounterflow(ShellTubeHeatExchanger):
+    @property
+    def p(self):
+        n1, n2 = self.ntu
+        r1, r2 = self.r
+        """
+        # from heat exchanger design handbook
+        delta = (9 * r1 ** 2 + 4 * (1 - r1)) ** 0.5 / r1
+        lambda_1 = (-3 + delta) / 2
+        lambda_2 = (-3 - delta) / 2
+        xi_1 = exp(lambda_1 * r1 * n1 / 3) / (2 * delta)
+        xi_2 = exp(lambda_2 * r1 * n1 / 3) / (2 * delta)
+        E = 0.5 * exp(n1 / 3)
+        B = xi_1 * (1 - r1 * lambda_2) / r1 - xi_2 * (1 - r1 * lambda_1) / r1 + E
+        C = -xi_1 * (3 + r1 * lambda_2) / r1 + xi_2 * (3 + r1 * lambda_1) / r1 + E
+        if r1 == 1:
+            A = -exp(-n1) / 18 - exp(n1 / 3) / 2 + (5 + n1) / 9
+        else:
+            A = xi_1*(1 + r1 * lambda_1) * (1 - r1 * lambda_2) / (2 * r1 ** 2 * lambda_1) - E - \
+                xi_2*(1 + r1 * lambda_2) * (1 - r1 * lambda_1) / (2 * r1 ** 2 * lambda_2) + r1 / (r1 - 1)
+
+        p1 = 1 - (C / (A * C + B ** 2))
+        """
+        # formula from VDI Waermeatlas
+        epsilon = 1 / 3
+        if r1 != 1:
+            p = n1 * (1 - 1 / 2 * r1 * (1 - 3 * epsilon))
+            q = 1 / 2 * epsilon * (1 - epsilon) * n1 ** 2 * r1 * (1 - r1)
+            s1 = -p / 2 + sqrt(p ** 2 / 4 - q)
+            s2 = -p / 2 - sqrt(p ** 2 / 4 - q)
+            s3 = 1 / 2 * r1 * n1 * (1 - epsilon)
+
+            p1 = (s1 * (exp(s1) + exp(s3)) * (exp(s2) - 1) +
+                  s2 * (exp(s2) + exp(s3)) * (1 - exp(s1)) +
+                  n1 * (1 - r1) * (exp(s2) - exp(s1)) * (1 + exp(s3))) / \
+                 (s1 * (exp(s1) + exp(s3)) * (r1 * exp(s2) - 1) +
+                  s2 * (exp(s2) + exp(s3)) * (1 - r1 * exp(s1)) +
+                  n1 * (1 - r1) * (exp(s2) - exp(s1)) * (1 + r1 * exp(s3)))
+        else:
+            x = n1 * (epsilon * (1 - epsilon)) / (1 + 3 * epsilon) - 2 * ((1 + epsilon) / (1 + 3 * epsilon)) ** 2 * \
+                ((exp(-0.5 * n1 * (1 + 3 * epsilon)) - 1) ** (-1) + (exp(0.5 * n1 * (1 - epsilon)) + 1) ** (-1)) ** (-1)
+            p1 = x / (x + 1)
+        p2 = r1 * p1
+
         return p1, p2

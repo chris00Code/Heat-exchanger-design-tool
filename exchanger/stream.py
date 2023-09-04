@@ -1,7 +1,7 @@
 import copy
 import json
 import os
-
+import warnings
 """file_path = os.path.join(os.path.dirname(__file__), "pyfluids.json")
 #os.chdir(os.path.dirname(file_path))
 #package_path = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +50,7 @@ class Fluid:
         try:
             self.__instance = self.fluid_instances[value]
         except KeyError:
-            raise AttributeError("instance not implemented")
+            raise AttributeError(f"instance '{value}' not implemented")
 
     @property
     def title(self):
@@ -206,7 +206,7 @@ class Flow:
     def out_temperature(self, value):
         self.out_fluid.temperature = value
         if self.phase_change:
-            raise Warning("the phase changes, this could lead to some problems")
+            warnings.warn("the phase changes, this could lead to some problems")
 
     @property
     def phase_change(self) -> bool:
@@ -234,7 +234,7 @@ class Flow:
     @property
     def heat_flow(self):
         if self.phase_change:
-            raise Warning("the phase changes, this could lead to some problems")
+            warnings.warn("the phase changes, this could lead to some problems")
         heat_flow_enthalpy = self.mass_flow * (self.in_fluid.fluid.enthalpy - self.out_fluid.fluid.enthalpy)
         # heat_flow_temps = self.heat_capacity_flow * (self.in_fluid.temperature - self.out_fluid.temperature)
         return heat_flow_enthalpy

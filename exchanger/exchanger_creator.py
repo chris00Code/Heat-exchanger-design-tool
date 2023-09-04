@@ -1,6 +1,6 @@
-from stream import Flow
-from parts import Assembly
-from exchanger_types import ExchangerEqualCells
+from .stream import Flow
+from .parts import Assembly
+from .exchanger_types import ExchangerEqualCells
 
 
 def auto_create_exchanger(flow_1: Flow = None, flow_2: Flow = None, assembly: Assembly = None):

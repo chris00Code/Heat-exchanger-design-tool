@@ -4,44 +4,28 @@ import exchanger
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from stream import Fluid, Flow
-from exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow, CrossFlowOneRow
-from matrix_converter import *
 from numpy.linalg import inv
-from utils import get_available_class_names
 from itertools import permutations
-from network import ExchangerNetwork
-from parts import Assembly
-from network_setups import *
+
+from .stream import Fluid, Flow
+from .exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow, CrossFlowOneRow
+from .matrix_converter import *
+from .utils import get_available_class_names, get_def_or_calc_value
+from .network import ExchangerNetwork
+from .parts import Assembly
 
 
 class ExchangerTwoFlow(ExchangerNetwork):
     flow_orders = ['ul2r', 'dl2r', 'ur2l', 'dr2l', 'ul2d', 'ur2d', 'dl2u', 'dr2u']
     auto_adjust = True
 
-
     def __init__(self, layout_matrix: np.ndarray = None, flow_1: Flow = None, flow_order_1: str = None,
                  flow_2: Flow = None, flow_order_2: str = None, ):
 
         self.layout_matrix = layout_matrix
-        """
-        if flow_1 is not None and flow_2 is not None:
-            input_flows = [flow_1, flow_2]
-            out_flow_1 = flow_1.clone()
-            out_flow_1.out_fluid = out_flow_1.in_fluid
-
-            out_flow_2 = flow_2.clone()
-            out_flow_2.out_fluid = out_flow_2.in_fluid
-            output_flows = [out_flow_1, out_flow_2]
-            super().__init__(input_flows=input_flows, output_flows=output_flows)
-        else:
-            super().__init__()
-        """
         super().__init__(input_flows=[NotImplemented, NotImplemented], output_flows=[NotImplemented, NotImplemented])
         self.in_flow_1 = flow_1
         self.in_flow_2 = flow_2
-        # if isinstance(flow_1, Flow): self.out_flow_1 = flow_1.clone()
-        # if isinstance(flow_2, Flow): self.out_flow_2 = flow_2.clone()
         self.flow_order_1 = flow_order_1
         self.flow_order_2 = flow_order_2
         self._fill()
@@ -133,16 +117,6 @@ class ExchangerTwoFlow(ExchangerNetwork):
     @property
     def flow_order_2(self):
         return self._flow_order_2
-
-    """
-    @flow_order_2.setter
-    def flow_order_2(self, value: str):
-        if value in self.flow_orders or value is None:
-            self._flow_order_2 = value
-            self._flatten()
-        else:
-            raise NotImplementedError
-    """
 
     @flow_order_2.setter
     def flow_order_2(self, value: str):
@@ -369,7 +343,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
     def vis_temperature_adjustment_development(self):
         super()._vis_temperature_adjusment_development(self._temperature_adjustment_development)
 
-    def vis_flow_temperature_development(self,ax=None, **ax_parameters):
+    def vis_flow_temperature_development(self, ax=None, **ax_parameters):
         temp_1, temp_2 = [], []
         for ex in self._exchangers_flattened[0]:
             temp_1.append(ex.flow_1.in_fluid.temperature)
@@ -379,7 +353,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
         temp_2.append(self.out_flow_2.mean_fluid.temperature)
 
         temp_list = [np.array([x, y]) for x, y in zip(temp_1, temp_2)]
-        super()._vis_flow_temperature_development(temp_list,ax,**ax_parameters)
+        super()._vis_flow_temperature_development(temp_list, ax, **ax_parameters)
 
     @staticmethod
     def input_arrangements():
@@ -394,12 +368,13 @@ class ExchangerTwoFlow(ExchangerNetwork):
                 pass
         return super().__repr__()
 
+
 class ExchangerEqualCells(ExchangerTwoFlow):
     def __init__(self, shape: tuple = (0, 0),
                  exchangers_type: str = 'HeatExchanger',
                  flow_1: Flow = None, flow_order_1: str = None,
                  flow_2: Flow = None, flow_order_2: str = None,
-                 assembly: Assembly = None, total_transferability: float = None):
+                 assembly: Assembly = NotImplemented, total_transferability: float = NotImplemented):
         # layout matrix can be passed to super constructor because self layout_matrix setter will be used
         self.exchangers_type = exchangers_type
         self.assembly = assembly
@@ -414,7 +389,7 @@ class ExchangerEqualCells(ExchangerTwoFlow):
 
     @exchangers_type.setter
     def exchangers_type(self, value):
-        if value in get_available_class_names(exchanger):
+        if value in get_available_class_names(exchanger.exchanger):
             self._exchangers_type = value
         else:
             raise NotImplementedError
@@ -444,30 +419,24 @@ class ExchangerEqualCells(ExchangerTwoFlow):
 
     @assembly.setter
     def assembly(self, value):
-        if isinstance(value, Assembly) or value is None:
+        if isinstance(value, Assembly) or value is NotImplemented:
             self._assembly = value
         else:
             raise NotImplementedError
 
     @property
     def total_transferability(self):
-        value = None
-        if self.assembly is not None:
-            value = self.assembly.heat_transferability
-        if value is None:
-            value = self._total_transferability
+        def_value = self._total_transferability
+        if self.assembly is NotImplemented:
+            calc_value = NotImplemented
         else:
-            try:
-                del self._total_transferability
-            except AttributeError:
-                pass
-        return value
+            calc_value = self.assembly.heat_transferability
+        return get_def_or_calc_value(def_value, calc_value)
 
     @total_transferability.setter
     def total_transferability(self, value):
-        if self.assembly is None or self.assembly.heat_transferability is None:
-            self._total_transferability = value
-            self._fill()
+        self._total_transferability = value
+        self._fill()
 
     def _fill(self):
         """
@@ -479,12 +448,7 @@ class ExchangerEqualCells(ExchangerTwoFlow):
             for i in range(self.layout_matrix.shape[0]):
                 for j in range(self.layout_matrix.shape[1]):
                     ex = self.__new_ex(ex_class)
-                    # flow_1, flow_2 = self.input_flows[0].clone(), self.input_flows[1].clone()
-                    # ex = ex_class(flow_1, flow_2)
-                    # ex.heat_transferability = self.total_transferability / self.cell_numbers
                     self.layout_matrix[i, j] = ex
-
-            # self.layout_matrix.fill(self.__new_ex(ex_class))
         except AttributeError:
             pass
         except ValueError:
@@ -506,5 +470,3 @@ class ExchangerEqualCells(ExchangerTwoFlow):
             pass
         except ZeroDivisionError:
             pass
-
-

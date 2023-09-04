@@ -1,13 +1,15 @@
 import unittest
 import numpy as np
-from exchanger import CounterCurrentFlow, CrossFlowOneRow
-from exchanger_types import *
-from stream import Fluid, Flow
-from parts import *
 import matplotlib.pyplot as plt
 import matplotlib
-from characteristic_plots import *
-import network as exnet
+
+import exchanger
+from exchanger.exchanger import CounterCurrentFlow, CrossFlowOneRow
+from exchanger.exchanger_types import *
+from exchanger.stream import Fluid, Flow
+from exchanger.parts import *
+from exchanger.characteristic_plots import *
+import exchanger.network as exnet
 
 
 def init_extype():
@@ -106,7 +108,7 @@ class ExchangerTypesTest(unittest.TestCase):
     def test_equalcells_init(self):
         ex_layout = ExchangerEqualCells((2, 2))
         self.assertEqual(ex_layout.cell_numbers, 4)
-        self.assertEqual(ex_layout.total_transferability, None)
+        self.assertEqual(ex_layout.total_transferability, NotImplemented)
         self.assertEqual(ex_layout.input_flows, [NotImplemented, NotImplemented])
         self.assertEqual(ex_layout.output_flows, [NotImplemented, NotImplemented])
         self.assertEqual(ex_layout.exchangers, NotImplemented)
@@ -122,7 +124,9 @@ class ExchangerTypesTest(unittest.TestCase):
         self.assertEqual(ex_layout.total_transferability, 10)
 
         assembly.heat_transfer_coefficient = 200
-        self.assertAlmostEqual(ex_layout.total_transferability, 35922, 0)
+        self.assertNotEqual(ex_layout.total_transferability, 35922, 0)
+        ex_layout.total_transferability = NotImplemented
+        self.assertNotEqual(ex_layout.total_transferability, 35922, 0)
 
     def test_equalcells_types(self):
         exchanger = ExchangerEqualCells()
@@ -165,7 +169,6 @@ class ExchangerTypesTest(unittest.TestCase):
                                [58.1]]) + 273.15
         np.testing.assert_array_almost_equal(ex.temperature_outputs[1], temp_check, decimal=1)
 
-
     def test_equalcells_calc_assembly(self):
         kA = 4000
         W = 3500
@@ -180,18 +183,17 @@ class ExchangerTypesTest(unittest.TestCase):
         assembly = Assembly(shell, pipe_layout)
         assembly.heat_transfer_coefficient = 22.271
         ex = ExchangerEqualCells((2, 2), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, assembly=assembly)
-        self.assertAlmostEqual(ex.total_transferability,4000,0)
+        self.assertAlmostEqual(ex.total_transferability, 4000, 0)
         ex.flow_order_1 = 'dr2u'
         ex.flow_order_2 = 'ul2r'
-        ex.auto_adjust=False
+        ex.auto_adjust = False
         str(ex)
-        self.assertEqual(ex.out_flow_1.mean_fluid.temperature,100+273.15)
+        self.assertEqual(ex.out_flow_1.mean_fluid.temperature, 100 + 273.15)
         self.assertEqual(ex.out_flow_2.mean_fluid.temperature, 20 + 273.15)
-        ex.auto_adjust=True
+        ex.auto_adjust = True
         str(ex)
-        self.assertAlmostEqual(ex.out_flow_1.mean_fluid.temperature, 62.18 + 273.15,2)
-        self.assertAlmostEqual(ex.out_flow_2.mean_fluid.temperature, 58.42 + 273.15,2)
-
+        self.assertAlmostEqual(ex.out_flow_1.mean_fluid.temperature, 62.18 + 273.15, 2)
+        self.assertAlmostEqual(ex.out_flow_2.mean_fluid.temperature, 58.42 + 273.15, 2)
 
     def test_calc(self):
         ex = init_extype()
@@ -307,10 +309,10 @@ class ExchangerTypesTest(unittest.TestCase):
 
         ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
         exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
-        #plt.show()
+        # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         exnet.vis_setups(networks, 'vis_flow_temperature_development', fig_title='temperature development')
-        #plt.show()
+        # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_vis_setup(self):
