@@ -1,23 +1,36 @@
-import copy
-import json
-import os
 import warnings
-"""file_path = os.path.join(os.path.dirname(__file__), "pyfluids.json")
-#os.chdir(os.path.dirname(file_path))
-#package_path = os.path.dirname(os.path.abspath(__file__))
-#file_path = os.path.join(package_path, 'pyfluids.json')
-
-with open(file_path) as config_file:
-    config_data = json.load(config_file)
-"""
 import pyfluids as fld
 import logging
 
+# Set up logging level
 logging.basicConfig(level=logging.CRITICAL)
 logging.debug(f'{__file__} will get logged')
 
 
 class Fluid:
+    """
+    Represents a fluid with its thermodynamic properties like pressure and temperature.
+
+    This class serves as an interface to the 'pyfluids' library, allowing to model and manage fluid properties.
+
+    Args:
+        title (str): The name of the fluid.
+        pressure (float, optional): The pressure in Pascals (Pa). Defaults to 101325 Pa.
+        temperature (float, optional): The temperature in Kelvin (K). Defaults to 293.15 K.
+        instance (str, optional): The type of fluid instance to create. Defaults to 'Fluid'.
+
+    Attributes:
+        fluid_instances (dict): A dictionary mapping instance names to fluid types from pyfluids.
+
+    Methods:
+        ntp_state: Set the fluid properties to standard conditions (NTP).
+        clone: Create a new Fluid object by cloning the current one.
+
+    Note:
+        - The 'pyfluids' library must be installed to use this class.
+        - The 'pyfluids' unit system is initialized in 'pyfluids.json' to the International System of Units (SI).
+    """
+
     fluid_instances = {
         'Fluid': fld.Fluid,
         # @TODO implement Mixture and Humid Air
@@ -43,6 +56,17 @@ class Fluid:
 
     @property
     def instance(self):
+        """
+        Get or set the type of fluid instance to create.
+
+        If setting a new instance type, it should be one of the supported fluid instances.
+
+        Raises:
+            AttributeError: If the provided instance is not implemented.
+
+        Returns:
+            instance of pyfluids: The current instance type.
+        """
         return self.__instance
 
     @instance.setter
@@ -54,6 +78,12 @@ class Fluid:
 
     @property
     def title(self):
+        """
+        Get or set the title (name) of the fluid.
+
+        Returns:
+            str: The current title (name) of the fluid.
+        """
         return self._title
 
     @title.setter
@@ -62,6 +92,25 @@ class Fluid:
 
     @property
     def fluid(self):
+        """
+        Get or set the fluid object associated with this instance.
+
+        This property represents the fluid's properties and behavior and allows for retrieval and modification of the fluid.
+
+        Setting the fluid can be done in two ways:
+        1. By providing an existing 'pyfluids.Fluid' object.
+        2. By specifying the fluid's title (name), in which case a new fluid object is created based on the title.
+
+        Args:
+            value (pyfluids.Fluid or None, optional): The fluid object to set or None to clear the fluid.
+
+        Raises:
+            NotImplementedError: If the provided value is not a valid 'pyfluids.Fluid' object
+            or if the fluid title is not implemented in pyfluids.
+
+        Returns:
+            pyfluids instance: The current fluid object associated with this instance.
+        """
         return self._fluid
 
     @fluid.setter
@@ -80,6 +129,18 @@ class Fluid:
 
     @property
     def pressure(self):
+        """
+            Get or set the pressure of the fluid in Pascals (Pa).
+
+            Args:
+                value (float): The new pressure to set in Pascals (Pa).
+
+            Raises:
+                ValueError: If the provided pressure value is not valid.
+
+            Returns:
+                float: The pressure of the fluid in Pascals (Pa).
+            """
         return self.fluid.pressure
 
     @pressure.setter
@@ -98,6 +159,18 @@ class Fluid:
 
     @property
     def temperature(self):
+        """
+        Get or set the temperature of the fluid in Kelvin (K).
+
+        Args:
+            value (float): The new temperature to set in Kelvin (K).
+
+        Raises:
+            ValueError: If the provided temperature value is not valid.
+
+        Returns:
+            float: The temperature of the fluid in Kelvin.
+        """
         return self.fluid.temperature
 
     @temperature.setter
@@ -115,17 +188,41 @@ class Fluid:
             print(f"Temperature not supported, please change temperature\n {e}")
 
     def ntp_state(self):
+        """
+        Set the fluid properties to standard conditions (NTP - Normal Temperature and Pressure).
+
+        This method updates the fluid's pressure to 101325 Pascals (Pa) and temperature to 293.15 Kelvin (K),
+        which are the standard conditions for many fluid properties.
+        """
         self.fluid.update(fld.Input.pressure(101325), fld.Input.temperature(293.15))
 
     @property
     def specific_heat(self):
+        """
+        Mass specific heat [J/kg/K].
+
+        Returns:
+            float: The mass specific heat of the fluid in J/kg/K.
+        """
         return self.fluid.specific_heat
 
     @property
     def density(self):
+        """
+        Mass density [kg/m3].
+
+        Returns:
+            float: The mass density of the fluid in kg/m3.
+        """
         return self.fluid.density
 
     def clone(self):
+        """
+        Create a new fluid object with the same properties as the current fluid instance.
+
+        Returns:
+            Fluid: A new fluid object with identical properties.
+        """
         new_fluid = Fluid(self.fluid)
         return new_fluid
 

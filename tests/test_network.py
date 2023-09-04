@@ -119,40 +119,7 @@ class NetworkTests(unittest.TestCase):
         np.testing.assert_array_almost_equal(network.network_characteristics, np.array([[0.5, 0.5],
                                                                                         [0.5, 0.5]]), decimal=5)
 
-    def test_output(self):
-        flow_1 = Flow(Fluid("Water", temperature=273.15 + 20), 1)
-        flow_2 = Flow(Fluid("Water", temperature=273.15 + 100), 1)
-        flows = [flow_1, flow_2]
-        network = ExchangerNetwork(flows)
-        network.phi_matrix = np.array([[0.75, 0., 0., 0., 0.25, 0., 0., 0.],
-                                       [0., 0.75, 0., 0., 0., 0.25, 0., 0.],
-                                       [0., 0., 0.75, 0., 0., 0., 0.25, 0.],
-                                       [0., 0., 0., 0.75, 0., 0., 0., 0.25],
-                                       [0.25, 0., 0., 0., 0.75, 0., 0., 0.],
-                                       [0., 0.25, 0., 0., 0., 0.75, 0., 0.],
-                                       [0., 0., 0.25, 0., 0., 0., 0.75, 0.],
-                                       [0., 0., 0., 0.25, 0., 0., 0., 0.75]])
-        network.structure_matrix = np.array([[0., 1., 0., 0., 0., 0., 0., 0.],
-                                             [0., 0., 1., 0., 0., 0., 0., 0.],
-                                             [0., 0., 0., 0., 0., 0., 0., 0.],
-                                             [1., 0., 0., 0., 0., 0., 0., 0.],
-                                             [0., 0., 0., 0., 0., 0., 0., 0.],
-                                             [0., 0., 0., 0., 1, 0., 0., 0.],
-                                             [0., 0., 0., 0., 0, 1., 0., 0.],
-                                             [0., 0., 0., 0., 0., 0, 1., 0.]])
-        network.input_matrix = np.array([[0, 0],
-                                         [0, 0],
-                                         [1, 0],
-                                         [0, 0],
-                                         [0, 1],
-                                         [0, 0],
-                                         [0, 0],
-                                         [0, 0]])
-        network.output_matrix = np.asarray([[0, 0, 0, 1, 0, 0, 0, 0],
-                                            [0, 0, 0, 0, 0, 0, 0, 1]])
-        print(network.temperature_outputs[1]-273.15)
-
-    def test_output_3(self):
+    def test_output_3flows(self):
         flow_1 = Flow(Fluid("Water", temperature=373), 1)
         flow_2 = Flow(Fluid("Water", temperature=405), 1)
         flow_3 = Flow(Fluid("Water", temperature=293), 1)
@@ -201,6 +168,7 @@ class NetworkTests(unittest.TestCase):
                                                                                         [0.38730, 0.09836, 0.51434],
                                                                                         [0.55943, 0.22541, 0.21516]]),
                                              decimal=5)
+
 
     def test_print(self):
         ex_1, ex_2 = init_ex()
