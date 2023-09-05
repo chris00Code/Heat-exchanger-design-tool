@@ -59,7 +59,7 @@ class TestParts(unittest.TestCase):
     def test_part_print(self):
         part = Part(heat_transfer_area=10, heat_transfer_coefficient=5)
         part.hydraulic_diameter = 50
-        self.assertEqual(len(str(part)),248)
+        self.assertEqual(len(str(part)), 248)
 
     def test_pipe_kwargs(self):
         pipe = Pipe(10, diameter_out=13, heat_transfer_coefficient=200)
@@ -155,7 +155,7 @@ class TestParts(unittest.TestCase):
         pipe_layout = PipeLayout(pipe, 20)
         assembly = Assembly(shell, pipe_layout)
         self.assertEqual(assembly.shell, shell)
-        self.assertEqual(assembly.pipe_layout,pipe_layout)
+        self.assertEqual(assembly.pipe_layout, pipe_layout)
 
     def test_assembly_baffles(self):
         shell = SquareShellGeometry(5, 2, 1)
@@ -163,8 +163,7 @@ class TestParts(unittest.TestCase):
         pipe_layout = PipeLayout(pipe, 5)
         baffle = SegmentalBaffle(1, 50)
         assembly = Assembly(shell, pipe_layout, baffle=baffle)
-        self.assertEqual(assembly.baffles,baffle)
-
+        self.assertEqual(assembly.baffles, baffle)
 
     def test_assembly_floworder(self):
         shell = SquareShellGeometry(5, 2, 1)
@@ -172,7 +171,7 @@ class TestParts(unittest.TestCase):
         pipe_layout = PipeLayout(pipe, 5)
         inlets = Inlets('ul', 'dl')
         assembly = Assembly(shell, pipe_layout, inlets=inlets)
-        self.assertEqual(assembly.flow_orders,("ul2d","dl2r"))
+        self.assertEqual(assembly.flow_orders, ("ul2d", "dl2r"))
 
 
 if __name__ == '__main__':
