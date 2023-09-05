@@ -8,6 +8,7 @@ from .parts import Part
 
 class HeatExchanger:
     auto_adjust = True
+
     def __init__(self, flow_1=None, flow_2=None, part: Part = None):
         self.flow_1 = flow_1
         self.flow_2 = flow_2
@@ -146,6 +147,13 @@ class HeatExchanger:
 
     @property
     def p(self):
+        """
+        Get the dimensionless temperature change for a heat exchanger.
+
+        Raises:
+            NotImplementedError: If the dimensionless temperature change is required
+            from a heat exchanger with no specific type.
+        """
         pass
         raise NotImplementedError
 
@@ -179,6 +187,16 @@ class HeatExchanger:
 class ParallelFlow(HeatExchanger):
     @property
     def p(self):
+        """
+        Get the dimensionless temperature changes (P1 and P2) for a counter-current flow heat exchanger.
+
+        Returns:
+            tuple (float,float): A tuple containing two dimensionless temperature changes, P1 and P2.
+
+        Notes:
+            - The dimensionless temperature changes are calculated based on the heat exchanger's NTU and R values.
+            - P1 represents the dimensionless temperature change on one side, and P2 on the other side.
+        """
         n1, n2 = self.ntu
         r1, r2 = self.r
         p1 = (1 - exp(-n1 * (1 + r1))) / (1 + r1)
@@ -205,10 +223,19 @@ class CounterCurrentFlow(HeatExchanger):
 class CrossFlowOneRow(HeatExchanger):
     @property
     def p(self):
+        """
+        Get the dimensionless temperature changes (P1 and P2) for a One-sided cross-mixed crossflow heat exchanger.
+
+        Returns:
+            tuple (float,float): A tuple containing two dimensionless temperature changes, P1 and P2.
+
+        Notes:
+            - The dimensionless temperature changes are calculated based on the heat exchanger's NTU and R values.
+            - P1 represents the dimensionless temperature change of ideally mixed flow 1, and P2 not.
+        """
         n1, n2 = self.ntu
         r1, r2 = self.r
         p1 = 1 - exp((exp(-r1 * n1) - 1) / r1)
-        # p2 = 1 - exp((exp(-r2 * n2) - 1) / r2)
         p2 = r1 * p1
         return p1, p2
 
@@ -220,26 +247,21 @@ class ShellTubeHeatExchanger(HeatExchanger):
 class OneOuterThreeInnerTwoCounterflow(ShellTubeHeatExchanger):
     @property
     def p(self):
+        """
+        Get the dimensionless temperature changes (P1 and P2) for a Shell-and-tube heat exchanger
+        with one outer and three inner passages, two in counterflow.
+
+        Returns:
+            tuple (float,float): A tuple containing two dimensionless temperature changes, P1 and P2.
+
+        Notes:
+            - The dimensionless temperature changes are calculated based on the heat exchanger's NTU and R values.
+            - P1 represents the dimensionless temperature change on the shell side, and P2 on the tube side.
+
+            Formula: VDI Waermeatlas, C1 Wärmeübertrager: Berechnungsmethoden, Tab 5
+        """
         n1, n2 = self.ntu
         r1, r2 = self.r
-        """
-        # from heat exchanger design handbook
-        delta = (9 * r1 ** 2 + 4 * (1 - r1)) ** 0.5 / r1
-        lambda_1 = (-3 + delta) / 2
-        lambda_2 = (-3 - delta) / 2
-        xi_1 = exp(lambda_1 * r1 * n1 / 3) / (2 * delta)
-        xi_2 = exp(lambda_2 * r1 * n1 / 3) / (2 * delta)
-        E = 0.5 * exp(n1 / 3)
-        B = xi_1 * (1 - r1 * lambda_2) / r1 - xi_2 * (1 - r1 * lambda_1) / r1 + E
-        C = -xi_1 * (3 + r1 * lambda_2) / r1 + xi_2 * (3 + r1 * lambda_1) / r1 + E
-        if r1 == 1:
-            A = -exp(-n1) / 18 - exp(n1 / 3) / 2 + (5 + n1) / 9
-        else:
-            A = xi_1*(1 + r1 * lambda_1) * (1 - r1 * lambda_2) / (2 * r1 ** 2 * lambda_1) - E - \
-                xi_2*(1 + r1 * lambda_2) * (1 - r1 * lambda_1) / (2 * r1 ** 2 * lambda_2) + r1 / (r1 - 1)
-
-        p1 = 1 - (C / (A * C + B ** 2))
-        """
         # formula from VDI Waermeatlas
         epsilon = 1 / 3
         if r1 != 1:
