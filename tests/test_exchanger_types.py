@@ -26,11 +26,6 @@ def init_extype():
     return ex
 
 
-def test_plot_setup():
-    matplotlib.use('Agg')
-    plt.close()
-
-
 class ExchangerTypesTest(unittest.TestCase):
 
     def test_exchangertwoflow_init(self):
@@ -60,12 +55,13 @@ class ExchangerTypesTest(unittest.TestCase):
         layout_matrix = np.array([ex_1, ex_2])
         ex_layout.layout_matrix = layout_matrix
         np.testing.assert_array_equal(ex_layout.layout_matrix, layout_matrix)
-        print(ex_layout)
+        self.assertEqual(len(str(ex_layout)),119)
         layout_matrix = np.array([[ex_1, ex_2], [ex_2, ex_1]])
         ex_layout.layout_matrix = layout_matrix
         ex_layout.flow_order_1 = 'ul2d'
         ex_layout.flow_order_2 = 'ul2r'
-        print(ex_layout)
+        self.assertEqual(len(str(ex_layout)),235)
+
 
     def test_flattening(self):
         flow_1 = Flow(Fluid("Water", temperature=10 + 273.15), 1)
@@ -124,8 +120,12 @@ class ExchangerTypesTest(unittest.TestCase):
         self.assertEqual(ex_layout.total_transferability, 10)
 
         assembly.heat_transfer_coefficient = 200
-        self.assertNotEqual(ex_layout.total_transferability, 35922, 0)
+        with self.assertWarnsRegex(Warning,
+                                   'defined value is not calculated, defined is returned',
+                                   msg='no warning when heat parameters are not consistent'):
+            self.assertNotEqual(ex_layout.total_transferability, 35922, 0)
         ex_layout.total_transferability = NotImplemented
+
         self.assertNotEqual(ex_layout.total_transferability, 35922, 0)
 
     def test_equalcells_types(self):
@@ -146,13 +146,22 @@ class ExchangerTypesTest(unittest.TestCase):
 
         self.assertEqual(exchangers.output_flows, [NotImplemented, NotImplemented])
         exchangers.in_flow_2 = flow_2
-        print(exchangers)
+        self.assertEqual(exchangers.cell_numbers, 0)
+        self.assertEqual(exchangers.shape, (0, 0))
+        self.assertEqual(exchangers.exchangers, NotImplemented)
+        self.assertEqual(len(exchangers.input_flows), 2)
+        self.assertEqual(len(exchangers.output_flows), 2)
+
         exchangers._fill()
         exchangers.total_transferability = 3500
         exchangers._fill()
         exchangers.shape = (1, 1)
         exchangers._fill()
-        print(exchangers)
+        self.assertEqual(exchangers.cell_numbers, 1)
+        self.assertEqual(exchangers.shape, (1, 1))
+        self.assertEqual(exchangers.exchangers, NotImplemented)
+        self.assertEqual(len(exchangers.input_flows), 2)
+        self.assertEqual(len(exchangers.output_flows), 2)
 
     def test_equalcells_calc(self):
         kA = 4000
@@ -248,9 +257,11 @@ class ExchangerTypesTest(unittest.TestCase):
         ex = ExchangerEqualCells((3, 10), 'CounterCurrentFlow',
                                  flow_1=flow_1, flow_order_1='ul2d',
                                  flow_2=flow_2, flow_order_2='dr2l', total_transferability=kA)
-        print(ex.temperature_outputs[1] - 273.15)
+        np.testing.assert_array_almost_equal(ex.temperature_outputs[1] - 273.15, np.array([[61.07],
+                                                                                           [59.56]]), decimal=-1)
         ex._adjust_temperatures(5)
-        print(ex.temperature_outputs[1] - 273.15)
+        np.testing.assert_array_almost_equal(ex.temperature_outputs[1] - 273.15, np.array([[61.07],
+                                                                                           [59.56]]), decimal=2)
 
         ex.vis_flow_temperature_development()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
@@ -258,14 +269,10 @@ class ExchangerTypesTest(unittest.TestCase):
         ex.vis_heat_flow()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
-        print(ex.extended_info())
-        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
-
     def test_print(self):
         ex = init_extype()
         ex._adjust_temperatures()
-        print(id_repr(ex.layout_matrix))
-        print(ex.extended_info())
+        self.assertEqual(len(ex.extended_info()),3995)
 
     def test_autoadjust(self):
         ex = init_extype()
@@ -337,5 +344,4 @@ class ExchangerTypesTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    test_plot_setup()
     unittest.main()
