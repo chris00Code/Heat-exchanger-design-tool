@@ -77,6 +77,25 @@ class TestFluid(unittest.TestCase):
         self.assertEqual(fluid.pressure, 150e3, msg='fluid cloning not working, pressure is still same object')
         self.assertEqual(new_fluid.pressure, 100e3, msg='fluid cloning not working, pressure is still same object')
 
+
+    def test_fluid_clone_constructor(self):
+        fluid = Fluid("Water")
+        new_fluid = Fluid(fluid=fluid)
+        self.assertNotEqual(fluid, new_fluid, msg='fluid cloning not working, fluid has same hash value')
+        new_fluid.pressure = 100e3
+
+        fluid = Fluid("Water", temperature=280)
+        new_fluid = fluid.clone()
+        self.assertNotEqual(fluid, new_fluid, msg='fluid cloning not working, fluid has same hash value')
+        new_fluid.pressure = 100e3
+        new_fluid.temperature = 350
+        fluid.pressure = 150e3
+
+        self.assertEqual(fluid.temperature, 280, msg='fluid cloning not working, temperature is still same object')
+        self.assertEqual(new_fluid.temperature, 350, msg='fluid cloning not working, temperature is still same object')
+        self.assertEqual(fluid.pressure, 150e3, msg='fluid cloning not working, pressure is still same object')
+        self.assertEqual(new_fluid.pressure, 100e3, msg='fluid cloning not working, pressure is still same object')
+
     def test_fluid_str(self):
         expected_output = r'^Fluid: title = \w+, id = \d+\n\tp = \d+(\.\d+)? Pa\n\tt = -?\d+(\.\d+)? °C'
 
@@ -149,7 +168,21 @@ class TestFlow(unittest.TestCase):
                             msg='cloned out fluids are equal, have same hash values')
         self.assertEqual(flow.mass_flow, new_flow.mass_flow, msg='mass flow was not cloned correct')
 
-    def test_flow_print(self):
+
+    def test_flow_clone_constructor(self):
+        fluid = Fluid("Water")
+        flow = Flow(fluid, 1)
+        new_flow = Flow(flow=flow)
+        self.assertNotEqual(flow, new_flow, msg='cloned flow object is equal, has same hash value')
+        self.assertNotEqual(flow.in_fluid, new_flow.in_fluid, msg='cloned in fluids are equal, have same hash values')
+        self.assertNotEqual(flow.mean_fluid, new_flow.mean_fluid,
+                            msg='cloned mean fluids are equal, have same hash values')
+        self.assertNotEqual(flow.out_fluid, new_flow.out_fluid,
+                            msg='cloned out fluids are equal, have same hash values')
+        self.assertEqual(flow.mass_flow, new_flow.mass_flow, msg='mass flow was not cloned correct')
+
+
+def test_flow_print(self):
         expected_output = r'^Flow: id = \d+\n\tmass flow = \d+(\.\d+)? kg\/s\n' \
                           r'\theat capacity flow: W_dot = \d+(\.\d+)? W\/K\n' \
                           r'\theat flow: Q_dot = -?\d+(\.\d+)? kW\n\n' \

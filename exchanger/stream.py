@@ -19,6 +19,8 @@ class Fluid:
         temperature (float, optional): The temperature in Kelvin (K). Defaults to 293.15 K.
         instance (str, optional): The type of fluid instance to create. Defaults to 'Fluid'.
 
+        fluid (Fluid): the fluid to be make a deepcopy of
+
     Attributes:
         fluid_instances (dict): A dictionary mapping instance names to fluid types from pyfluids.
 
@@ -38,15 +40,21 @@ class Fluid:
         # 'HumidAir': fld.HumidAir
     }
 
-    def __init__(self, title: str, pressure: float = 101325, temperature: float = 293.15, instance: str = 'Fluid'):
-        if isinstance(title, fld.Fluid):
-            fluid = title.clone()
-            self.title = fluid.name
-            self.fluid = fluid
-
+    def __init__(self, title: str = None, pressure: float = 101325, temperature: float = 293.15,
+                 instance: str = 'Fluid',
+                 **kwargs):
+        if "fluid" in kwargs:
+            fluid = kwargs["fluid"]
+            if isinstance(fluid, Fluid):
+                self.title = fluid.title
+                self.fluid = fluid.fluid.clone()
+            else:
+                raise ValueError("fluid is not a Fluid object")
         else:
-            self.instance = instance
 
+            self.instance = instance
+            if title is None:
+                raise TypeError
             self.title = title
             self.fluid = None
 
@@ -223,7 +231,7 @@ class Fluid:
         Returns:
             Fluid: A new fluid object with identical properties.
         """
-        new_fluid = Fluid(self.fluid)
+        new_fluid = Fluid(fluid=self)
         return new_fluid
 
     def __repr__(self):
@@ -234,12 +242,15 @@ class Fluid:
 
 
 class Flow:
-    def __init__(self, fluid: Fluid = None, mass_flow: float = None, volume_flow: float = None):
-        if isinstance(fluid, Flow):
-            flow = fluid
-            self.in_fluid = flow.in_fluid.clone()
-            self.out_fluid = flow.out_fluid.clone()
-            self.volume_flow = flow.volume_flow
+    def __init__(self, fluid: Fluid = None, mass_flow: float = None, volume_flow: float = None, **kwargs):
+        if "flow" in kwargs:
+            flow = kwargs["flow"]
+            if isinstance(flow, Flow):
+                self.in_fluid = flow.in_fluid.clone()
+                self.out_fluid = flow.out_fluid.clone()
+                self.volume_flow = flow.volume_flow
+            else:
+                raise ValueError("flow is not a Flow object")
         else:
             self.in_fluid = fluid
             self.out_fluid = None
@@ -340,7 +351,7 @@ class Flow:
         return f"heat flow: Q_dot = %.5f kW\n" % (self.heat_flow * 1e-3)
 
     def clone(self):
-        new_flow = Flow(self)
+        new_flow = Flow(flow=self)
         return new_flow
 
     def clone_by_fluid(self, clone_fluid='in'):
