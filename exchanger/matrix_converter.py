@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import patheffects
 
 
 def l2r(array):
@@ -67,3 +68,98 @@ def heat_flow_repr(matrix):
     vectorized_get_heat_flow = np.vectorize(lambda obj: abs(obj.heat_flows[0]))
     output = vectorized_get_heat_flow(matrix)
     return output
+
+
+def add_arrows(ax, direction_list, start_point):
+    # direction = 'dr'
+    # start_point = [0, -0.5]
+
+    for direction in direction_list:
+
+        end_point = start_point.copy()
+        match len(direction):
+            case 1:
+                add = 1
+            case 2:
+                add = 0.5
+
+        arrow_connectionstyle = "angle3"
+        match direction[0]:
+            case 'd':
+                end_point[1] += add
+            case 'u':
+                end_point[1] -= add
+            case 'l':
+                end_point[0] -= add
+                arrow_connectionstyle = "angle3,angleA=0, angleB=-90"
+            case 'r':
+                end_point[0] += add
+                arrow_connectionstyle = "angle3,angleA=0, angleB=90"
+        if len(direction) == 2:
+            match direction[1]:
+                case 'd':
+                    end_point[1] += add
+                case 'u':
+                    end_point[1] -= add
+                case 'l':
+                    end_point[0] -= add
+                case 'r':
+                    end_point[0] += add
+
+        start_point = tuple(start_point)
+        end_point = tuple(end_point)
+
+        txt = ax.annotate("", end_point, start_point,
+                          arrowprops=dict(arrowstyle="->", connectionstyle=arrow_connectionstyle, lw=2),
+                          size=20, ha="center", path_effects=[patheffects.withStroke(linewidth=3, foreground="w")])
+
+        txt.arrow_patch.set_path_effects([
+            patheffects.Stroke(linewidth=5, foreground="w"),
+            patheffects.Normal()])
+
+        start_point = list(end_point)
+
+
+def get_direction_list(matrix, order):
+    shape = matrix.shape
+    direction_list = [order[-1]]
+    n_same = (shape[0] - 2, shape[1] - 2)
+
+    others = {'u': 'd', 'd': 'u', 'r': 'l', 'l': 'r'}
+
+    if order[-1] in ['u', 'd']:
+
+        for i in range(shape[1]):
+            if i % 2 == 0:
+                filler = order[-1]
+            else:
+                filler = others[order[-1]]
+            direction_list += [filler]*n_same[0]
+            if i < shape[1]:
+                direction_list.append(filler + others[order[1]])
+                direction_list.append(others[order[1]]+others[order[-1]])
+        match order[1]:
+            case 'l':
+                x = 0
+            case 'r':
+                x = shape[1] - 1
+        match order[0]:
+            case 'u':
+                y = -0.5
+            case 'd':
+                y = shape[0] - 0.5
+    elif order[-1] in ['r', 'l']:
+        match order[1]:
+            case 'l':
+                x = -0.5
+            case 'r':
+                x = shape[1] - 0.5
+        match order[0]:
+            case 'u':
+                y = 0
+            case 'd':
+                y = shape[0] - 1
+    start_point = [x, y]
+
+
+    return start_point, direction_list

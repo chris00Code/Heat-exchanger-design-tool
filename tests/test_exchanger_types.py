@@ -55,13 +55,12 @@ class ExchangerTypesTest(unittest.TestCase):
         layout_matrix = np.array([ex_1, ex_2])
         ex_layout.layout_matrix = layout_matrix
         np.testing.assert_array_equal(ex_layout.layout_matrix, layout_matrix)
-        self.assertEqual(len(str(ex_layout)),119)
+        self.assertEqual(len(str(ex_layout)), 119)
         layout_matrix = np.array([[ex_1, ex_2], [ex_2, ex_1]])
         ex_layout.layout_matrix = layout_matrix
         ex_layout.flow_order_1 = 'ul2d'
         ex_layout.flow_order_2 = 'ul2r'
-        self.assertEqual(len(str(ex_layout)),235)
-
+        self.assertEqual(len(str(ex_layout)), 235)
 
     def test_flattening(self):
         flow_1 = Flow(Fluid("Water", temperature=10 + 273.15), 1)
@@ -272,7 +271,7 @@ class ExchangerTypesTest(unittest.TestCase):
     def test_print(self):
         ex = init_extype()
         ex._adjust_temperatures()
-        self.assertEqual(len(ex.extended_info()),3995)
+        self.assertEqual(len(ex.extended_info()), 3995)
 
     def test_autoadjust(self):
         ex = init_extype()
@@ -304,6 +303,21 @@ class ExchangerTypesTest(unittest.TestCase):
         ex.vis_heat_flow()
         # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
+
+    def test_vis_flow_direction(self):
+        kA = 4000
+        W = 3500
+        fld_1 = Fluid("Water", pressure=101420, temperature=373.15)
+        flow_1 = Flow(fld_1, W / fld_1.specific_heat)
+        fld_2 = Fluid("Water", temperature=293.15)
+        flow_2 = Flow(fld_2, W / fld_2.specific_heat)
+
+        ex = ExchangerEqualCells((3, 4), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, total_transferability=kA)
+        ex.flow_order_1 = 'dr2u'
+        ex.flow_order_2 = 'ul2r'
+        ex._adjust_temperatures()
+        ex.vis_heat_flow()
+        plt.show()
 
     def test_input_arrangements(self):
         networks = []
