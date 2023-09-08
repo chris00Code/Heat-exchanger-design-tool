@@ -322,7 +322,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
         except TypeError:
             return ""
 
-    def vis_heat_flow(self,direction_matrix = None, ax=None, **ax_parameters):
+    def vis_heat_flow(self, ax=None, **ax_parameters):
         par_matrix = heat_flow_repr(self.layout_matrix)
 
         vmin = ax_parameters.pop('vmin', 0)
@@ -341,7 +341,10 @@ class ExchangerTwoFlow(ExchangerNetwork):
         plt.colorbar(im, ax=ax, label='heat flow in W')
 
         start_point,direction_list = get_direction_list(self.layout_matrix,self.flow_order_1)
-        add_arrows(ax,direction_list,start_point)
+        add_arrows(ax,direction_list,start_point,text='flow 1')
+
+        start_point,direction_list = get_direction_list(self.layout_matrix,self.flow_order_2)
+        add_arrows(ax,direction_list,start_point,text='flow 2',color='blue')
 
 
     def vis_temperature_adjustment_development(self):

@@ -312,9 +312,9 @@ class ExchangerTypesTest(unittest.TestCase):
         fld_2 = Fluid("Water", temperature=293.15)
         flow_2 = Flow(fld_2, W / fld_2.specific_heat)
 
-        ex = ExchangerEqualCells((3, 4), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, total_transferability=kA)
+        ex = ExchangerEqualCells((3, 3), 'CrossFlowOneRow', flow_1=flow_1, flow_2=flow_2, total_transferability=kA)
         ex.flow_order_1 = 'dr2u'
-        ex.flow_order_2 = 'ul2r'
+        ex.flow_order_2 = 'dl2r'
         ex._adjust_temperatures()
         ex.vis_heat_flow()
         plt.show()

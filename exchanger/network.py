@@ -207,10 +207,10 @@ class ExchangerNetwork:
             return ""
 
     def _vis_temperature_adjusment_development(self, temp_list, ax=None, **ax_parameters):
-        vis_temp_progress(temp_list, 'temperature adjustment development', ax, **ax_parameters)
+        vis_temp_progress(temp_list, 'temperature adjustment development', ax, label_x='iterations', **ax_parameters)
 
     def _vis_flow_temperature_development(self, temp_list, ax=None, **ax_parameters):
-        vis_temp_progress(temp_list, 'flow temperature development', ax, **ax_parameters)
+        vis_temp_progress(temp_list, 'flow temperature development', ax, label_x='cell passed by flow', **ax_parameters)
 
     def extended_info(self):
         output = self.__repr__()
@@ -244,13 +244,19 @@ def vis_temp_progress(data_list, title: str = 'temperature development', ax=None
     for i, data_row in enumerate(zip(*data_list)):
         ax.plot(data_row, label=f'temperature {i + 1}')
 
-    ax.set_xlabel('development')
-    ax.set_ylabel('temperatures')
+    label_x = ax_parameters.get('label_x', 'development')
+    label_y = ax_parameters.get('label_y', 'temperatures')
+    ax.set_xlabel(label_x)
+    ax.set_ylabel(label_y)
 
     min_y = ax_parameters.get('min_y', None)  # Retrieve min_y from ax_parameters or set to None
     max_y = ax_parameters.get('max_y', None)  # Retrieve max_y from ax_parameters or set to None
     if min_y is not None and max_y is not None:
         ax.set_ylim(min_y, max_y)
+
+    x_ticks = np.arange(0, len(data_list), 1)
+    ax.set_xticks(x_ticks)
+    ax.set_xticklabels([str(int(x)) for x in x_ticks])
 
     ax.set_title(title)
     ax.grid(True)

@@ -70,11 +70,9 @@ def heat_flow_repr(matrix):
     return output
 
 
-def add_arrows(ax, direction_list, start_point):
-    # direction = 'dr'
-    # start_point = [0, -0.5]
+def add_arrows(ax, direction_list, start_point,text="", color='black'):
 
-    for direction in direction_list:
+    for i,direction in enumerate(direction_list):
 
         end_point = start_point.copy()
         match len(direction):
@@ -109,15 +107,22 @@ def add_arrows(ax, direction_list, start_point):
         start_point = tuple(start_point)
         end_point = tuple(end_point)
 
+
+
         txt = ax.annotate("", end_point, start_point,
-                          arrowprops=dict(arrowstyle="->", connectionstyle=arrow_connectionstyle, lw=2),
+                          arrowprops=dict(arrowstyle="->", connectionstyle=arrow_connectionstyle, lw=2, color=color),
                           size=20, ha="center", path_effects=[patheffects.withStroke(linewidth=3, foreground="w")])
 
         txt.arrow_patch.set_path_effects([
-            patheffects.Stroke(linewidth=5, foreground="w"),
+            patheffects.Stroke(linewidth=4, foreground="w"),
             patheffects.Normal()])
 
+        if i ==0:
+            ax.text(start_point[0]+0.05,start_point[1]-0.05,text,color=color,fontsize=12)
+
+
         start_point = list(end_point)
+
 
 
 def get_direction_list(matrix, order):
@@ -128,16 +133,7 @@ def get_direction_list(matrix, order):
     others = {'u': 'd', 'd': 'u', 'r': 'l', 'l': 'r'}
 
     if order[-1] in ['u', 'd']:
-
-        for i in range(shape[1]):
-            if i % 2 == 0:
-                filler = order[-1]
-            else:
-                filler = others[order[-1]]
-            direction_list += [filler]*n_same[0]
-            if i < shape[1]:
-                direction_list.append(filler + others[order[1]])
-                direction_list.append(others[order[1]]+others[order[-1]])
+        _arrow_direction(direction_list, order[1], shape[1], order, others, n_same[0])
         match order[1]:
             case 'l':
                 x = 0
@@ -149,6 +145,7 @@ def get_direction_list(matrix, order):
             case 'd':
                 y = shape[0] - 0.5
     elif order[-1] in ['r', 'l']:
+        _arrow_direction(direction_list, order[0], shape[0], order, others, n_same[1])
         match order[1]:
             case 'l':
                 x = -0.5
@@ -161,5 +158,20 @@ def get_direction_list(matrix, order):
                 y = shape[0] - 1
     start_point = [x, y]
 
-
     return start_point, direction_list
+
+
+def _arrow_direction(direction_list, arrow_direction, length, order, others, n_same):
+    for i in range(length):
+        if i % 2 == 0:
+            filler = order[-1]
+        else:
+            filler = others[order[-1]]
+        direction_list += [filler] * n_same
+        if i < length - 1:
+            direction_list.append(filler + others[arrow_direction])
+            direction_list.append(others[arrow_direction] + others[filler])
+    if length % 2 == 0:
+        direction_list += others[order[-1]]
+    else:
+        direction_list += order[-1]
