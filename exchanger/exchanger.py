@@ -244,7 +244,7 @@ class ShellTubeHeatExchanger(HeatExchanger):
     pass
 
 
-class OneOuterThreeInnerTwoCounterflow(ShellTubeHeatExchanger):
+class OneOuterThreeInnerTwoCounterFlow(ShellTubeHeatExchanger):
     @property
     def p(self):
         """
