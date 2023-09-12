@@ -446,7 +446,7 @@ class Baffle:
 
 
 class SegmentalBaffle(Baffle):
-    def __init__(self, number, baffle_cut):
+    def __init__(self, number, baffle_cut=50):
         self.number_baffles = number
         self.baffle_cut = baffle_cut
 
@@ -532,8 +532,9 @@ class Assembly(Part):
                  baffle: Baffle = NotImplemented,
                  inlets: Inlets = Inlets()):
         self.shell = shell
-        self.pipe_layout = pipe_layout
         self.tube_passes = tube_passes
+        self.pipe_layout = pipe_layout
+
         self.baffles = baffle
         self.flow_orders = inlets
 
@@ -575,7 +576,8 @@ class Assembly(Part):
     def pipe_layout(self, value):
         if isinstance(value, PipeLayout):
             if value.pipe.length is NotImplemented:
-                value.pipe.length = self.shell.length
+                # assumes tubesheets not bends
+                value.pipe.length = self.shell.length*self.tube_passes
             self._pipe_layout = value
         else:
             raise NotImplementedError

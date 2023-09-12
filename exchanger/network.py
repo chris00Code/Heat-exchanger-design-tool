@@ -207,7 +207,8 @@ class ExchangerNetwork:
             return ""
 
     def _vis_temperature_adjusment_development(self, temp_list, ax=None, **ax_parameters):
-        vis_temp_progress(temp_list, 'temperature adjustment development', ax, label_x='iterations', **ax_parameters)
+        vis_temp_progress(temp_list, 'temperature adjustment development', ax,
+                          label_data=[f'network output temperature {i + 1}' for i in range(len(temp_list))], label_x='iterations', **ax_parameters)
 
     def _vis_flow_temperature_development(self, temp_list, ax=None, **ax_parameters):
         vis_temp_progress(temp_list, 'flow temperature development', ax, label_x='cell passed by flow', **ax_parameters)
@@ -241,8 +242,11 @@ def vis_temp_progress(data_list, title: str = 'temperature development', ax=None
 
     data_list = [data - 273.15 for data in data_list]
 
-    for i, data_row in enumerate(zip(*data_list)):
-        ax.plot(data_row, label=f'temperature {i + 1}')
+    label_data = ax_parameters.get('label_data', [f'temperature {i + 1}' for i in range(len(data_list))])
+    # for i, data_row in enumerate(zip(*data_list)):
+    # ax.plot(data_row, label=f'temperature {i + 1}')
+    for i, data in enumerate(zip(*data_list)):
+        ax.plot(data, label=label_data[i])
 
     label_x = ax_parameters.get('label_x', 'development')
     label_y = ax_parameters.get('label_y', 'temperatures')
