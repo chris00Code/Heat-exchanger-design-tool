@@ -242,7 +242,54 @@ class Fluid:
 
 
 class Flow:
+    """
+        Represents a fluid flow with input and output fluids, mass and volume flow rates, and thermodynamic properties.
+
+        This class allows you to model and manage fluid flows and calculate properties such as mass flow rate, heat capacity flow,
+        heat flow, and pressure loss. It also handles incompressible flows and phase changes.
+
+        Args:
+            fluid (Fluid, optional): The input fluid. Defaults to None.
+            mass_flow (float, optional): The mass flow rate in kg/s. Defaults to None.
+            volume_flow (float, optional): The volume flow rate in m^3/s. Defaults to None.
+
+        Attributes:
+            in_fluid (Fluid): The input fluid.
+            out_fluid (Fluid): The output fluid.
+            volume_flow (float): The volume flow rate in m^3/s.
+            pressure_loss (float): The pressure loss in Pascals (Pa).
+            out_temperature (float): The output temperature in Kelvin (K).
+            phase_change (bool): Indicates if a phase change occurs in the flow.
+            mass_flow (float): The mass flow rate in kg/s.
+            heat_capacity_flow (float): The heat capacity flow rate in Watts per Kelvin (W/K).
+            heat_flow (float): The heat flow rate in Watts (W).
+
+        Methods:
+            mass_flow_str(): Returns a formatted string for mass flow rate.
+            heat_capacity_flow_str(): Returns a formatted string for heat capacity flow rate.
+            heat_flow_str(): Returns a formatted string for heat flow rate.
+            clone(): Creates a new Flow object with the same properties.
+            clone_by_fluid(clone_fluid='in'): Creates a new Flow object by cloning and using the specified input or output fluid.
+
+        Note:
+            - This class assumes incompressible flow.
+            - Warning: Phase changes in the flow may lead to issues.
+
+        """
+
     def __init__(self, fluid: Fluid = None, mass_flow: float = None, volume_flow: float = None, **kwargs):
+        """
+        Initialize a Flow object with input fluid, mass flow rate, or volume flow rate.
+
+        Args:
+            fluid (Fluid, optional): The input fluid. Defaults to None.
+            mass_flow (float, optional): The mass flow rate in kg/s. Defaults to None.
+            volume_flow (float, optional): The volume flow rate in m^3/s. Defaults to None.
+
+        Raises:
+            NotImplementedError: If both mass_flow and volume_flow are provided.
+
+        """
         if "flow" in kwargs:
             flow = kwargs["flow"]
             if isinstance(flow, Flow):
@@ -263,6 +310,16 @@ class Flow:
 
     @property
     def in_fluid(self):
+        """
+        Get or set the input fluid of the flow.
+
+        Args:
+            value (Fluid): The input fluid.
+
+        Returns:
+            Fluid: The input fluid.
+
+        """
         return self._in_fluid
 
     @in_fluid.setter
@@ -271,6 +328,18 @@ class Flow:
 
     @property
     def out_fluid(self):
+        """
+        Get or set the output fluid of the flow.
+
+        If the output fluid is not set, it defaults to a copy of the input fluid.
+
+         Args:
+            value (Fluid or None): The output fluid or None to reset to a copy of the input fluid.
+
+        Returns:
+            Fluid: The output fluid.
+
+        """
         return self._out_fluid
 
     @out_fluid.setter
@@ -282,6 +351,13 @@ class Flow:
 
     @property
     def mean_fluid(self):
+        """
+        Calculate and return the mean fluid based on the average temperature and pressure between input and output fluids.
+
+        Returns:
+            Fluid: The mean fluid with averaged temperature and pressure.
+
+        """
         mean_temp = sum([self.in_fluid.temperature, self.out_fluid.temperature]) / 2
         mean_pressure = sum([self.in_fluid.pressure, self.out_fluid.pressure]) / 2
         fluid = Fluid(str(self.in_fluid.title), pressure=mean_pressure, temperature=mean_temp)
@@ -289,7 +365,16 @@ class Flow:
 
     @property
     def volume_flow(self):
-        "an incompressible flow is assumed"
+        """
+        Get or set the volume flow rate for the incompressible flow.
+
+        Args:
+            value (float): The volume flow rate in m^3/s.
+
+        Returns:
+            float: The volume flow rate in m^3/s.
+
+        """
         return self._volume_flow
 
     @volume_flow.setter
@@ -298,6 +383,16 @@ class Flow:
 
     @property
     def pressure_loss(self):
+        """
+        Calculate and return the pressure loss between input and output fluids.
+
+        Args:
+            value (float): The pressure loss in Pascals (Pa).
+
+        Returns:
+            float: The pressure loss in Pascals (Pa).
+
+        """
         return self.in_fluid.pressure - self.out_fluid.pressure
 
     @pressure_loss.setter
@@ -308,6 +403,18 @@ class Flow:
 
     @property
     def out_temperature(self):
+        """
+        Get or set the output temperature in Kelvin (K).
+
+        If the phase changes during the process, a warning is issued.
+
+        Args:
+            value (float): The output temperature in Kelvin (K).
+
+        Returns:
+            float: The output temperature in Kelvin (K).
+
+        """
         return self.out_fluid.temperature
 
     @out_temperature.setter
@@ -318,10 +425,27 @@ class Flow:
 
     @property
     def phase_change(self) -> bool:
+        """
+        Check if a phase change occurs between input and output fluids.
+
+        Returns:
+            bool: True if a phase change occurs, False otherwise.
+
+        """
         return self.in_fluid.fluid.phase != self.out_fluid.fluid.phase
 
     @property
     def mass_flow(self):
+        """
+        Calculate and return the mass flow rate based on the volume flow rate and the mean fluid's density.
+
+        Args:
+            value (float): The mass flow rate in kg/s.
+
+        Returns:
+            float: The mass flow rate in kg/s.
+
+        """
         value = self.volume_flow * self.mean_fluid.density
         return value
 
@@ -330,6 +454,13 @@ class Flow:
         self._volume_flow = value / self.mean_fluid.density
 
     def mass_flow_str(self):
+        """
+        Return a formatted string for the mass flow rate.
+
+        Returns:
+            str: A string containing the mass flow rate in kg/s.
+
+        """
         return f"mass flow = %.5f kg/s" % self.mass_flow
 
     @property
@@ -337,6 +468,13 @@ class Flow:
         return self.mass_flow * self.mean_fluid.specific_heat
 
     def heat_capacity_flow_str(self):
+        """
+        Return a formatted string for the heat capacity flow rate.
+
+        Returns:
+            str: A string containing the heat capacity flow rate in W/K.
+
+        """
         return f"heat capacity flow: W_dot = %.5f W/K" % (self.heat_capacity_flow)
 
     @property
@@ -348,13 +486,40 @@ class Flow:
         return heat_flow_enthalpy
 
     def heat_flow_str(self):
+        """
+        Return a formatted string for the heat flow rate.
+
+        Returns:
+            str: A string containing the heat flow rate in kW.
+
+        """
         return f"heat flow: Q_dot = %.5f kW\n" % (self.heat_flow * 1e-3)
 
     def clone(self):
+        """
+        Create a new Flow object with the same properties.
+
+        Returns:
+            Flow: A new Flow object with identical properties.
+
+        """
         new_flow = Flow(flow=self)
         return new_flow
 
     def clone_by_fluid(self, clone_fluid='in'):
+        """
+        Create a new Flow object by cloning and using the specified input or output fluid.
+
+        Args:
+            clone_fluid (str): Specifies whether to clone the 'in' or 'out' fluid.
+
+        Returns:
+            Flow: A new Flow object with the specified input or output fluid.
+
+        Raises:
+            NotImplementedError: If an unsupported value for clone_fluid is provided.
+
+        """
         new_flow = self.clone()
         if clone_fluid == 'in':
             fluid = self.in_fluid
