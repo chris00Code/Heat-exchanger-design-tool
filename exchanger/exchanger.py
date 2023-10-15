@@ -352,7 +352,7 @@ class ParallelFlow(HeatExchanger):
     @property
     def p(self):
         """
-        Get the dimensionless temperature changes (P1 and P2) for a counter-current flow heat exchanger.
+        Get the dimensionless temperature changes (P1 and P2) for a parallel flow heat exchanger.
 
         Returns:
             tuple (float,float): A tuple containing two dimensionless temperature changes, P1 and P2.
@@ -371,6 +371,16 @@ class ParallelFlow(HeatExchanger):
 class CounterCurrentFlow(HeatExchanger):
     @property
     def p(self):
+        """
+        Get the dimensionless temperature changes (P1 and P2) for a counter current flow heat exchanger.
+
+        Returns:
+            tuple (float,float): A tuple containing two dimensionless temperature changes, P1 and P2.
+
+        Notes:
+            - The dimensionless temperature changes are calculated based on the heat exchanger's NTU and R values.
+            - P1 represents the dimensionless temperature change on one side, and P2 on the other side.
+        """
         n1, n2 = self.ntu
         r1, r2 = self.r
         if r1 == 1:
