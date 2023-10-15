@@ -7,6 +7,17 @@ from .parts import Part
 
 
 class HeatExchanger:
+    """
+    A class representing a heat exchanger.
+
+    Args:
+        flow_1 (Flow, optional): The first fluid flow in the heat exchanger.
+        flow_2 (Flow, optional): The second fluid flow in the heat exchanger.
+        part (Part, optional): The heat exchanger component.
+
+    Attributes:
+        auto_adjust (bool): If output values should be adjusted for str representation
+    """
     auto_adjust = True
 
     def __init__(self, flow_1=None, flow_2=None, part: Part = None):
@@ -16,6 +27,16 @@ class HeatExchanger:
 
     @property
     def flow_1(self):
+        """
+        Get or set the first fluid flow in the heat exchanger.
+
+        Args:
+            value (Flow): The first fluid flow.
+
+        Raises:
+            NotImplementedError: If the provided value is not a Flow.
+
+        """
         return self._flow_1
 
     @flow_1.setter
@@ -27,6 +48,16 @@ class HeatExchanger:
 
     @property
     def flow_2(self):
+        """
+        Get or set the second  fluid flow in the heat exchanger.
+
+        Args:
+            value (Flow): The second fluid flow.
+
+        Raises:
+            NotImplementedError: If the provided value is not a Flow.
+
+        """
         return self._flow_2
 
     @flow_2.setter
@@ -38,6 +69,13 @@ class HeatExchanger:
 
     @property
     def part(self):
+        """
+        Get or set the heat exchanger component.
+
+        Args:
+            value (Part): The new heat exchanger component.
+
+        """
         return self._part
 
     @part.setter
@@ -48,6 +86,15 @@ class HeatExchanger:
 
     @property
     def heat_transfer_area(self):
+        """
+        Get or set the heat transfer area of the part in square meters (m^2).
+
+        Args:
+            value (float): The new heat transfer area to set in square meters (m^2).
+
+        Returns:
+            float: The heat transfer area of the part in square meters (m^2).
+        """
         return self.part.heat_transfer_area
 
     @heat_transfer_area.setter
@@ -56,6 +103,15 @@ class HeatExchanger:
 
     @property
     def heat_transfer_coefficient(self):
+        """
+        Get or set the heat transfer coefficient of the part in W/(m^2 K).
+
+        Args:
+            value (float): The new heat transfer coefficient to set in W/(m^2 K).
+
+        Returns:
+            float: The heat transfer coefficient of the part in W/(m^2 K).
+        """
         return self.part.heat_transfer_coefficient
 
     @heat_transfer_coefficient.setter
@@ -64,6 +120,15 @@ class HeatExchanger:
 
     @property
     def heat_transferability(self):
+        """
+        Get or set the heat transferability of the part in W/K.
+
+        Args:
+            value (float): The new heat transferability to set in W/K.
+
+        Returns:
+            float: The heat transferability of the part in W/K.
+        """
         return self.part.heat_transferability
 
     @heat_transferability.setter
@@ -72,18 +137,40 @@ class HeatExchanger:
 
     @property
     def heat_capacity_flow(self):
+        """
+        Get the heat capacity flow of the heat exchanger.
+
+        Returns:
+            tuple (float, float): A tuple containing the heat capacity flow of the first and second fluid flows.
+
+        """
         return self.flow_1.heat_capacity_flow, self.flow_2.heat_capacity_flow
 
     @property
     def heat_flows(self):
+        """
+        Get the heat flows of the heat exchanger.
+
+        Returns:
+            tuple (float, float): A tuple containing the heat flow of the first and second fluid flows.
+
+        """
         return self.flow_1.heat_flow, self.flow_2.heat_flow
 
     @property
     def pressure_loss(self):
         """
-        calcs the pressure loss of the two fluids in the heat exchanger. flow 1 is assumened as the flow inside of the part.
-        :return: pressure loss
+        Calculate the pressure loss of the two fluids in the heat exchanger.
+
+        Returns:
+            float: The pressure loss.
+
+        Notes:
+            This method calculates the pressure loss based on the heat exchanger's parameters.
+            flow 1 is assumed as the flow inside the part.
+
         """
+        # TODO calculation not implemented
         zeta = self.part.pressure_coefficient
         hydraulic_diameter = self.part.hydraulic_diameter
         if isinstance(zeta, tuple):
@@ -95,9 +182,32 @@ class HeatExchanger:
 
     @staticmethod
     def _calc_pressure_loss(zeta, velocity, density):
+        """
+        Calculate the pressure loss in the heat exchanger.
+
+        Args:
+            zeta (float): Pressure coefficient.
+            velocity (float): Fluid velocity.
+            density (float): Fluid density.
+
+        Returns:
+            float: The calculated pressure loss.
+
+        Notes:
+            This method calculates the pressure loss based on the provided pressure coefficient, fluid velocity, and fluid density.
+
+        """
         return zeta * density / 2 * velocity ** 2
 
     def _calc_output(self):
+        """
+        Calculate the output temperatures of the heat exchanger.
+
+        Notes:
+            This method calculates the output temperatures of the fluid flows in the heat exchanger based on the
+            dimensionless temperature change (P) of the heat exchanger.
+            The temperature and thus the fluid properties, are iteratively adjusted 5 times to find stable output temperatures.
+        """
         for i in range(5):
             temp_1_in = self.flow_1.in_fluid.temperature
             temp_2_in = self.flow_2.in_fluid.temperature
@@ -109,6 +219,17 @@ class HeatExchanger:
 
     @property
     def ntu(self):
+        """
+        Get the number of transfer units (NTU) of the heat exchanger.
+
+        Returns:
+            tuple (float, float): A tuple containing the NTU values for the first and second fluid flows.
+
+        Notes:
+            - The NTU values are calculated based on the heat exchanger's parameters.
+            - NTU_1 represents the NTU value for one side, and NTU_2 for the other side.
+
+        """
         kA = self.heat_transferability
         heat_capacity_flow_1 = self.flow_1.heat_capacity_flow
         heat_capacity_flow_2 = self.flow_2.heat_capacity_flow
@@ -119,6 +240,13 @@ class HeatExchanger:
         return ntu1, ntu2
 
     def ntu_str(self):
+        """
+        Return a formatted string for the number of transfer units (NTU) of the heat exchanger.
+
+        Returns:
+            str: A string containing the NTU values of the heat exchanger.
+
+        """
         output = "number of transfer units:\n"
         try:
             output += f"\tNTU_1 = %.3f\n\tNTU_2 = %.3f\n" % (self.ntu)
@@ -128,6 +256,20 @@ class HeatExchanger:
 
     @property
     def r(self):
+        """
+        Get the heat capacity flow ratios of the heat exchanger.
+
+        Returns:
+            tuple (float, float): A tuple containing the heat capacity flow ratios for the first and second fluid flows.
+
+        Raises:
+            ValueError: If heat capacity flow values are not defined.
+
+        Notes:
+            - The heat capacity flow ratios are calculated based on the heat exchanger's parameters.
+            - R_1 represents the heat capacity flow ratio for one side, and R_2 for the other side.
+
+        """
         heat_capacity_flow_1 = self.flow_1.heat_capacity_flow
         heat_capacity_flow_2 = self.flow_2.heat_capacity_flow
         if (heat_capacity_flow_1 and heat_capacity_flow_2) is not None:
@@ -138,6 +280,13 @@ class HeatExchanger:
         return r1, r2
 
     def r_str(self):
+        """
+        Return a formatted string for the heat capacity flow ratios of the heat exchanger.
+
+        Returns:
+            str: A string containing the heat capacity flow ratios of the heat exchanger.
+
+        """
         output = "heat capacity flow ratios:\n"
         try:
             output += f"\tR_1 = %.3f\n\tR_2 = %.3f\n" % (self.r)
@@ -158,6 +307,13 @@ class HeatExchanger:
         raise NotImplementedError
 
     def p_str(self):
+        """
+        Return a formatted string for the dimensionless temperature of the heat exchanger.
+
+        Returns:
+            str: A string containing the dimensionless temperature of the heat exchanger.
+
+        """
         output = "dimensionless temperature change:\n"
         try:
             output += f"\tP_1 = %.3f\n\tP_2 = %.3f\n" % (self.p)
@@ -168,6 +324,14 @@ class HeatExchanger:
         return output
 
     def dimensionless_parameters_str(self):
+        """
+        Return a formatted string for the dimensionless parameters of the heat exchanger.
+
+        Returns:
+            str: A string containing the str representations for number of transfer units (NTU),
+             heat capacity flow ratios (R), and dimensionless temperature (P) of the heat exchanger.
+
+        """
         return f"dimensionless parameters:\n" + self.ntu_str() + self.r_str() + self.p_str()
 
     def __repr__(self) -> str:
