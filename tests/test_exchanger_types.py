@@ -317,7 +317,8 @@ class ExchangerTypesTest(unittest.TestCase):
         ex.flow_order_2 = 'dl2r'
         ex._adjust_temperatures()
         ex.vis_heat_flow()
-        plt.show()
+        #plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_input_arrangements(self):
         networks = []
