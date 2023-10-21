@@ -8,6 +8,22 @@ from .exchanger import HeatExchanger, ParallelFlow, CounterCurrentFlow
 
 
 class ExchangerNetwork:
+    """
+        A class representing a heat exchanger network.
+
+        Args:
+            input_flows (list, optional): A list of input flows to the network.
+            exchangers (list, optional): A list of heat exchangers in the network.
+            output_flows (list, optional): A list of output flows from the network.
+
+        Attributes:
+            input_temps (tuple): A tuple containing input temperatures and their dimensionless representation.
+            structure_matrix (numpy.ndarray, optional): The structure matrix of the network.
+            input_matrix (numpy.ndarray, optional): The input matrix of the network.
+            output_matrix (numpy.ndarray, optional): The output matrix of the network.
+
+    """
+
     def __init__(self, input_flows: list = None, exchangers: list = None, output_flows: list = None):
         if input_flows is None:
             input_flows = list()
@@ -25,6 +41,16 @@ class ExchangerNetwork:
 
     @property
     def input_flows(self):
+        """
+        Get or set the list of input flows to the network.
+
+        Args:
+            value (list): A list of input flows.
+
+        Raises:
+            NotImplementedError: If the provided value is not a list.
+
+        """
         return self._input_flows
 
     @input_flows.setter
@@ -36,6 +62,16 @@ class ExchangerNetwork:
 
     @property
     def exchangers(self):
+        """
+        Get or set the list of heat exchangers in the network.
+
+        Args:
+            value (list or HeatExchanger): A list of heat exchangers or a single heat exchanger.
+
+        Raises:
+            NotImplementedError: If the provided value is not a list or a HeatExchanger object.
+
+        """
         return self._exchangers
 
     @exchangers.setter
@@ -47,11 +83,28 @@ class ExchangerNetwork:
 
     @property
     def cell_numbers(self):
+        """
+        Get the number of cells (heat exchangers) in the network.
+
+        Returns:
+            int: The number of cells.
+
+        """
         value = len(self.exchangers)
         return value
 
     @property
     def output_flows(self):
+        """
+        Get or set the list of output flows from the network.
+
+        Args:
+            value (list): A list of output flows.
+
+        Raises:
+            NotImplementedError: If the provided value is not a list.
+
+        """
         return self._output_flows
 
     @output_flows.setter
@@ -63,6 +116,16 @@ class ExchangerNetwork:
 
     @property
     def input_temps(self):
+        """
+        Get or set the input temperatures and their dimensionless representation.
+
+        Args:
+            value (numpy.ndarray): The dimensionless representation
+
+        Returns:
+            tuple: A tuple containing input temperatures and their dimensionless representation.
+
+        """
         value = self._input_temps
         if value[0] is None:  # only if input temps is set directly
             return self._input_temps
@@ -93,6 +156,16 @@ class ExchangerNetwork:
 
     @property
     def structure_matrix(self):
+        """
+        Get or set the structure matrix of the network.
+
+        Args:
+            value (numpy.ndarray): The structure matrix.
+
+        Raises:
+            NotImplementedError: If the provided value is not a numpy.ndarray.
+
+        """
         try:
             return self._structure_matrix
         except AttributeError:
@@ -107,6 +180,16 @@ class ExchangerNetwork:
 
     @property
     def input_matrix(self):
+        """
+        Get or set the input matrix of the network.
+
+        Args:
+            value (numpy.ndarray): The input matrix.
+
+        Raises:
+            NotImplementedError: If the provided value is not a numpy.ndarray.
+
+        """
         try:
             return self._input_matrix
         except AttributeError:
@@ -121,6 +204,16 @@ class ExchangerNetwork:
 
     @property
     def output_matrix(self):
+        """
+        Get or set the output matrix of the network.
+
+        Args:
+            value (numpy.ndarray): The output matrix.
+
+        Raises:
+            NotImplementedError: If the provided value is not a numpy.ndarray.
+
+        """
         try:
             return self._output_matrix
         except AttributeError:
@@ -128,6 +221,13 @@ class ExchangerNetwork:
 
     @output_matrix.setter
     def output_matrix(self, value):
+        """
+        Get the temperature input matrix.
+
+        Returns:
+            numpy.ndarray: The temperature input matrix.
+
+        """
         if isinstance(value, np.ndarray):
             self._output_matrix = value
         else:
@@ -139,6 +239,16 @@ class ExchangerNetwork:
 
     @property
     def phi_matrix(self):
+        """
+        Get or set the phi matrix of the network.
+
+        Args:
+            value (numpy.ndarray): The phi matrix.
+
+        Raises:
+            NotImplementedError: If the provided value is not a numpy.ndarray.
+
+        """
         try:
             value = self._phi_matrix
         except AttributeError:
@@ -163,6 +273,13 @@ class ExchangerNetwork:
             raise NotImplementedError
 
     def _cells_characteristic(self):
+        """
+        Calculate the characteristics of the network cells.
+
+        Returns:
+            numpy.ndarray: The calculated characteristics of the network cells.
+
+        """
         phi = self.phi_matrix
         s = self.structure_matrix
         inp = self.input_matrix
@@ -175,14 +292,32 @@ class ExchangerNetwork:
 
     @property
     def temperature_matrix(self):
+        """
+        Get the temperature matrix of the network.
+
+        Returns:
+            tuple: A tuple containing the temperature matrix and its dimensional representation.
+
+        """
         value = self._cells_characteristic() @ self.temperature_input_matrix
         return value, self._dimles_2_temp(value)
 
     @property
     def network_characteristics(self):
+        """
+        Get the network characteristics.
+
+        Returns:
+            numpy.ndarray: The network characteristics.
+
+        """
         return self.output_matrix @ self._cells_characteristic()
 
     def _dimles_2_temp(self, matrix):
+        """
+        converts the dimensionless temperatures back to temperature in K
+        based on the maximal and minimal input temperatures.
+        """
         temps = self.input_temps[0]
         min_temp = min(temps)
         max_temp = max(temps)
@@ -190,10 +325,24 @@ class ExchangerNetwork:
 
     @property
     def temperature_outputs(self):
+        """
+        Get the temperature outputs of the network.
+
+        Returns:
+            tuple: A tuple containing the temperature outputs and their dimensional representation.
+
+        """
         value = self.output_matrix @ self.temperature_matrix[0]
         return value, self._dimles_2_temp(value)
 
     def temperature_outputs_str(self):
+        """
+        Return a formatted string for the temperature outputs of the network.
+
+        Returns:
+            str: A string containing the temperature outputs of the network.
+
+        """
         pass
 
     @property
@@ -201,19 +350,52 @@ class ExchangerNetwork:
         pass
 
     def heat_flows_str(self):
+        """
+        Return a formatted string for the heat flows of the network.
+
+        Returns:
+            str: A string containing the heat flows of the network.
+
+        """
         try:
             return f"\theat flows q_1=%.2f kW,\tq_2=%.2f kW\n" % (self.heat_flows[0] * 1e-3, self.heat_flows[1] * 1e-3)
         except TypeError:
             return ""
 
     def _vis_temperature_adjusment_development(self, temp_list, ax=None, **ax_parameters):
+        """
+        Visualize temperature adjustment development or iterations.
+
+        Args:
+            temp_list (list): A list of temperature data to visualize.
+            ax (matplotlib.axes.Axes, optional): The matplotlib axes to use for plotting. If not provided, a new figure is created.
+            **ax_parameters: Additional parameters to customize the plot.
+
+        """
         vis_temp_progress(temp_list, 'temperature adjustment development', ax,
-                          label_data=[f'network output temperature {i + 1}' for i in range(len(temp_list))], label_x='iterations', **ax_parameters)
+                          label_data=[f'network output temperature {i + 1}' for i in range(len(temp_list))],
+                          label_x='iterations', **ax_parameters)
 
     def _vis_flow_temperature_development(self, temp_list, ax=None, **ax_parameters):
+        """
+        Visualize flow temperature development over the heat exchanger cells.
+
+        Args:
+            temp_list (list): A list of temperature data to visualize.
+            ax (matplotlib.axes.Axes, optional): The matplotlib axes to use for plotting. If not provided, a new figure is created.
+            **ax_parameters: Additional parameters to customize the plot.
+
+        """
         vis_temp_progress(temp_list, 'flow temperature development', ax, label_x='cell passed by flow', **ax_parameters)
 
     def extended_info(self):
+        """
+            Return extended information about the network, including information about input flows, output flows, and heat exchangers.
+
+            Returns:
+                str: A string containing extended information about the network
+
+        """
         output = self.__repr__()
         for i, ex in enumerate(self.exchangers):
             output += f"\ncell:{i}\n{ex}\n"
@@ -237,6 +419,21 @@ class ExchangerNetwork:
 
 
 def vis_temp_progress(data_list, title: str = 'temperature development', ax=None, **ax_parameters):
+    """
+       Visualize temperature progression.
+
+       Args:
+           data_list (list): A list of temperature data to visualize.
+           title (str, optional): The title of the plot. Default is 'temperature development'.
+           ax (matplotlib.axes.Axes, optional): The matplotlib axes to use for plotting. If not provided, a new figure is created.
+           **ax_parameters: Additional parameters to customize the plot.
+               label_data (list, optional): A list of labels for the temperature data series. Default is ['temperature 1', 'temperature 2', ...].
+               label_x (str, optional): Label for the x-axis. Default is 'development'.
+               label_y (str, optional): Label for the y-axis. Default is 'temperatures'.
+               min_y (float, optional): Minimum value for the y-axis.
+               max_y (float, optional): Maximum value for the y-axis.
+
+       """
     if ax is None:
         fig, ax = plt.subplots()
 
@@ -268,6 +465,16 @@ def vis_temp_progress(data_list, title: str = 'temperature development', ax=None
 
 
 def vis_setups(network_list: list, plot_function, fig_title: str = "", **ax_parameters):
+    """
+    Visualize multiple network setups.
+
+    Args:
+        network_list (list): A list of ExchangerNetwork objects to visualize.
+        plot_function (callable): A function for plotting each network setup.
+        fig_title (str, optional): The title of the figure. Default is an empty string.
+        **ax_parameters: Additional parameters to customize the plot.
+
+    """
     num_networks = len(network_list)
 
     num_cols = 6
