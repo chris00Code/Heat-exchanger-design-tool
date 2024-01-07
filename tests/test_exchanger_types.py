@@ -8,7 +8,6 @@ from exchanger.exchanger import CounterCurrentFlow, CrossFlowOneRow
 from exchanger.exchanger_types import *
 from exchanger.stream import Fluid, Flow
 from exchanger.parts import *
-from exchanger.characteristic_plots import *
 import exchanger.network as exnet
 
 
