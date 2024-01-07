@@ -4,6 +4,21 @@ from .exchanger_types import ExchangerEqualCells
 
 
 def auto_create_exchanger(flow_1: Flow = None, flow_2: Flow = None, assembly: Assembly = None):
+    """
+    Automatically create an instance of ExchangerEqualCells (with two Flows) based on the provided parameters.
+
+    Args:
+        flow_1 (Flow): The first flow for the exchanger.
+        flow_2 (Flow): The second flow for the exchanger.
+        assembly (Assembly): The assembly object containing all constructive parameters for the exchanger.
+
+    Returns:
+        ExchangerEqualCells: An instance of ExchangerEqualCells.
+
+    Raises:
+        ValueError: If the number of baffles and tube passes are both available.
+
+    """
     flow_order_1, flow_order_2 = assembly.flow_orders
 
     baffles = assembly.baffles

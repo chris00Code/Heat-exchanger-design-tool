@@ -637,10 +637,6 @@ class ExchangerEqualCells(ExchangerTwoFlow):
         exchangers_type (str): The type of heat exchangers used in the network.
         assembly (Assembly): The assembly object containing all constructive parameters for the network.
         total_transferability (float): The total heat transferability of the exchangers.
-
-    Methods:
-    - input_arrangements(): Returns a list of possible input flow arrangements.
-
     """
     def __init__(self, shape: tuple = (0, 0),
                  exchangers_type: str = 'HeatExchanger',
