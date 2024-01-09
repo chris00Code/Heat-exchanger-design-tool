@@ -119,40 +119,7 @@ class NetworkTests(unittest.TestCase):
         np.testing.assert_array_almost_equal(network.network_characteristics, np.array([[0.5, 0.5],
                                                                                         [0.5, 0.5]]), decimal=5)
 
-    def test_output(self):
-        flow_1 = Flow(Fluid("Water", temperature=273.15 + 20), 1)
-        flow_2 = Flow(Fluid("Water", temperature=273.15 + 100), 1)
-        flows = [flow_1, flow_2]
-        network = ExchangerNetwork(flows)
-        network.phi_matrix = np.array([[0.75, 0., 0., 0., 0.25, 0., 0., 0.],
-                                       [0., 0.75, 0., 0., 0., 0.25, 0., 0.],
-                                       [0., 0., 0.75, 0., 0., 0., 0.25, 0.],
-                                       [0., 0., 0., 0.75, 0., 0., 0., 0.25],
-                                       [0.25, 0., 0., 0., 0.75, 0., 0., 0.],
-                                       [0., 0.25, 0., 0., 0., 0.75, 0., 0.],
-                                       [0., 0., 0.25, 0., 0., 0., 0.75, 0.],
-                                       [0., 0., 0., 0.25, 0., 0., 0., 0.75]])
-        network.structure_matrix = np.array([[0., 1., 0., 0., 0., 0., 0., 0.],
-                                             [0., 0., 1., 0., 0., 0., 0., 0.],
-                                             [0., 0., 0., 0., 0., 0., 0., 0.],
-                                             [1., 0., 0., 0., 0., 0., 0., 0.],
-                                             [0., 0., 0., 0., 0., 0., 0., 0.],
-                                             [0., 0., 0., 0., 1, 0., 0., 0.],
-                                             [0., 0., 0., 0., 0, 1., 0., 0.],
-                                             [0., 0., 0., 0., 0., 0, 1., 0.]])
-        network.input_matrix = np.array([[0, 0],
-                                         [0, 0],
-                                         [1, 0],
-                                         [0, 0],
-                                         [0, 1],
-                                         [0, 0],
-                                         [0, 0],
-                                         [0, 0]])
-        network.output_matrix = np.asarray([[0, 0, 0, 1, 0, 0, 0, 0],
-                                            [0, 0, 0, 0, 0, 0, 0, 1]])
-        print(network.temperature_outputs[1]-273.15)
-
-    def test_output_3(self):
+    def test_output_3flows(self):
         flow_1 = Flow(Fluid("Water", temperature=373), 1)
         flow_2 = Flow(Fluid("Water", temperature=405), 1)
         flow_3 = Flow(Fluid("Water", temperature=293), 1)
@@ -210,7 +177,7 @@ class NetworkTests(unittest.TestCase):
 
         exchangers = [ex_2, ex_1]
         network.exchangers = exchangers
-        print(network)
+        self.assertEqual(len(str(network)), 76)
 
     def test_bspHue(self):
         flow_1 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
@@ -241,16 +208,18 @@ class NetworkTests(unittest.TestCase):
                                             [0, 1, 0, 0, 0, 0],
                                             [0, 0, 1, 0, 0, 0],
                                             [0, 0, 0, 0, 0, 1]])
-
-        print(network.temperature_matrix[1] - 273.15)
+        np.testing.assert_array_almost_equal(network.temperature_matrix[1] - 273.15, np.array([[56.21],
+                                                                                               [60.28],
+                                                                                               [62.32],
+                                                                                               [20.00],
+                                                                                               [24.29],
+                                                                                               [29.24]]),
+                                             decimal=0)
 
     def test_bspHue_mix(self):
         flow_1 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
-        flow_2 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
-        flow_3 = Flow(Fluid("nHeptane", temperature=273.15 + 120), 1)
-        flow_4 = Flow(Fluid("Water", temperature=273.15 + 15), 1)
-        # flows = [flow_1, flow_2,flow_3,flow_4]
-        flows = [flow_1, flow_4]
+        flow_2 = Flow(Fluid("Water", temperature=273.15 + 15), 1)
+        flows = [flow_1, flow_2]
         network = ExchangerNetwork(flows)
         network.phi_matrix = np.array([[0.392, 0., 0., 0.608, 0., 0.],
                                        [0., 0.403, 0., 0., 0.597, 0.],
@@ -264,17 +233,6 @@ class NetworkTests(unittest.TestCase):
                                              [0., 0., 0., 0., 0., 0.],
                                              [0., 0., 0., 1., 0., 0.],
                                              [0., 0., 0., 0., 1., 0.]])
-        """network.input_matrix = np.array([[1, 0, 0, 0],
-                                         [0, 1, 0, 0],
-                                         [0, 0, 1, 0],
-                                         [0, 0, 0, 1],
-                                         [0, 0, 0, 0],
-                                         [0, 0, 0, 0]])
-        network.output_matrix = np.asarray([[1/3, 0, 0, 0, 0, 0],
-                                            [0, 1/3, 0, 0, 0, 0],
-                                            [0, 0, 1/3, 0, 0, 0],
-                                            [0, 0, 0, 0, 0, 1]])
-        """
         network.input_matrix = np.array([[1, 0],
                                          [1, 0],
                                          [1, 0],
@@ -283,8 +241,9 @@ class NetworkTests(unittest.TestCase):
                                          [0, 0]])
         network.output_matrix = np.asarray([[1 / 3, 1 / 3, 1 / 3, 0, 0, 0],
                                             [0, 0, 0, 0, 0, 1]])
-
-        print(network.temperature_outputs[1] - 273.15)
+        np.testing.assert_array_almost_equal(network.temperature_outputs[1] - 273.15, np.array([[59.6],
+                                                                                                [29.24]]),
+                                             decimal=0)
 
 
 if __name__ == '__main__':

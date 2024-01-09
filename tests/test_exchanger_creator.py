@@ -5,10 +5,10 @@ from exchanger.exchanger_creator import *
 import matplotlib.pyplot as plt
 from exchanger import *
 
+
 def init_assembly():
     shell = SquareShellGeometry(5, 2, 1)
     pipe = StraightPipe(10e-3, 13e-3)
-    pipe.heat_transfer_coefficient = 200
     pipe_layout = PipeLayout(pipe, 5)
     inlets = Inlets('ul', 'dl')
     assembly = Assembly(shell, pipe_layout, inlets=inlets)
@@ -30,17 +30,20 @@ class TestExchangerCreator(unittest.TestCase):
         assembly = init_assembly()
         flow_1, flow_2 = init_fluids()
         ex_layout = auto_create_exchanger(flow_1, flow_2, assembly)
-        # print(ex_layout.extended_info())
-        print(ex_layout)
-        print(flow_2)
+        self.assertEqual(ex_layout.shape, (1, 1))
+        self.assertEqual(len(ex_layout.exchangers), 1)
+        self.assertEqual(len(ex_layout.input_flows), 2)
+        self.assertEqual(len(ex_layout.output_flows), 2)
+        self.assertEqual(ex_layout.flow_order_1, 'ul2d')
+        self.assertEqual(ex_layout.flow_order_2, 'dl2r')
 
     def test_baffles(self):
         assembly = init_assembly()
         baffle = SegmentalBaffle(1, 50)
         assembly.baffles = baffle
-        print(assembly)
         flow_1, flow_2 = init_fluids()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError,
+                               msg='layout is created despite one vertical baffle with one tube pass is not possible'):
             ex_layout = auto_create_exchanger(flow_1, flow_2, assembly)
 
     def test_tubepasses(self):
@@ -48,11 +51,18 @@ class TestExchangerCreator(unittest.TestCase):
         assembly.tube_passes = 2
         flow_1, flow_2 = init_fluids()
         ex_layout = auto_create_exchanger(flow_1, flow_2, assembly)
-        print(ex_layout.extended_info())
+
+        self.assertEqual(ex_layout.shape, (2, 1))
+        self.assertEqual(len(ex_layout.exchangers), 2)
+        self.assertEqual(len(ex_layout.input_flows), 2)
+        self.assertEqual(len(ex_layout.output_flows), 2)
+        self.assertEqual(ex_layout.flow_order_1, 'ul2d')
+        self.assertEqual(ex_layout.flow_order_2, 'dl2r')
 
         ex_layout.vis_heat_flow()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         ex_layout.vis_flow_temperature_development()
-        plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_tubepasses_baffles(self):
         assembly = init_assembly()
@@ -61,41 +71,41 @@ class TestExchangerCreator(unittest.TestCase):
         assembly.baffles = baffle
         flow_1, flow_2 = init_fluids()
         ex_layout = auto_create_exchanger(flow_1, flow_2, assembly)
-        print(ex_layout.flow_orders_str())
-        print(ex_layout.extended_info())
-
+        self.assertEqual(ex_layout.shape, (4, 6))
+        self.assertEqual(len(ex_layout.exchangers), 24)
+        self.assertEqual(len(ex_layout.input_flows), 2)
+        self.assertEqual(len(ex_layout.output_flows), 2)
+        self.assertEqual(ex_layout.flow_order_1, 'ul2d')
+        self.assertEqual(ex_layout.flow_order_2, 'dl2r')
+        str(ex_layout)
         ex_layout.vis_heat_flow()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         ex_layout.vis_flow_temperature_development()
-        plt.show()
-
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_parallel_flow(self):
         fld_1 = Fluid("Water", pressure=101420, temperature=373.15)
         flow_1 = Flow(fld_1, 1)
         fld_2 = Fluid("Water", temperature=293.15)
-        flow_2 = Flow(fld_2,2)
+        flow_2 = Flow(fld_2, 2)
         assembly = init_assembly()
-        assembly.flow_orders = Inlets('ul','dl')
-        #print(assembly.heat_transferability)
-
-        #ex_parallel = ParallelFlow(flow_1,flow_2,assembly)
-        #ex_parallel._calc_output()
-        #print(ex_parallel)
-
-        #ex_counter = CounterCurrentFlow(flow_1,flow_2,assembly)
-        #ex_counter._calc_output()
-        #print(ex_counter)
+        assembly.flow_orders = Inlets('dr', 'dl')
 
         assembly.tube_passes = 2
         baffle = SegmentalBaffle(15, 50)
         assembly.baffles = baffle
-        print(assembly)
-        ex_layout=auto_create_exchanger(flow_1,flow_2,assembly)
-        print(ex_layout.extended_info())
-        #print(ex_layout._cells_characteristic())
+        ex_layout = auto_create_exchanger(flow_1, flow_2, assembly)
+        self.assertEqual(ex_layout.shape, (2, 16))
+        self.assertEqual(len(ex_layout.exchangers), 32)
+        self.assertEqual(len(ex_layout.input_flows), 2)
+        self.assertEqual(len(ex_layout.output_flows), 2)
+        self.assertEqual(ex_layout.flow_order_1, 'dr2u')
+        self.assertEqual(ex_layout.flow_order_2, 'dl2r')
+
         ex_layout.vis_heat_flow()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         ex_layout.vis_flow_temperature_development()
-        plt.show()
+        self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
 if __name__ == '__main__':
     unittest.main()

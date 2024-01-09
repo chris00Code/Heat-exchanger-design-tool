@@ -1,23 +1,38 @@
-import copy
-import json
-import os
 import warnings
-"""file_path = os.path.join(os.path.dirname(__file__), "pyfluids.json")
-#os.chdir(os.path.dirname(file_path))
-#package_path = os.path.dirname(os.path.abspath(__file__))
-#file_path = os.path.join(package_path, 'pyfluids.json')
-
-with open(file_path) as config_file:
-    config_data = json.load(config_file)
-"""
 import pyfluids as fld
 import logging
 
+# Set up logging level
 logging.basicConfig(level=logging.CRITICAL)
 logging.debug(f'{__file__} will get logged')
 
 
 class Fluid:
+    """
+    Represents a fluid with its thermodynamic properties like pressure and temperature.
+
+    This class serves as an interface to the 'pyfluids' library, allowing to model and manage fluid properties.
+
+    Args:
+        title (str): The name of the fluid.
+        pressure (float, optional): The pressure in Pascals (Pa). Defaults to 101325 Pa.
+        temperature (float, optional): The temperature in Kelvin (K). Defaults to 293.15 K.
+        instance (str, optional): The type of fluid instance to create. Defaults to 'Fluid'.
+
+        fluid (Fluid): the fluid to be make a deepcopy of
+
+    Attributes:
+        fluid_instances (dict): A dictionary mapping instance names to fluid types from pyfluids.
+
+    Methods:
+        ntp_state: Set the fluid properties to standard conditions (NTP).
+        clone: Create a new Fluid object by cloning the current one.
+
+    Note:
+        - The 'pyfluids' library must be installed to use this class.
+        - The 'pyfluids' unit system is initialized in 'pyfluids.json' to the International System of Units (SI).
+    """
+
     fluid_instances = {
         'Fluid': fld.Fluid,
         # @TODO implement Mixture and Humid Air
@@ -25,15 +40,21 @@ class Fluid:
         # 'HumidAir': fld.HumidAir
     }
 
-    def __init__(self, title: str, pressure: float = 101325, temperature: float = 293.15, instance: str = 'Fluid'):
-        if isinstance(title, fld.Fluid):
-            fluid = title.clone()
-            self.title = fluid.name
-            self.fluid = fluid
-
+    def __init__(self, title: str = None, pressure: float = 101325, temperature: float = 293.15,
+                 instance: str = 'Fluid',
+                 **kwargs):
+        if "fluid" in kwargs:
+            fluid = kwargs["fluid"]
+            if isinstance(fluid, Fluid):
+                self.title = fluid.title
+                self.fluid = fluid.fluid.clone()
+            else:
+                raise ValueError("fluid is not a Fluid object")
         else:
-            self.instance = instance
 
+            self.instance = instance
+            if title is None:
+                raise TypeError
             self.title = title
             self.fluid = None
 
@@ -43,6 +64,17 @@ class Fluid:
 
     @property
     def instance(self):
+        """
+        Get or set the type of fluid instance to create.
+
+        If setting a new instance type, it should be one of the supported fluid instances.
+
+        Raises:
+            AttributeError: If the provided instance is not implemented.
+
+        Returns:
+            instance of pyfluids: The current instance type.
+        """
         return self.__instance
 
     @instance.setter
@@ -54,6 +86,12 @@ class Fluid:
 
     @property
     def title(self):
+        """
+        Get or set the title (name) of the fluid.
+
+        Returns:
+            str: The current title (name) of the fluid.
+        """
         return self._title
 
     @title.setter
@@ -62,6 +100,25 @@ class Fluid:
 
     @property
     def fluid(self):
+        """
+        Get or set the fluid object associated with this instance.
+
+        This property represents the fluid's properties and behavior and allows for retrieval and modification of the fluid.
+
+        Setting the fluid can be done in two ways:
+        1. By providing an existing 'pyfluids.Fluid' object.
+        2. By specifying the fluid's title (name), in which case a new fluid object is created based on the title.
+
+        Args:
+            value (pyfluids.Fluid or None, optional): The fluid object to set or None to clear the fluid.
+
+        Raises:
+            NotImplementedError: If the provided value is not a valid 'pyfluids.Fluid' object
+            or if the fluid title is not implemented in pyfluids.
+
+        Returns:
+            pyfluids instance: The current fluid object associated with this instance.
+        """
         return self._fluid
 
     @fluid.setter
@@ -80,6 +137,18 @@ class Fluid:
 
     @property
     def pressure(self):
+        """
+        Get or set the pressure of the fluid in Pascals (Pa).
+
+        Args:
+            value (float): The new pressure to set in Pascals (Pa).
+
+        Raises:
+            ValueError: If the provided pressure value is not valid.
+
+        Returns:
+            float: The pressure of the fluid in Pascals (Pa).
+        """
         return self.fluid.pressure
 
     @pressure.setter
@@ -98,6 +167,18 @@ class Fluid:
 
     @property
     def temperature(self):
+        """
+        Get or set the temperature of the fluid in Kelvin (K).
+
+        Args:
+            value (float): The new temperature to set in Kelvin (K).
+
+        Raises:
+            ValueError: If the provided temperature value is not valid.
+
+        Returns:
+            float: The temperature of the fluid in Kelvin.
+        """
         return self.fluid.temperature
 
     @temperature.setter
@@ -115,18 +196,42 @@ class Fluid:
             print(f"Temperature not supported, please change temperature\n {e}")
 
     def ntp_state(self):
+        """
+        Set the fluid properties to standard conditions (NTP - Normal Temperature and Pressure).
+
+        This method updates the fluid's pressure to 101325 Pascals (Pa) and temperature to 293.15 Kelvin (K),
+        which are the standard conditions for many fluid properties.
+        """
         self.fluid.update(fld.Input.pressure(101325), fld.Input.temperature(293.15))
 
     @property
     def specific_heat(self):
+        """
+        Mass specific heat [J/kg/K].
+
+        Returns:
+            float: The mass specific heat of the fluid in J/kg/K.
+        """
         return self.fluid.specific_heat
 
     @property
     def density(self):
+        """
+        Mass density [kg/m3].
+
+        Returns:
+            float: The mass density of the fluid in kg/m3.
+        """
         return self.fluid.density
 
     def clone(self):
-        new_fluid = Fluid(self.fluid)
+        """
+        Create a new fluid object with the same properties as the current fluid instance.
+
+        Returns:
+            Fluid: A new fluid object with identical properties.
+        """
+        new_fluid = Fluid(fluid=self)
         return new_fluid
 
     def __repr__(self):
@@ -137,12 +242,62 @@ class Fluid:
 
 
 class Flow:
-    def __init__(self, fluid: Fluid = None, mass_flow: float = None, volume_flow: float = None):
-        if isinstance(fluid, Flow):
-            flow = fluid
-            self.in_fluid = flow.in_fluid.clone()
-            self.out_fluid = flow.out_fluid.clone()
-            self.volume_flow = flow.volume_flow
+    """
+        Represents a fluid flow with input and output fluids, mass and volume flow rates, and thermodynamic properties.
+
+        This class allows you to model and manage fluid flows and calculate properties such as mass flow rate, heat capacity flow,
+        heat flow, and pressure loss. It also handles incompressible flows and phase changes.
+
+        Args:
+            fluid (Fluid, optional): The input fluid. Defaults to None.
+            mass_flow (float, optional): The mass flow rate in kg/s. Defaults to None.
+            volume_flow (float, optional): The volume flow rate in m^3/s. Defaults to None.
+
+        Attributes:
+            in_fluid (Fluid): The input fluid.
+            out_fluid (Fluid): The output fluid.
+            volume_flow (float): The volume flow rate in m^3/s.
+            pressure_loss (float): The pressure loss in Pascals (Pa).
+            out_temperature (float): The output temperature in Kelvin (K).
+            phase_change (bool): Indicates if a phase change occurs in the flow.
+            mass_flow (float): The mass flow rate in kg/s.
+            heat_capacity_flow (float): The heat capacity flow rate in Watts per Kelvin (W/K).
+            heat_flow (float): The heat flow rate in Watts (W).
+
+        Methods:
+            mass_flow_str(): Returns a formatted string for mass flow rate.
+            heat_capacity_flow_str(): Returns a formatted string for heat capacity flow rate.
+            heat_flow_str(): Returns a formatted string for heat flow rate.
+            clone(): Creates a new Flow object with the same properties.
+            clone_by_fluid(clone_fluid='in'): Creates a new Flow object by cloning and using the specified input or output fluid.
+
+        Note:
+            - This class assumes incompressible flow.
+            - Warning: Phase changes in the flow may lead to issues.
+
+        """
+
+    def __init__(self, fluid: Fluid = None, mass_flow: float = None, volume_flow: float = None, **kwargs):
+        """
+        Initialize a Flow object with input fluid, mass flow rate, or volume flow rate.
+
+        Args:
+            fluid (Fluid, optional): The input fluid. Defaults to None.
+            mass_flow (float, optional): The mass flow rate in kg/s. Defaults to None.
+            volume_flow (float, optional): The volume flow rate in m^3/s. Defaults to None.
+
+        Raises:
+            NotImplementedError: If both mass_flow and volume_flow are provided.
+
+        """
+        if "flow" in kwargs:
+            flow = kwargs["flow"]
+            if isinstance(flow, Flow):
+                self.in_fluid = flow.in_fluid.clone()
+                self.out_fluid = flow.out_fluid.clone()
+                self.volume_flow = flow.volume_flow
+            else:
+                raise ValueError("flow is not a Flow object")
         else:
             self.in_fluid = fluid
             self.out_fluid = None
@@ -155,6 +310,16 @@ class Flow:
 
     @property
     def in_fluid(self):
+        """
+        Get or set the input fluid of the flow.
+
+        Args:
+            value (Fluid): The input fluid.
+
+        Returns:
+            Fluid: The input fluid.
+
+        """
         return self._in_fluid
 
     @in_fluid.setter
@@ -163,6 +328,18 @@ class Flow:
 
     @property
     def out_fluid(self):
+        """
+        Get or set the output fluid of the flow.
+
+        If the output fluid is not set, it defaults to a copy of the input fluid.
+
+         Args:
+            value (Fluid or None): The output fluid or None to reset to a copy of the input fluid.
+
+        Returns:
+            Fluid: The output fluid.
+
+        """
         return self._out_fluid
 
     @out_fluid.setter
@@ -174,6 +351,13 @@ class Flow:
 
     @property
     def mean_fluid(self):
+        """
+        Calculate and return the mean fluid based on the average temperature and pressure between input and output fluids.
+
+        Returns:
+            Fluid: The mean fluid with averaged temperature and pressure.
+
+        """
         mean_temp = sum([self.in_fluid.temperature, self.out_fluid.temperature]) / 2
         mean_pressure = sum([self.in_fluid.pressure, self.out_fluid.pressure]) / 2
         fluid = Fluid(str(self.in_fluid.title), pressure=mean_pressure, temperature=mean_temp)
@@ -181,7 +365,16 @@ class Flow:
 
     @property
     def volume_flow(self):
-        "an incompressible flow is assumed"
+        """
+        Get or set the volume flow rate for the incompressible flow.
+
+        Args:
+            value (float): The volume flow rate in m^3/s.
+
+        Returns:
+            float: The volume flow rate in m^3/s.
+
+        """
         return self._volume_flow
 
     @volume_flow.setter
@@ -190,6 +383,16 @@ class Flow:
 
     @property
     def pressure_loss(self):
+        """
+        Calculate and return the pressure loss between input and output fluids.
+
+        Args:
+            value (float): The pressure loss in Pascals (Pa).
+
+        Returns:
+            float: The pressure loss in Pascals (Pa).
+
+        """
         return self.in_fluid.pressure - self.out_fluid.pressure
 
     @pressure_loss.setter
@@ -200,6 +403,18 @@ class Flow:
 
     @property
     def out_temperature(self):
+        """
+        Get or set the output temperature in Kelvin (K).
+
+        If the phase changes during the process, a warning is issued.
+
+        Args:
+            value (float): The output temperature in Kelvin (K).
+
+        Returns:
+            float: The output temperature in Kelvin (K).
+
+        """
         return self.out_fluid.temperature
 
     @out_temperature.setter
@@ -210,10 +425,27 @@ class Flow:
 
     @property
     def phase_change(self) -> bool:
+        """
+        Check if a phase change occurs between input and output fluids.
+
+        Returns:
+            bool: True if a phase change occurs, False otherwise.
+
+        """
         return self.in_fluid.fluid.phase != self.out_fluid.fluid.phase
 
     @property
     def mass_flow(self):
+        """
+        Calculate and return the mass flow rate based on the volume flow rate and the mean fluid's density.
+
+        Args:
+            value (float): The mass flow rate in kg/s.
+
+        Returns:
+            float: The mass flow rate in kg/s.
+
+        """
         value = self.volume_flow * self.mean_fluid.density
         return value
 
@@ -222,6 +454,13 @@ class Flow:
         self._volume_flow = value / self.mean_fluid.density
 
     def mass_flow_str(self):
+        """
+        Return a formatted string for the mass flow rate.
+
+        Returns:
+            str: A string containing the mass flow rate in kg/s.
+
+        """
         return f"mass flow = %.5f kg/s" % self.mass_flow
 
     @property
@@ -229,6 +468,13 @@ class Flow:
         return self.mass_flow * self.mean_fluid.specific_heat
 
     def heat_capacity_flow_str(self):
+        """
+        Return a formatted string for the heat capacity flow rate.
+
+        Returns:
+            str: A string containing the heat capacity flow rate in W/K.
+
+        """
         return f"heat capacity flow: W_dot = %.5f W/K" % (self.heat_capacity_flow)
 
     @property
@@ -240,13 +486,40 @@ class Flow:
         return heat_flow_enthalpy
 
     def heat_flow_str(self):
+        """
+        Return a formatted string for the heat flow rate.
+
+        Returns:
+            str: A string containing the heat flow rate in kW.
+
+        """
         return f"heat flow: Q_dot = %.5f kW\n" % (self.heat_flow * 1e-3)
 
     def clone(self):
-        new_flow = Flow(self)
+        """
+        Create a new Flow object with the same properties.
+
+        Returns:
+            Flow: A new Flow object with identical properties.
+
+        """
+        new_flow = Flow(flow=self)
         return new_flow
 
     def clone_by_fluid(self, clone_fluid='in'):
+        """
+        Create a new Flow object by cloning and using the specified input or output fluid.
+
+        Args:
+            clone_fluid (str): Specifies whether to clone the 'in' or 'out' fluid.
+
+        Returns:
+            Flow: A new Flow object with the specified input or output fluid.
+
+        Raises:
+            NotImplementedError: If an unsupported value for clone_fluid is provided.
+
+        """
         new_flow = self.clone()
         if clone_fluid == 'in':
             fluid = self.in_fluid
