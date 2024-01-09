@@ -1,5 +1,6 @@
 matplotlib
 scipy
+ipykernel
 pyfluids~=2.4.0
 numpy~=1.25.1
 networkx~=3.1
