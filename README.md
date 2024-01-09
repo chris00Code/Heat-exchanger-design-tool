@@ -1,7 +1,7 @@
-# Heat Exchanger Design Project
+# Heat Exchanger Design Tool
 
-A project for heat exchanger design. It makes use of the cell method/matrix approach to calculate the resulting temperatures of the heat exchanger. Further information can be seen in [examples/theorie.pdf](examples/theorie.pdf).
-
+An object-oriented design tool to design any heat exchanger using the cell method/matrix approach to calculate the resulting temperatures of the heat exchanger. Further information about the solving algorithm can be seen in [examples/theorie.pdf](examples/theorie.pdf).
+Any configuration of heatexchanger can be calculated utilizing the fluid data of pyfluids. The different configurations of various designs can either be calculated analytically by formulas (partly already implemented as a separate class) or by individual configurations using the cell method. More information can be found in the [examples](#examples).
 
 ## Navigation
 
