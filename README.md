@@ -18,7 +18,7 @@ Any configuration of heat exchanger can be calculated utilizing the fluid data o
 1. Clone the repository to your local machine:
 
 ```shell
-git clone <repository_url>
+git clone https://github.com/chris00Code/Heat-exchanger-design-tool.git
 ```
 
 2. Navigate to the project directory:
