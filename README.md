@@ -10,8 +10,8 @@ Any configuration of heat exchanger can be calculated utilizing the fluid data o
 - [Units system](#units-systems)
 - [Examples](#examples)
     - [standard_heatexchangers.ipynb](#standard_heatexchangers.ipynb)
-    - [heatexchanger_twoflows.ipynb](#heatexchanger_twoflos.ipynb)
-    - [complex_heatexchanger_networks.ipynb](#complex_heatexchanger_networksipynb)
+    - [heatexchanger_twoflows.ipynb](#heatexchanger_twoflows.ipynb)
+    - [complex_heatexchanger_networks.ipynb](#complex_heatexchanger_networks.ipynb)
 
 ## How to install
 
@@ -73,9 +73,9 @@ The use of the class to calculate a heat exchanger and necessary steps to get a 
 ### [standard_heatexchangers.ipynb](#standard_heatexchangers.ipynb)
 This notebook provides examples how to calculate the properties, in particular dimensionless parameters and fluid temperatures, of heat exchangers with predefined characteristics.  
 
-### [heatexchanger_twoflows.ipynb](#heatexchanger_twoflos.ipynb)
+### [heatexchanger_twoflows.ipynb](#heatexchanger_twoflows.ipynb)
 The examples show in particular the application for a shell and tube heat exchanger with two fluid flows and without phase transition.
 In particular, the use of the classes and functions provided is shown and these can be used to design simple shell-and-tube heat exchangers very quickly.
 
-### [complex_heatexchanger_networks.ipynb](#complex_heatexchanger_networksipynb)
+### [complex_heatexchanger_networks.ipynb](#complex_heatexchanger_networks.ipynb)
 This notebook shows how to calculate more complex heat transfer networks. This requires the manual provision of structural matrices etc.
