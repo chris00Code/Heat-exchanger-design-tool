@@ -239,7 +239,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
         return output
 
     @property
-    def heat_flows(self):
+    def heat_fluxes(self):
         """
         Get the total heat fluxs in the network.
 
@@ -249,8 +249,8 @@ class ExchangerTwoFlow(ExchangerNetwork):
         """
         q_1, q_2 = 0, 0
         for ex in self.exchangers:
-            q_1 += ex.heat_flows[0]
-            q_2 += ex.heat_flows[1]
+            q_1 += ex.heat_fluxes[0]
+            q_2 += ex.heat_fluxes[1]
         return q_1, q_2
 
     @property
@@ -548,7 +548,7 @@ class ExchangerTwoFlow(ExchangerNetwork):
             **ax_parameters: Additional keyword arguments for Matplotlib axes.
 
         """
-        par_matrix = heat_flow_repr(self.layout_matrix)
+        par_matrix = heat_flux_repr(self.layout_matrix)
 
         vmin = ax_parameters.pop('vmin', 0)
         vmax = ax_parameters.pop('vmax', par_matrix.max())
