@@ -539,9 +539,9 @@ class ExchangerTwoFlow(ExchangerNetwork):
         except TypeError:
             return ""
 
-    def vis_heat_flow(self, ax=None, **ax_parameters):
+    def vis_heat_flux(self, ax=None, **ax_parameters):
         """
-        Visualize the heat flow in the exchanger network.
+        Visualize the heat flux in the exchanger network.
 
         Args:
             ax (matplotlib.axes.Axes, optional): Matplotlib axes to plot on. If None, a new figure and axes will be created.
