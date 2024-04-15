@@ -346,19 +346,19 @@ class ExchangerNetwork:
         pass
 
     @property
-    def heat_flows(self):
+    def heat_fluxes(self):
         pass
 
-    def heat_flows_str(self):
+    def heat_fluxes_str(self):
         """
-        Return a formatted string for the heat flows of the network.
+        Return a formatted string for the heat fluxs of the network.
 
         Returns:
-            str: A string containing the heat flows of the network.
+            str: A string containing the heat fluxs of the network.
 
         """
         try:
-            return f"\theat flows q_1=%.2f kW,\tq_2=%.2f kW\n" % (self.heat_flows[0] * 1e-3, self.heat_flows[1] * 1e-3)
+            return f"\theat fluxs q_1=%.2f kW,\tq_2=%.2f kW\n" % (self.heat_fluxes[0] * 1e-3, self.heat_fluxes[1] * 1e-3)
         except TypeError:
             return ""
 
@@ -404,7 +404,7 @@ class ExchangerNetwork:
     def __repr__(self):
         output = "Heat Exchanger Network:\n"
         output += f"\tcell numbers: {self.cell_numbers}\n"
-        output += self.heat_flows_str()
+        output += self.heat_fluxes_str()
 
         if all(isinstance(item, Flow) for item in self.input_flows):
             output += f"input flows: n={len(self.input_flows)}\n"
