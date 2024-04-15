@@ -147,7 +147,7 @@ class HeatExchanger:
         return self.flow_1.heat_capacity_flow, self.flow_2.heat_capacity_flow
 
     @property
-    def heat_fluxs(self):
+    def heat_fluxes(self):
         """
         Get the heat fluxs of the heat exchanger.
 
