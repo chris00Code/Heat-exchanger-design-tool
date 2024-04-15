@@ -59,7 +59,7 @@ class TestExchangerCreator(unittest.TestCase):
         self.assertEqual(ex_layout.flow_order_1, 'ul2d')
         self.assertEqual(ex_layout.flow_order_2, 'dl2r')
 
-        ex_layout.vis_heat_flow()
+        ex_layout.vis_heat_flux()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         ex_layout.vis_flow_temperature_development()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
@@ -78,7 +78,7 @@ class TestExchangerCreator(unittest.TestCase):
         self.assertEqual(ex_layout.flow_order_1, 'ul2d')
         self.assertEqual(ex_layout.flow_order_2, 'dl2r')
         str(ex_layout)
-        ex_layout.vis_heat_flow()
+        ex_layout.vis_heat_flux()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         ex_layout.vis_flow_temperature_development()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
@@ -102,7 +102,7 @@ class TestExchangerCreator(unittest.TestCase):
         self.assertEqual(ex_layout.flow_order_1, 'dr2u')
         self.assertEqual(ex_layout.flow_order_2, 'dl2r')
 
-        ex_layout.vis_heat_flow()
+        ex_layout.vis_heat_flux()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         ex_layout.vis_flow_temperature_development()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
