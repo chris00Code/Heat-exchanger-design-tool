@@ -262,12 +262,12 @@ class Flow:
             phase_change (bool): Indicates if a phase change occurs in the flow.
             mass_flow (float): The mass flow rate in kg/s.
             heat_capacity_flow (float): The heat capacity flow rate in Watts per Kelvin (W/K).
-            heat_flow (float): The heat flow rate in Watts (W).
+            heat_flux (float): The heat flow rate in Watts (W).
 
         Methods:
             mass_flow_str(): Returns a formatted string for mass flow rate.
             heat_capacity_flow_str(): Returns a formatted string for heat capacity flow rate.
-            heat_flow_str(): Returns a formatted string for heat flow rate.
+            heat_flux_str(): Returns a formatted string for heat flow rate.
             clone(): Creates a new Flow object with the same properties.
             clone_by_fluid(clone_fluid='in'): Creates a new Flow object by cloning and using the specified input or output fluid.
 
@@ -478,14 +478,14 @@ class Flow:
         return f"heat capacity flow: W_dot = %.5f W/K" % (self.heat_capacity_flow)
 
     @property
-    def heat_flow(self):
+    def heat_flux(self):
         if self.phase_change:
             warnings.warn("the phase changes, this could lead to some problems")
-        heat_flow_enthalpy = self.mass_flow * (self.in_fluid.fluid.enthalpy - self.out_fluid.fluid.enthalpy)
-        # heat_flow_temps = self.heat_capacity_flow * (self.in_fluid.temperature - self.out_fluid.temperature)
-        return heat_flow_enthalpy
+        heat_flux_enthalpy = self.mass_flow * (self.in_fluid.fluid.enthalpy - self.out_fluid.fluid.enthalpy)
+        # heat_flux_temps = self.heat_capacity_flow * (self.in_fluid.temperature - self.out_fluid.temperature)
+        return heat_flux_enthalpy
 
-    def heat_flow_str(self):
+    def heat_flux_str(self):
         """
         Return a formatted string for the heat flow rate.
 
@@ -493,7 +493,7 @@ class Flow:
             str: A string containing the heat flow rate in kW.
 
         """
-        return f"heat flow: Q_dot = %.5f kW\n" % (self.heat_flow * 1e-3)
+        return f"heat flow: Q_dot = %.5f kW\n" % (self.heat_flux * 1e-3)
 
     def clone(self):
         """
@@ -536,7 +536,7 @@ class Flow:
         output = f"Flow: id = {id(self)}\n"
         output += f"\t" + self.mass_flow_str() + "\n"
         output += f"\t" + self.heat_capacity_flow_str() + "\n"
-        output += f"\t" + self.heat_flow_str() + "\n"
+        output += f"\t" + self.heat_flux_str() + "\n"
         output += f"Input Fluid:\n\t{self.in_fluid}\n"
         output += f"Output Fluid:\n\t{self.out_fluid}\n"
         return output
