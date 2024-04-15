@@ -264,7 +264,7 @@ class ExchangerTypesTest(unittest.TestCase):
         ex.vis_flow_temperature_development()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
-        ex.vis_heat_flow()
+        ex.vis_heat_flux()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
     def test_print(self):
@@ -295,11 +295,11 @@ class ExchangerTypesTest(unittest.TestCase):
         self.assertEqual(ex.in_flow_1.mean_fluid.temperature, temp)
         self.assertEqual(ex.layout_matrix[0, 0].flow_1.in_fluid.temperature, temp)
 
-    def test_heat_flow_vis(self):
+    def test_heat_flux_vis(self):
         ex = init_extype()
         ex._adjust_temperatures()
 
-        ex.vis_heat_flow()
+        ex.vis_heat_flux()
         # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
@@ -315,7 +315,7 @@ class ExchangerTypesTest(unittest.TestCase):
         ex.flow_order_1 = 'dr2u'
         ex.flow_order_2 = 'dl2r'
         ex._adjust_temperatures()
-        ex.vis_heat_flow()
+        ex.vis_heat_flux()
         #plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
 
@@ -328,8 +328,8 @@ class ExchangerTypesTest(unittest.TestCase):
             netw._adjust_temperatures()
             networks.append(netw)
 
-        ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
-        exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
+        ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flux_repr(netw.layout_matrix).max() for netw in networks])}
+        exnet.vis_setups(networks, 'vis_heat_flux', fig_title='heat flows', **ax_parameters_heat)
         # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         exnet.vis_setups(networks, 'vis_flow_temperature_development', fig_title='temperature development')
@@ -347,9 +347,9 @@ class ExchangerTypesTest(unittest.TestCase):
         for n in networks:
             n._adjust_temperatures(5)
 
-        ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flow_repr(netw.layout_matrix).max() for netw in networks])}
+        ax_parameters_heat = {'vmin': 0, 'vmax': max([heat_flux_repr(netw.layout_matrix).max() for netw in networks])}
 
-        exnet.vis_setups(networks, 'vis_heat_flow', fig_title='heat flows', **ax_parameters_heat)
+        exnet.vis_setups(networks, 'vis_heat_flux', fig_title='heat flows', **ax_parameters_heat)
         # plt.show()
         self.assertTrue(len(plt.gcf().get_axes()) > 0, "plot wasn't created")
         exnet.vis_setups(networks, 'vis_flow_temperature_development', fig_title='temperature development')
