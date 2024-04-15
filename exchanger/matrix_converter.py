@@ -123,19 +123,19 @@ def id_repr(matrix):
     return output
 
 
-def heat_flow_repr(matrix):
+def heat_flux_repr(matrix):
     """
-    Get the absolute values of heat flows from a matrix of heat exchangers.
+    Get the absolute values of heat fluxs from a matrix of heat exchangers.
 
     Args:
         matrix (numpy.ndarray): The matrix of heat exchangers.
 
     Returns:
-        numpy.ndarray: An array of absolute heat flow values.
+        numpy.ndarray: An array of absolute heat flux values.
 
     """
-    vectorized_get_heat_flow = np.vectorize(lambda obj: abs(obj.heat_flows[0]))
-    output = vectorized_get_heat_flow(matrix)
+    vectorized_get_heat_flux = np.vectorize(lambda obj: abs(obj.heat_fluxs[0]))
+    output = vectorized_get_heat_flux(matrix)
     return output
 
 
