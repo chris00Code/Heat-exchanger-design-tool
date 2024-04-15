@@ -147,15 +147,15 @@ class HeatExchanger:
         return self.flow_1.heat_capacity_flow, self.flow_2.heat_capacity_flow
 
     @property
-    def heat_flows(self):
+    def heat_fluxs(self):
         """
-        Get the heat flows of the heat exchanger.
+        Get the heat fluxs of the heat exchanger.
 
         Returns:
-            tuple (float, float): A tuple containing the heat flow of the first and second fluid flows.
+            tuple (float, float): A tuple containing the heat flux of the first and second fluid flows.
 
         """
-        return self.flow_1.heat_flow, self.flow_2.heat_flow
+        return self.flow_1.heat_flux, self.flow_2.heat_flux
 
     @property
     def pressure_loss(self):
