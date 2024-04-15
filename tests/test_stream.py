@@ -141,20 +141,20 @@ class TestFlow(unittest.TestCase):
             flow.out_temperature = 250 + 273.15
         with self.assertWarnsRegex(Warning, 'the phase changes, this could lead to some problems',
                                    msg='no warning when the phase change is used'):
-            q = flow.heat_flow
+            q = flow.heat_flux
 
         flow.out_temperature = 101 + 273.15
-        q = flow.heat_flow
+        q = flow.heat_flux
 
     def test_flow_heatflow(self):
         fluid = Fluid("Water", temperature=273.15 + 15)
         flow = Flow(fluid, 0.33)
         self.assertAlmostEqual(flow.heat_capacity_flow, 1382, 0, msg='heat capacity flow not correct')
         self.assertEqual(flow.in_fluid.temperature - flow.out_temperature, 0, msg='temperature delta is not 0')
-        self.assertEqual(flow.heat_flow, 0, msg='heat flow is not 0, if temperature delta is 0')
+        self.assertEqual(flow.heat_flux, 0, msg='heat flow is not 0, if temperature delta is 0')
         flow.out_temperature = 273.15 + 23.11
         self.assertNotEqual(flow.in_fluid.temperature - flow.out_temperature, 0, msg='temperature delta is 0')
-        self.assertAlmostEqual(flow.heat_flow, -11.2e3, delta=0.1e3, msg='heat flow was not calculated correct')
+        self.assertAlmostEqual(flow.heat_flux, -11.2e3, delta=0.1e3, msg='heat flow was not calculated correct')
 
     def test_flow_clone(self):
         fluid = Fluid("Water")
