@@ -199,16 +199,19 @@ class HeatExchanger:
         """
         return zeta * density / 2 * velocity ** 2
 
-    def _calc_output(self):
+    def _calc_output(self, n_iter: int = 5):
         """
         Calculate the output temperatures of the heat exchanger.
+
+        Args:
+            n_iter (int): number of iterations
 
         Notes:
             This method calculates the output temperatures of the fluid flows in the heat exchanger based on the
             dimensionless temperature change (P) of the heat exchanger.
-            The temperature and thus the fluid properties, are iteratively adjusted 5 times to find stable output temperatures.
+            The temperature and thus the fluid properties, are iteratively adjusted n_iter times to find stable output temperatures.
         """
-        for i in range(5):
+        for i in range(n_iter):
             temp_1_in = self.flow_1.in_fluid.temperature
             temp_2_in = self.flow_2.in_fluid.temperature
             p1, p2 = self.p
