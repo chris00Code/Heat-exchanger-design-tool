@@ -134,7 +134,7 @@ def heat_flux_repr(matrix):
         numpy.ndarray: An array of absolute heat flux values.
 
     """
-    vectorized_get_heat_flux = np.vectorize(lambda obj: abs(obj.heat_fluxs[0]))
+    vectorized_get_heat_flux = np.vectorize(lambda obj: abs(obj.heat_fluxes[0]))
     output = vectorized_get_heat_flux(matrix)
     return output
 
