@@ -241,10 +241,10 @@ class ExchangerTwoFlow(ExchangerNetwork):
     @property
     def heat_flows(self):
         """
-        Get the total heat flows in the network.
+        Get the total heat fluxs in the network.
 
         Returns:
-            Tuple: A tuple containing the total heat flows for flow path 1 and flow path 2.
+            Tuple: A tuple containing the total heat fluxs for flow path 1 and flow path 2.
 
         """
         q_1, q_2 = 0, 0
@@ -557,13 +557,13 @@ class ExchangerTwoFlow(ExchangerNetwork):
             fig, ax = plt.subplots()
 
         im = ax.imshow(par_matrix, cmap='viridis', interpolation='nearest', vmin=vmin, vmax=vmax, **ax_parameters)
-        ax.set_title('heat flows')
+        ax.set_title('heat flux')
         num_rows, num_cols = par_matrix.shape
         ax.set_xticks(range(num_cols))
         ax.set_xticklabels(range(1, num_cols + 1))
         ax.set_yticks(range(num_rows))
         ax.set_yticklabels(range(1, num_rows + 1))
-        plt.colorbar(im, ax=ax, label='heat flow in W')
+        plt.colorbar(im, ax=ax, label='heat flux in W')
 
         start_point,direction_list = get_direction_list(self.layout_matrix,self.flow_order_1)
         add_arrows(ax,direction_list,start_point,text='flow 1')
